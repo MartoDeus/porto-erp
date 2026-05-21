@@ -569,7 +569,7 @@ button {
 
 .priority-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(150px, 1fr));
+  grid-template-columns: repeat(4, minmax(170px, 1fr));
   gap: 18px;
   margin-bottom: 18px;
 }
@@ -602,6 +602,14 @@ button {
 .metric-icon svg {
   width: 25px;
   height: 25px;
+}
+
+.metric-icon .resource-svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .metric-card p,
@@ -640,7 +648,6 @@ button {
 .lubricant .metric-icon { color: #8468d5; background: #f0ecff; }
 .treated .metric-icon { color: #2b79d3; background: #e9f3ff; }
 .consumption .metric-icon { color: #63a9e8; background: #edf7ff; }
-.diving .metric-icon { color: #0d8a7e; background: #e5f7f4; }
 
 .dashboard-grid {
   display: grid;
