@@ -74,6 +74,7 @@ function showDashboard(session) {
   authPage.hidden = true;
   dashboardPage.hidden = false;
   welcomeText.textContent = `${session.name} · ${session.role}`;
+  renderIcons();
 }
 
 function showLogin() {
@@ -83,6 +84,17 @@ function showLogin() {
   passwordInput.value = "";
   setMessage("");
   usernameInput.focus();
+  renderIcons();
+}
+
+function renderIcons() {
+  if (window.lucide) {
+    window.lucide.createIcons({
+      attrs: {
+        "stroke-width": 1.9
+      }
+    });
+  }
 }
 
 async function authenticate(username, password) {
@@ -160,6 +172,7 @@ function boot() {
   }
 
   usernameInput.focus();
+  renderIcons();
 }
 
 boot();

@@ -41,6 +41,12 @@ button {
   cursor: pointer;
 }
 
+[data-lucide] {
+  width: 1.15em;
+  height: 1.15em;
+  stroke: currentColor;
+}
+
 .auth-page {
   position: relative;
   height: 100vh;
@@ -400,10 +406,11 @@ button {
 
 .nav-icon {
   width: 24px;
+  height: 24px;
   display: inline-grid;
   place-items: center;
   color: rgba(255, 255, 255, 0.86);
-  font-size: 1.05rem;
+  flex: 0 0 24px;
 }
 
 .dashboard-workspace {
@@ -450,7 +457,16 @@ button {
 }
 
 .menu-button {
-  font-size: 1.45rem;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+}
+
+.menu-button svg {
+  width: 23px;
+  height: 23px;
 }
 
 .topbar-actions {
@@ -460,8 +476,16 @@ button {
 .topbar-icon {
   width: 36px;
   height: 36px;
+  display: grid;
+  place-items: center;
   border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 50%;
+}
+
+.topbar-icon i,
+.topbar-icon svg {
+  width: 18px;
+  height: 18px;
 }
 
 .user-chip {
@@ -539,6 +563,8 @@ button {
 
 .date-icon {
   color: var(--muted);
+  width: 20px;
+  height: 20px;
 }
 
 .priority-grid {
@@ -570,7 +596,12 @@ button {
   display: grid;
   place-items: center;
   border-radius: 12px;
-  font-size: 1.65rem;
+  flex: 0 0 42px;
+}
+
+.metric-icon svg {
+  width: 25px;
+  height: 25px;
 }
 
 .metric-card p,
@@ -722,6 +753,11 @@ button {
   border: 1px solid #e4eaf0;
   border-radius: 8px;
   color: var(--teal-dark);
+}
+
+.operation-icon svg {
+  width: 21px;
+  height: 21px;
 }
 
 .operation-row strong,
