@@ -172,14 +172,14 @@
             <span class="notification-dot"></span>
           </button>
           <button class="topbar-icon" type="button" aria-label="Ayuda"><i data-lucide="circle-help"></i></button>
-          <div class="user-chip">
+          <button class="user-chip" id="profileButton" type="button" aria-label="Menu de perfil" aria-expanded="false">
             <span class="user-avatar"><i data-lucide="user"></i></span>
             <div>
-              <strong>Administrador</strong>
+              <strong id="profileName">Administrador</strong>
               <span id="welcomeText">Sesion iniciada</span>
             </div>
-          </div>
-          <button class="logout-link" id="logoutButton" type="button">Salir</button>
+            <i class="profile-chevron" data-lucide="chevron-down"></i>
+          </button>
           <div class="notification-panel" id="notificationPanel" hidden>
             <div class="notification-heading">
               <strong>Notificaciones</strong>
@@ -211,6 +211,55 @@
                 </div>
               </article>
             </div>
+          </div>
+          <div class="profile-menu" id="profileMenu" hidden>
+            <div class="profile-card-head">
+              <span class="profile-card-avatar"><i data-lucide="user"></i></span>
+              <div>
+                <strong id="profileMenuName">Administrador</strong>
+                <span id="profileMenuRole">Administrador</span>
+                <small><span class="online-dot"></span>Online</small>
+              </div>
+            </div>
+
+            <div class="profile-menu-list">
+              <button type="button">
+                <i data-lucide="user-round"></i>
+                <span><strong>Mi Perfil</strong><small>Ver y editar informacion personal</small></span>
+              </button>
+              <button type="button">
+                <i data-lucide="shield-check"></i>
+                <span><strong>Seguridad</strong><small>Contrasena y sesiones activas</small></span>
+              </button>
+              <button type="button">
+                <i data-lucide="bell"></i>
+                <span><strong>Notificaciones</strong><small>Alertas y mensajes del sistema</small></span>
+                <em>3</em>
+              </button>
+              <button type="button">
+                <i data-lucide="wand-sparkles"></i>
+                <span><strong>Apariencia</strong><small>Personaliza tu experiencia</small></span>
+              </button>
+              <button type="button">
+                <i data-lucide="settings"></i>
+                <span><strong>Configuracion</strong><small>Usuarios, permisos y modulos</small></span>
+              </button>
+            </div>
+
+            <div class="profile-activity">
+              <div>
+                <strong>Actividad reciente</strong>
+                <a href="#">Ver todo</a>
+              </div>
+              <p><span></span>Registro pasajeros en Olympic<br><small>Hoy, 09:45</small></p>
+              <p><span></span>Actualizo consumo de diesel<br><small>Hoy, 08:30</small></p>
+              <p><span></span>Exporto reporte de operaciones<br><small>Ayer, 18:20</small></p>
+            </div>
+
+            <button class="profile-logout" id="logoutButton" type="button">
+              <i data-lucide="log-out"></i>
+              <span><strong>Cerrar sesion</strong><small>Salir del sistema</small></span>
+            </button>
           </div>
         </div>
       </header>

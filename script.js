@@ -17,6 +17,11 @@ const pageViews = document.querySelectorAll(".page-view");
 const topbarTitle = document.querySelector(".topbar-title h2");
 const notificationButton = document.querySelector("#notificationButton");
 const notificationPanel = document.querySelector("#notificationPanel");
+const profileButton = document.querySelector("#profileButton");
+const profileMenu = document.querySelector("#profileMenu");
+const profileName = document.querySelector("#profileName");
+const profileMenuName = document.querySelector("#profileMenuName");
+const profileMenuRole = document.querySelector("#profileMenuRole");
 
 const passengerRefs = {
   date: document.querySelector("#passengerDate"),
@@ -103,13 +108,18 @@ function getSession() {
 function showDashboard(session) {
   authPage.hidden = true;
   dashboardPage.hidden = false;
-  welcomeText.textContent = `${session.name} · ${session.role}`;
   setPage("dashboard");
+  welcomeText.textContent = session.role;
+  profileName.textContent = session.name;
+  profileMenuName.textContent = session.name;
+  profileMenuRole.textContent = session.role === "Administrador" ? "Administrador General" : session.role;
   renderIcons();
 }
 
 function showLogin() {
   sessionStorage.removeItem(SESSION_KEY);
+  closeNotificationPanel();
+  closeProfileMenu();
   dashboardPage.hidden = true;
   authPage.hidden = false;
   passwordInput.value = "";
@@ -128,6 +138,20 @@ function renderIcons() {
   }
 }
 
+function closeNotificationPanel() {
+  if (notificationPanel && notificationButton) {
+    notificationPanel.hidden = true;
+    notificationButton.setAttribute("aria-expanded", "false");
+  }
+}
+
+function closeProfileMenu() {
+  if (profileMenu && profileButton) {
+    profileMenu.hidden = true;
+    profileButton.setAttribute("aria-expanded", "false");
+  }
+}
+
 function setPage(pageName) {
   pageViews.forEach((view) => {
     const isActive = view.dataset.view === pageName;
@@ -143,10 +167,8 @@ function setPage(pageName) {
     topbarTitle.textContent = pageName === "passengers" ? "Pasajeros" : "Dashboard";
   }
 
-  if (notificationPanel && notificationButton) {
-    notificationPanel.hidden = true;
-    notificationButton.setAttribute("aria-expanded", "false");
-  }
+  closeNotificationPanel();
+  closeProfileMenu();
 
   renderIcons();
 }
@@ -310,6 +332,7 @@ navItems.forEach((item) => {
 if (notificationButton && notificationPanel) {
   notificationButton.addEventListener("click", (event) => {
     event.stopPropagation();
+    closeProfileMenu();
     notificationPanel.hidden = !notificationPanel.hidden;
     notificationButton.setAttribute("aria-expanded", String(!notificationPanel.hidden));
     renderIcons();
@@ -317,8 +340,27 @@ if (notificationButton && notificationPanel) {
 
   document.addEventListener("click", (event) => {
     if (!notificationPanel.hidden && !notificationPanel.contains(event.target) && !notificationButton.contains(event.target)) {
-      notificationPanel.hidden = true;
-      notificationButton.setAttribute("aria-expanded", "false");
+      closeNotificationPanel();
+    }
+  });
+}
+
+if (profileButton && profileMenu) {
+  profileButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    closeNotificationPanel();
+    profileMenu.hidden = !profileMenu.hidden;
+    profileButton.setAttribute("aria-expanded", String(!profileMenu.hidden));
+    renderIcons();
+  });
+
+  profileMenu.addEventListener("click", (event) => {
+    event.stopPropagation();
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!profileMenu.hidden && !profileMenu.contains(event.target) && !profileButton.contains(event.target)) {
+      closeProfileMenu();
     }
   });
 }
@@ -328,6 +370,7 @@ passengerRefs.clear?.addEventListener("click", clearPassengerForm);
 passengerRefs.new?.addEventListener("click", clearPassengerForm);
 passengerRefs.save?.addEventListener("click", () => {
   if (notificationPanel && notificationButton) {
+    closeProfileMenu();
     notificationPanel.hidden = false;
     notificationButton.setAttribute("aria-expanded", "true");
   }
