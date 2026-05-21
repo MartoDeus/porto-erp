@@ -119,7 +119,7 @@
       </div>
 
       <nav class="sidebar-nav">
-        <a class="nav-item active" href="#">
+        <a class="nav-item active" href="#" data-page="dashboard">
           <i class="nav-icon" data-lucide="layout-dashboard"></i>
           Dashboard
         </a>
@@ -139,8 +139,8 @@
         </a>
         <a class="nav-item priority" href="#"><i class="nav-icon" data-lucide="paint-bucket"></i>Agua Tratada</a>
         <a class="nav-item priority" href="#"><i class="nav-icon" data-lucide="glass-water"></i>Agua de Consumo</a>
-        <a class="nav-item priority" href="#"><i class="nav-icon" data-lucide="shield-check"></i>Buceo</a>
-        <a class="nav-item" href="#"><i class="nav-icon" data-lucide="users"></i>Pasajeros</a>
+        <a class="nav-item priority" href="#"><i class="nav-icon" data-lucide="rectangle-goggles"></i>Buceo</a>
+        <a class="nav-item" href="#" data-page="passengers"><i class="nav-icon" data-lucide="users"></i>Pasajeros</a>
         <a class="nav-item" href="#"><i class="nav-icon" data-lucide="timer"></i>Horometros</a>
         <a class="nav-item" href="#"><i class="nav-icon" data-lucide="container"></i>Cargas</a>
 
@@ -167,20 +167,56 @@
         </div>
 
         <div class="topbar-actions">
-          <button class="topbar-icon" type="button" aria-label="Notificaciones"><i data-lucide="bell"></i></button>
+          <button class="topbar-icon notification-button" id="notificationButton" type="button" aria-label="Notificaciones" aria-expanded="false">
+            <i data-lucide="bell"></i>
+            <span class="notification-dot"></span>
+          </button>
           <button class="topbar-icon" type="button" aria-label="Ayuda"><i data-lucide="circle-help"></i></button>
           <div class="user-chip">
-            <span class="user-avatar">A</span>
+            <span class="user-avatar"><i data-lucide="user"></i></span>
             <div>
               <strong>Administrador</strong>
               <span id="welcomeText">Sesion iniciada</span>
             </div>
           </div>
           <button class="logout-link" id="logoutButton" type="button">Salir</button>
+          <div class="notification-panel" id="notificationPanel" hidden>
+            <div class="notification-heading">
+              <strong>Notificaciones</strong>
+              <span>3 nuevas</span>
+            </div>
+            <div class="notification-list">
+              <article class="notification-item unread">
+                <i data-lucide="fuel"></i>
+                <div>
+                  <strong>Diesel bajo seguimiento</strong>
+                  <p>Se registro una variacion mayor al 8% en el inventario operativo.</p>
+                  <span>Hace 8 min</span>
+                </div>
+              </article>
+              <article class="notification-item unread">
+                <i data-lucide="users"></i>
+                <div>
+                  <strong>Nuevo registro de pasajeros</strong>
+                  <p>Hay movimientos pendientes de validacion para la nave Olympic.</p>
+                  <span>Hace 22 min</span>
+                </div>
+              </article>
+              <article class="notification-item">
+                <i data-lucide="triangle-alert"></i>
+                <div>
+                  <strong>Agua de consumo</strong>
+                  <p>El consumo diario esta por debajo del promedio esperado.</p>
+                  <span>Hace 1 h</span>
+                </div>
+              </article>
+            </div>
+          </div>
         </div>
       </header>
 
       <main class="dashboard-content" aria-label="Dashboard principal">
+        <section class="page-view active" id="dashboardView" data-view="dashboard">
         <section class="dashboard-intro">
           <div>
             <h1>Bienvenido, Administrador</h1>
@@ -283,7 +319,7 @@
                 <em>En progreso</em>
               </div>
               <div class="operation-row">
-                <span class="operation-icon"><i data-lucide="shield-check"></i></span>
+                <span class="operation-icon"><i data-lucide="rectangle-goggles"></i></span>
                 <div><strong>Inspeccion de buceo</strong><small>Zona de maniobras</small></div>
                 <em>Programado</em>
               </div>
@@ -313,6 +349,135 @@
             <strong>5 usuarios</strong>
             <span>Administrador, Analista, Controlador, Supervisor y Visitante</span>
           </article>
+        </section>
+        </section>
+
+        <section class="page-view" id="passengersView" data-view="passengers" hidden>
+          <section class="passenger-header">
+            <div>
+              <h1>Registro de Pasajeros</h1>
+              <p>Registro y control de pasajeros en naves y embarcaciones</p>
+            </div>
+            <div class="passenger-actions">
+              <button class="outline-action" type="button"><i data-lucide="download"></i>Exportar</button>
+              <button class="green-action" type="button" id="newPassengerButton"><i data-lucide="plus"></i>Nuevo Pasajero</button>
+            </div>
+          </section>
+
+          <section class="passenger-layout">
+            <div class="passenger-main">
+              <article class="panel-card passenger-form-card">
+                <h3>Informacion del registro</h3>
+                <div class="passenger-form-grid">
+                  <label>
+                    Fecha <span>*</span>
+                    <div class="field-with-icon">
+                      <input id="passengerDate" type="date" value="2026-05-20">
+                      <i data-lucide="calendar-days"></i>
+                    </div>
+                  </label>
+
+                  <fieldset>
+                    <legend>Movimiento <span>*</span></legend>
+                    <label class="radio-row"><input type="radio" name="movement" value="Saliente">Saliente</label>
+                    <label class="radio-row"><input type="radio" name="movement" value="Entrante" checked>Entrante</label>
+                  </fieldset>
+
+                  <fieldset>
+                    <legend>Tipo de pasajero <span>*</span></legend>
+                    <label class="radio-row"><input type="radio" name="passengerType" value="Pasajero" checked>Pasajero</label>
+                    <label class="radio-row"><input type="radio" name="passengerType" value="Tripulacion">Tripulacion</label>
+                  </fieldset>
+
+                  <label>
+                    Embarcacion <span>*</span>
+                    <select id="vesselSelect">
+                      <option>Olympic</option>
+                      <option>Kelly</option>
+                      <option>Albatros</option>
+                    </select>
+                  </label>
+
+                  <fieldset>
+                    <legend>Turno <span>*</span></legend>
+                    <label class="radio-row"><input type="radio" name="shift" value="Diurno" checked>Diurno</label>
+                    <label class="radio-row"><input type="radio" name="shift" value="Nocturno">Nocturno</label>
+                  </fieldset>
+                </div>
+              </article>
+
+              <article class="panel-card passenger-detail-card">
+                <h3>Detalle de contratistas y rutinas</h3>
+                <div class="entry-form">
+                  <label>
+                    Contratista
+                    <select id="contractorSelect">
+                      <option>PetroPeru</option>
+                      <option>Confipetrol</option>
+                      <option>IMI</option>
+                      <option>IPCO</option>
+                    </select>
+                  </label>
+                  <label>
+                    Rutina
+                    <select id="routineSelect">
+                      <option>MT-LOBITOS</option>
+                      <option>MT-PROVIDENCIA</option>
+                      <option>MT-PLAYA TORTUGA</option>
+                    </select>
+                  </label>
+                  <label>
+                    Cantidad
+                    <input id="quantityInput" type="number" min="1" step="1" placeholder="Cantidad">
+                  </label>
+                </div>
+
+                <div class="passenger-table-wrap">
+                  <table class="passenger-table">
+                    <thead>
+                      <tr>
+                        <th>Contratista</th>
+                        <th>Rutina</th>
+                        <th>Cantidad</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody id="passengerRows"></tbody>
+                  </table>
+                </div>
+              </article>
+            </div>
+
+            <aside class="passenger-side">
+              <article class="side-card button-card">
+                <button class="save-button" type="button" id="savePassengerButton"><i data-lucide="save"></i>Guardar</button>
+                <button class="clear-button" type="button" id="clearPassengerButton"><i data-lucide="eraser"></i>Limpiar</button>
+              </article>
+
+              <article class="side-card">
+                <button class="add-button" type="button" id="addPassengerEntry"><i data-lucide="circle-plus"></i>Agregar</button>
+              </article>
+
+              <article class="side-card summary-card-passenger">
+                <h3>Resumen del registro</h3>
+                <dl>
+                  <div><dt>Fecha:</dt><dd id="summaryDate">20/05/2026</dd></div>
+                  <div><dt>Nave:</dt><dd id="summaryVessel">Olympic</dd></div>
+                  <div><dt>Movimiento:</dt><dd id="summaryMovement">Entrante</dd></div>
+                  <div><dt>Turno:</dt><dd id="summaryShift">Diurno</dd></div>
+                  <div><dt>Total de pasajeros:</dt><dd id="summaryTotal">13</dd></div>
+                </dl>
+              </article>
+            </aside>
+          </section>
+
+          <section class="passenger-stat-grid">
+            <article class="passenger-stat"><i data-lucide="users"></i><div><p>Total pasajeros hoy</p><strong id="statTotalPassengers">156</strong><span>+12.3% vs ayer</span></div></article>
+            <article class="passenger-stat"><i data-lucide="ship"></i><div><p>Embarcados hoy</p><strong>98</strong><span>+8.7% vs ayer</span></div></article>
+            <article class="passenger-stat"><i data-lucide="user-round-check"></i><div><p>Desembarcados hoy</p><strong>58</strong><span>+5.1% vs ayer</span></div></article>
+            <article class="passenger-stat"><i data-lucide="route"></i><div><p>En transito</p><strong>24</strong><span>Actual</span></div></article>
+            <article class="passenger-stat"><i data-lucide="warehouse"></i><div><p>Capacidad total</p><strong>320</strong><span>Por dia</span></div></article>
+          </section>
         </section>
       </main>
     </div>

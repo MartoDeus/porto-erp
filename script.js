@@ -12,8 +12,38 @@ const togglePasswordButton = document.querySelector("#togglePassword");
 const recoverButton = document.querySelector("#recoverButton");
 const logoutButton = document.querySelector("#logoutButton");
 const welcomeText = document.querySelector("#welcomeText");
+const navItems = document.querySelectorAll(".nav-item[data-page]");
+const pageViews = document.querySelectorAll(".page-view");
+const topbarTitle = document.querySelector(".topbar-title h2");
+const notificationButton = document.querySelector("#notificationButton");
+const notificationPanel = document.querySelector("#notificationPanel");
+
+const passengerRefs = {
+  date: document.querySelector("#passengerDate"),
+  vessel: document.querySelector("#vesselSelect"),
+  contractor: document.querySelector("#contractorSelect"),
+  routine: document.querySelector("#routineSelect"),
+  quantity: document.querySelector("#quantityInput"),
+  rows: document.querySelector("#passengerRows"),
+  add: document.querySelector("#addPassengerEntry"),
+  clear: document.querySelector("#clearPassengerButton"),
+  save: document.querySelector("#savePassengerButton"),
+  new: document.querySelector("#newPassengerButton"),
+  summaryDate: document.querySelector("#summaryDate"),
+  summaryVessel: document.querySelector("#summaryVessel"),
+  summaryMovement: document.querySelector("#summaryMovement"),
+  summaryShift: document.querySelector("#summaryShift"),
+  summaryTotal: document.querySelector("#summaryTotal"),
+  statTotalPassengers: document.querySelector("#statTotalPassengers")
+};
 
 let usersCache = [];
+let passengerEntries = [
+  { id: crypto.randomUUID(), contractor: "PetroPeru", routine: "MT-LOBITOS", quantity: 4 },
+  { id: crypto.randomUUID(), contractor: "Confipetrol", routine: "MT-LOBITOS", quantity: 2 },
+  { id: crypto.randomUUID(), contractor: "IMI", routine: "MT-PROVIDENCIA", quantity: 2 },
+  { id: crypto.randomUUID(), contractor: "IPCO", routine: "MT-PLAYA TORTUGA", quantity: 5 }
+];
 
 function setMessage(text, type = "") {
   formMessage.textContent = text;
@@ -74,6 +104,7 @@ function showDashboard(session) {
   authPage.hidden = true;
   dashboardPage.hidden = false;
   welcomeText.textContent = `${session.name} · ${session.role}`;
+  setPage("dashboard");
   renderIcons();
 }
 
@@ -95,6 +126,118 @@ function renderIcons() {
       }
     });
   }
+}
+
+function setPage(pageName) {
+  pageViews.forEach((view) => {
+    const isActive = view.dataset.view === pageName;
+    view.hidden = !isActive;
+    view.classList.toggle("active", isActive);
+  });
+
+  navItems.forEach((item) => {
+    item.classList.toggle("active", item.dataset.page === pageName);
+  });
+
+  if (topbarTitle) {
+    topbarTitle.textContent = pageName === "passengers" ? "Pasajeros" : "Dashboard";
+  }
+
+  if (notificationPanel && notificationButton) {
+    notificationPanel.hidden = true;
+    notificationButton.setAttribute("aria-expanded", "false");
+  }
+
+  renderIcons();
+}
+
+function getCheckedValue(name) {
+  return document.querySelector(`input[name="${name}"]:checked`)?.value || "";
+}
+
+function formatDisplayDate(value) {
+  if (!value) {
+    return "";
+  }
+
+  const [year, month, day] = value.split("-");
+  return `${day}/${month}/${year}`;
+}
+
+function updatePassengerSummary() {
+  if (!passengerRefs.summaryDate) {
+    return;
+  }
+
+  const total = passengerEntries.reduce((sum, entry) => sum + entry.quantity, 0);
+  passengerRefs.summaryDate.textContent = formatDisplayDate(passengerRefs.date.value);
+  passengerRefs.summaryVessel.textContent = passengerRefs.vessel.value;
+  passengerRefs.summaryMovement.textContent = getCheckedValue("movement");
+  passengerRefs.summaryShift.textContent = getCheckedValue("shift");
+  passengerRefs.summaryTotal.textContent = String(total);
+  passengerRefs.statTotalPassengers.textContent = String(143 + total);
+}
+
+function renderPassengerRows() {
+  if (!passengerRefs.rows) {
+    return;
+  }
+
+  passengerRefs.rows.innerHTML = "";
+
+  passengerEntries.forEach((entry) => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${entry.contractor}</td>
+      <td>${entry.routine}</td>
+      <td>${entry.quantity}</td>
+      <td>
+        <button class="delete-row" type="button" data-id="${entry.id}" aria-label="Eliminar registro">
+          <i data-lucide="trash-2"></i>
+        </button>
+      </td>
+    `;
+    passengerRefs.rows.appendChild(row);
+  });
+
+  passengerRefs.rows.querySelectorAll(".delete-row").forEach((button) => {
+    button.addEventListener("click", () => {
+      passengerEntries = passengerEntries.filter((entry) => entry.id !== button.dataset.id);
+      renderPassengerRows();
+      updatePassengerSummary();
+    });
+  });
+
+  renderIcons();
+}
+
+function addPassengerEntry() {
+  const quantity = Number(passengerRefs.quantity.value);
+
+  if (!Number.isFinite(quantity) || quantity <= 0) {
+    passengerRefs.quantity.focus();
+    return;
+  }
+
+  passengerEntries.push({
+    id: crypto.randomUUID(),
+    contractor: passengerRefs.contractor.value,
+    routine: passengerRefs.routine.value,
+    quantity
+  });
+
+  passengerRefs.quantity.value = "";
+  renderPassengerRows();
+  updatePassengerSummary();
+}
+
+function clearPassengerForm() {
+  passengerEntries = [];
+  passengerRefs.quantity.value = "";
+  passengerRefs.contractor.value = "PetroPeru";
+  passengerRefs.routine.value = "MT-LOBITOS";
+  renderPassengerRows();
+  updatePassengerSummary();
 }
 
 async function authenticate(username, password) {
@@ -157,6 +300,47 @@ recoverButton.addEventListener("click", () => {
 
 logoutButton.addEventListener("click", showLogin);
 
+navItems.forEach((item) => {
+  item.addEventListener("click", (event) => {
+    event.preventDefault();
+    setPage(item.dataset.page);
+  });
+});
+
+if (notificationButton && notificationPanel) {
+  notificationButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    notificationPanel.hidden = !notificationPanel.hidden;
+    notificationButton.setAttribute("aria-expanded", String(!notificationPanel.hidden));
+    renderIcons();
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!notificationPanel.hidden && !notificationPanel.contains(event.target) && !notificationButton.contains(event.target)) {
+      notificationPanel.hidden = true;
+      notificationButton.setAttribute("aria-expanded", "false");
+    }
+  });
+}
+
+passengerRefs.add?.addEventListener("click", addPassengerEntry);
+passengerRefs.clear?.addEventListener("click", clearPassengerForm);
+passengerRefs.new?.addEventListener("click", clearPassengerForm);
+passengerRefs.save?.addEventListener("click", () => {
+  if (notificationPanel && notificationButton) {
+    notificationPanel.hidden = false;
+    notificationButton.setAttribute("aria-expanded", "true");
+  }
+});
+
+[
+  passengerRefs.date,
+  passengerRefs.vessel,
+  ...document.querySelectorAll('input[name="movement"], input[name="shift"]')
+].forEach((control) => {
+  control?.addEventListener("change", updatePassengerSummary);
+});
+
 function boot() {
   const rememberedUser = localStorage.getItem(REMEMBER_KEY);
   const session = getSession();
@@ -168,10 +352,14 @@ function boot() {
 
   if (session) {
     showDashboard(session);
+    renderPassengerRows();
+    updatePassengerSummary();
     return;
   }
 
   usernameInput.focus();
+  renderPassengerRows();
+  updatePassengerSummary();
   renderIcons();
 }
 
