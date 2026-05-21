@@ -1,0 +1,9 @@
+node_modules/
+outputs/
+SistemaAlumnosGUI/
+
+.DS_Store
+Thumbs.db
+
+*.log
+*.tmp

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PORTO ERP | Iniciar sesion</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="auth-page" id="authPage">
+    <section class="auth-hero" aria-label="PORTO ERP">
+      <div class="brand-area">
+        <div class="anchor-mark" aria-hidden="true">
+          <svg viewBox="0 0 64 64" role="img">
+            <path d="M32 5a8 8 0 0 0-4 14.9V26h-9v8h9v18.7c-6.7-1.4-12.3-6-14.8-12.2l6.3-1.5-8.9-8.5L2 39.3l6.3 1.4C11.8 51.5 21.5 59 32 59s20.2-7.5 23.7-18.3l6.3-1.4-8.6-8.8-8.9 8.5 6.3 1.5C48.3 46.7 42.7 51.3 36 52.7V34h9v-8h-9v-6.1A8 8 0 0 0 32 5Zm0 5a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z"/>
+          </svg>
+        </div>
+        <div>
+          <h1>PORTO ERP</h1>
+          <p>Gestion integral de tu muelle</p>
+        </div>
+      </div>
+
+      <div class="hero-copy">
+        <p>Solucion ERP para</p>
+        <p>la administracion <strong>eficiente</strong></p>
+        <p>de tu <strong>muelle maritimo</strong></p>
+      </div>
+
+      <ul class="feature-list" aria-label="Capacidades del ERP">
+        <li>
+          <span class="feature-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21h18v-9l-9-7-9 7v9Zm3-2v-6l6-4.7 6 4.7v6h-4v-5h-4v5H6Z"/></svg>
+          </span>
+          Operaciones portuarias
+        </li>
+        <li>
+          <span class="feature-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8h18v11H3V8Zm2 2v7h14v-7H5Zm2-5h10l2 3H5l2-3Zm2.2 2h5.6l-.6-1H9.8l-.6 1Z"/></svg>
+          </span>
+          Control de carga y contenedores
+        </li>
+        <li>
+          <span class="feature-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16v2H2V3h2v16Zm3-2V9h3v8H7Zm5 0V5h3v12h-3Zm5 0v-6h3v6h-3Z"/></svg>
+          </span>
+          Administracion y finanzas
+        </li>
+        <li>
+          <span class="feature-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22a10 10 0 1 1 0-20 10 10 0 0 1 0 20Zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm1-8.4 4.2 2.5-1 1.7L11 12.7V6h2v5.6Z"/></svg>
+          </span>
+          Reportes en tiempo real
+        </li>
+        <li>
+          <span class="feature-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 8 3v6c0 5-3.4 9.7-8 11-4.6-1.3-8-6-8-11V5l8-3Zm0 2.1L6 6.4V11c0 3.9 2.5 7.7 6 8.9 3.5-1.2 6-5 6-8.9V6.4l-6-2.3Zm4.4 5.5-5.1 5.1-2.7-2.7L10 10.6l1.3 1.3L15 8.2l1.4 1.4Z"/></svg>
+          </span>
+          Seguridad y cumplimiento
+        </li>
+      </ul>
+
+      <footer class="auth-footer">
+        <span>© 2026 Porto ERP</span>
+        <span>Todos los derechos reservados.</span>
+      </footer>
+    </section>
+
+    <section class="login-panel" aria-label="Inicio de sesion">
+      <form class="login-card" id="loginForm" novalidate>
+        <div class="login-heading">
+          <h2>Iniciar sesion</h2>
+          <p>Accede a tu cuenta</p>
+        </div>
+
+        <div class="form-field">
+          <label for="username">Usuario o correo electronico</label>
+          <div class="input-wrap">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Zm0 3.3V17h16V8.3l-8 5-8-5Zm1.1-1.3 6.9 4.3L18.9 7H5.1Z"/></svg>
+            <input id="username" name="username" type="text" autocomplete="username" placeholder="usuario@empresa.com" required>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="password">Contrasena</label>
+          <div class="input-wrap">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 9h1a2 2 0 0 1 2 2v9H4v-9a2 2 0 0 1 2-2h1V7a5 5 0 0 1 10 0v2ZM6 11v7h12v-7H6Zm3-2h6V7a3 3 0 0 0-6 0v2Zm4 4v3h-2v-3h2Z"/></svg>
+            <input id="password" name="password" type="password" autocomplete="current-password" placeholder="••••••••••" required>
+            <button class="icon-button" id="togglePassword" type="button" aria-label="Mostrar contrasena">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5c5.5 0 9.5 5.1 9.7 5.3l.6.7-.6.7C21.5 11.9 17.5 17 12 17s-9.5-5.1-9.7-5.3L1.7 11l.6-.7C2.5 10.1 6.5 5 12 5Zm0 2c-3.7 0-6.7 2.9-7.6 4 .9 1.1 3.9 4 7.6 4s6.7-2.9 7.6-4c-.9-1.1-3.9-4-7.6-4Zm0 1.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5Z"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="login-options">
+          <label class="check-row">
+            <input id="rememberMe" name="rememberMe" type="checkbox">
+            <span>Recordarme</span>
+          </label>
+          <button class="link-button" type="button" id="recoverButton">¿Olvidaste tu contrasena?</button>
+        </div>
+
+        <p class="form-message" id="formMessage" role="status" aria-live="polite"></p>
+
+        <button class="primary-button" type="submit">Iniciar sesion</button>
+
+        <div class="login-version">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 9h1a2 2 0 0 1 2 2v9H4v-9a2 2 0 0 1 2-2h1V7a5 5 0 0 1 10 0v2ZM6 11v7h12v-7H6Zm3-2h6V7a3 3 0 0 0-6 0v2Z"/></svg>
+          ERP Muelle v0.1
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <section class="dashboard-page" id="dashboardPage" hidden>
+    <header class="dashboard-header">
+      <div class="dashboard-brand">
+        <div class="mini-anchor" aria-hidden="true"></div>
+        <div>
+          <strong>PORTO ERP</strong>
+          <span id="welcomeText">Sesion iniciada</span>
+        </div>
+      </div>
+      <button class="secondary-button" id="logoutButton" type="button">Cerrar sesion</button>
+    </header>
+
+    <main class="dashboard-shell">
+      <section class="welcome-module">
+        <span>Primer modulo listo</span>
+        <h2>Inicio de sesion funcionando</h2>
+        <p>Desde aqui seguiremos construyendo Diesel, Agua Tratada, Agua de Consumo, Lubricante, Pasajeros, Horometros, Cargas y el Mapa animado.</p>
+      </section>
+    </main>
+  </section>
+
+  <script src="script.js"></script>
+</body>
+</html>
