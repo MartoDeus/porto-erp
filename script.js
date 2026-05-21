@@ -48,6 +48,7 @@ const dieselRefs = {
   receive: document.querySelector("#dieselReceiveSelect"),
   recharge: document.querySelector("#dieselRecharge"),
   consumption: document.querySelector("#dieselConsumption"),
+  returnVolume: document.querySelector("#dieselReturn"),
   difference: document.querySelector("#dieselDifference"),
   qty: document.querySelector("#dieselDispatchQty"),
   voucher: document.querySelector("#dieselDispatchVoucher"),
@@ -55,7 +56,6 @@ const dieselRefs = {
   clear: document.querySelector("#clearDieselButton"),
   save: document.querySelector("#saveDieselButton"),
   rows: document.querySelector("#dieselDispatchRows"),
-  dispatchedTotal: document.querySelector("#dieselDispatchedTotal"),
   summaryVessel: document.querySelector("#dieselSummaryVessel"),
   summaryRecharge: document.querySelector("#dieselSummaryRecharge"),
   summaryDispatched: document.querySelector("#dieselSummaryDispatched"),
@@ -365,7 +365,7 @@ function renderDieselRows() {
       <td>${entry.vessel}</td>
       <td>${formatNumber(entry.quantity)}</td>
       <td>${entry.voucher || "-"}</td>
-      <td>${transfer ? '<span class="type-pill">Transferencia</span>' : "-"}</td>
+      <td><span class="type-pill">${transfer ? "Trans." : "Desp."}</span></td>
       <td>
         <button class="delete-row" type="button" data-id="${entry.id}" aria-label="Eliminar despacho">
           <i data-lucide="trash-2"></i>
@@ -395,23 +395,26 @@ function updateDieselSummary() {
   const initialStock = 7006;
   const recharge = toNumber(dieselRefs.recharge.value);
   const consumption = toNumber(dieselRefs.consumption.value);
-  const difference = toNumber(dieselRefs.difference.value);
+  const returnVolume = toNumber(dieselRefs.returnVolume.value);
+  const differenceValue = toNumber(dieselRefs.difference.value);
+  const sondage = returnVolume > 0 ? returnVolume : -differenceValue;
   const dispatched = dieselDispatches
     .filter((entry) => !isDieselTransfer(origin, entry.vessel))
     .reduce((sum, entry) => sum + entry.quantity, 0);
   const transferred = dieselDispatches
     .filter((entry) => isDieselTransfer(origin, entry.vessel))
     .reduce((sum, entry) => sum + entry.quantity, 0);
-  const finalStock = initialStock + recharge - dispatched - transferred - consumption + difference;
+  const finalStock = initialStock + recharge - dispatched - transferred - consumption + sondage;
 
   dieselRefs.summaryVessel.textContent = origin;
   dieselRefs.summaryRecharge.textContent = formatNumber(recharge);
   dieselRefs.summaryDispatched.textContent = formatNumber(dispatched);
   dieselRefs.summaryTransferred.textContent = formatNumber(transferred);
   dieselRefs.summaryConsumption.textContent = formatNumber(consumption);
-  dieselRefs.summaryDifference.textContent = `${difference >= 0 ? "+" : ""}${formatNumber(difference)}`;
+  dieselRefs.summaryDifference.textContent = `${sondage >= 0 ? "+" : "-"}${formatNumber(Math.abs(sondage))}`;
+  dieselRefs.summaryDifference.classList.toggle("positive", sondage >= 0);
+  dieselRefs.summaryDifference.classList.toggle("negative", sondage < 0);
   dieselRefs.summaryFinal.textContent = formatNumber(finalStock);
-  dieselRefs.dispatchedTotal.textContent = formatNumber(dispatched);
   dieselRefs.statFinal.textContent = formatNumber(finalStock);
   dieselRefs.statRecharge.textContent = formatNumber(recharge);
   dieselRefs.statDispatched.textContent = formatNumber(dispatched);
@@ -443,9 +446,12 @@ function addDieselDispatch() {
 function clearDieselForm() {
   dieselRefs.recharge.value = "0";
   dieselRefs.consumption.value = "0";
+  dieselRefs.returnVolume.value = "";
+  dieselRefs.difference.value = "";
   dieselRefs.qty.value = "";
   dieselRefs.voucher.value = "";
   dieselDispatches = [];
+  updateSondageInputs();
   renderDieselRows();
   updateDieselSummary();
 }
@@ -453,9 +459,31 @@ function clearDieselForm() {
 function updateModuleState(module) {
   const toggle = module.querySelector('.switch input');
   const state = module.querySelector(".module-state");
+  if (!toggle || !state) {
+    return;
+  }
   const isActive = Boolean(toggle?.checked);
   module.classList.toggle("is-blocked", !isActive);
   state.textContent = isActive ? "Activo" : "Bloqueado";
+}
+
+function updateSondageInputs(changedControl = null) {
+  const hasReturn = toNumber(dieselRefs.returnVolume.value) > 0;
+  const hasDifference = toNumber(dieselRefs.difference.value) > 0;
+
+  if (changedControl === dieselRefs.returnVolume && hasReturn) {
+    dieselRefs.difference.value = "";
+  }
+
+  if (changedControl === dieselRefs.difference && hasDifference) {
+    dieselRefs.returnVolume.value = "";
+  }
+
+  dieselRefs.difference.disabled = toNumber(dieselRefs.returnVolume.value) > 0;
+  dieselRefs.returnVolume.disabled = toNumber(dieselRefs.difference.value) > 0;
+  dieselRefs.difference.classList.toggle("negative", toNumber(dieselRefs.difference.value) > 0);
+  dieselRefs.returnVolume.classList.toggle("positive-field", toNumber(dieselRefs.returnVolume.value) > 0);
+  updateDieselSummary();
 }
 
 function bootDiesel() {
@@ -484,9 +512,15 @@ function bootDiesel() {
     }
   });
 
-  [dieselRefs.recharge, dieselRefs.consumption, dieselRefs.difference].forEach((control) => {
+  [dieselRefs.recharge, dieselRefs.consumption].forEach((control) => {
     control?.addEventListener("input", updateDieselSummary);
   });
+
+  [dieselRefs.returnVolume, dieselRefs.difference].forEach((control) => {
+    control?.addEventListener("input", () => updateSondageInputs(control));
+  });
+
+  updateSondageInputs();
 
   dieselRefs.observation?.addEventListener("input", () => {
     dieselRefs.observationCount.textContent = String(dieselRefs.observation.value.length);

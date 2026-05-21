@@ -613,7 +613,7 @@
                 <div class="diesel-module-head"><h3>Acta Sondaje</h3><span class="module-state">Activo</span><label class="switch"><input type="checkbox" checked><b></b></label></div>
                 <label>N Documento<input id="dieselDocument" type="text" value="005"></label>
                 <label>Reingreso (gal)<input id="dieselReturn" type="number" min="0" value="10"></label>
-                <label>Diferencia (gal)<input id="dieselDifference" class="positive-field" type="text" value="+10" readonly></label>
+                <label>Diferencia (gal)<input id="dieselDifference" type="number" min="0" placeholder="Diferencia"></label>
               </article>
 
               <article class="panel-card diesel-module" data-module="consumo">
@@ -630,7 +630,7 @@
                 <label># Vale<input id="dieselDispatchVoucher" type="text" placeholder="N Vale"></label>
                 <button class="add-square" type="button" id="addDieselDispatch"><i data-lucide="plus"></i></button>
               </div>
-              <div class="passenger-table-wrap">
+              <div class="passenger-table-wrap diesel-table-wrap">
                 <table class="passenger-table diesel-table">
                   <thead>
                     <tr><th>Nave recibe</th><th>Cantidad (gal)</th><th>N Vale</th><th>Tipo</th><th>Accion</th></tr>
@@ -638,7 +638,6 @@
                   <tbody id="dieselDispatchRows"></tbody>
                 </table>
               </div>
-              <strong class="diesel-total">Total despachado: <span id="dieselDispatchedTotal">300</span></strong>
             </article>
 
             <article class="side-card diesel-summary">
@@ -650,14 +649,14 @@
                 <div><dt>Total Despachado (gal):</dt><dd id="dieselSummaryDispatched">300</dd></div>
                 <div><dt>Total Transferido (gal):</dt><dd id="dieselSummaryTransferred">3000</dd></div>
                 <div><dt>Consumo (gal):</dt><dd id="dieselSummaryConsumption">100</dd></div>
-                <div><dt>Diferencia (gal):</dt><dd class="positive" id="dieselSummaryDifference">+10</dd></div>
+                <div><dt>Sondaje (gal):</dt><dd class="positive" id="dieselSummaryDifference">+10</dd></div>
                 <div class="final-stock"><dt>Stock Final (gal):</dt><dd id="dieselSummaryFinal">3716</dd></div>
               </dl>
             </article>
           </section>
 
-          <section class="diesel-observations panel-card diesel-module" data-module="observaciones">
-            <div class="diesel-module-head"><h3>Observaciones</h3><span class="module-state">Activo</span><label class="switch"><input type="checkbox" checked><b></b></label></div>
+          <section class="diesel-observations panel-card diesel-module is-always-active" data-module="observaciones">
+            <div class="diesel-module-head"><h3>Observaciones</h3><span class="module-state">Siempre activo</span></div>
             <textarea id="dieselObservation" maxlength="500">Se observa que hubo un reingreso de 10 galones en la nave Talara</textarea>
             <small><span id="dieselObservationCount">67</span> / 500</small>
           </section>

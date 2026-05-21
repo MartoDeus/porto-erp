@@ -1271,6 +1271,11 @@ button {
   accent-color: var(--teal);
 }
 
+.diesel-register-top .radio-row input {
+  width: 37px;
+  height: 37px;
+}
+
 .entry-form {
   display: grid;
   grid-template-columns: 1fr 1fr 130px;
@@ -1579,6 +1584,18 @@ button {
   font-weight: 800;
 }
 
+.negative {
+  color: #dc2626 !important;
+  background: #fee2e2 !important;
+  font-weight: 800;
+}
+
+.diesel-module input:disabled {
+  color: #94a3b8;
+  background: #f1f5f9;
+  cursor: not-allowed;
+}
+
 .diesel-dispatch {
   min-height: 432px;
 }
@@ -1605,6 +1622,11 @@ button {
   min-width: 560px;
 }
 
+.diesel-table-wrap {
+  max-height: 218px;
+  overflow: auto;
+}
+
 .type-pill {
   display: inline-flex;
   align-items: center;
@@ -1615,13 +1637,6 @@ button {
   background: #ddf5ee;
   font-size: 0.78rem;
   font-weight: 800;
-}
-
-.diesel-total {
-  display: block;
-  margin-top: 16px;
-  color: #1d4ea8;
-  text-align: center;
 }
 
 .diesel-summary {
