@@ -67,13 +67,13 @@ button {
   gap: 18px;
 }
 
-.anchor-mark {
-  width: clamp(54px, 5.2vw, 68px);
-  height: clamp(54px, 5.2vw, 68px);
-  color: var(--teal-bright);
+.brand-logo {
+  width: clamp(76px, 7vw, 96px);
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.28));
 }
 
-.anchor-mark svg,
 .feature-icon svg,
 .input-wrap svg,
 .login-version svg {
@@ -356,13 +356,10 @@ button {
   font-size: 0.9rem;
 }
 
-.mini-anchor {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  background:
-    linear-gradient(135deg, transparent 42%, white 43% 56%, transparent 57%),
-    linear-gradient(135deg, var(--teal), var(--teal-dark));
+.dashboard-logo {
+  width: 46px;
+  height: auto;
+  display: block;
 }
 
 .secondary-button {
@@ -447,9 +444,8 @@ button {
     gap: 24px;
   }
 
-  .anchor-mark {
-    width: 54px;
-    height: 54px;
+  .brand-logo {
+    width: 74px;
   }
 
   .brand-area h1 {
@@ -510,9 +506,8 @@ button {
     gap: 16px;
   }
 
-  .anchor-mark {
-    width: 58px;
-    height: 58px;
+  .brand-logo {
+    width: 68px;
   }
 
   .feature-list {
