@@ -368,10 +368,34 @@ button {
 }
 
 .sidebar-nav {
+  flex: 1;
   min-height: 0;
   display: grid;
+  align-content: start;
   gap: 5px;
-  overflow: hidden;
+  padding-right: 4px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(20, 184, 166, 0.62) rgba(255, 255, 255, 0.06);
+}
+
+.sidebar-nav::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(20, 184, 166, 0.62);
+  border-radius: 999px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(20, 184, 166, 0.82);
 }
 
 .nav-section {
