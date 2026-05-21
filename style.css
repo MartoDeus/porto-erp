@@ -1011,11 +1011,6 @@ button {
   font-weight: 700;
 }
 
-.passenger-form-grid label span,
-.passenger-form-grid legend span {
-  color: #dc2626;
-}
-
 .passenger-form-grid input,
 .passenger-form-grid select,
 .entry-form input,
