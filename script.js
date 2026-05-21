@@ -103,7 +103,7 @@ loginForm.addEventListener("submit", async (event) => {
   const password = passwordInput.value;
 
   if (!username || !password) {
-    setMessage("Ingresa tu usuario y contrasena para continuar.", "error");
+    setMessage("Ingresa tu usuario y contraseña para continuar.", "error");
     return;
   }
 
@@ -115,7 +115,7 @@ loginForm.addEventListener("submit", async (event) => {
     const user = await authenticate(username, password);
 
     if (!user) {
-      setMessage("Usuario o contrasena incorrectos.", "error");
+      setMessage("Usuario o contraseña incorrectos.", "error");
       passwordInput.select();
       return;
     }
@@ -136,7 +136,7 @@ loginForm.addEventListener("submit", async (event) => {
 togglePasswordButton.addEventListener("click", () => {
   const isHidden = passwordInput.type === "password";
   passwordInput.type = isHidden ? "text" : "password";
-  togglePasswordButton.setAttribute("aria-label", isHidden ? "Ocultar contrasena" : "Mostrar contrasena");
+  togglePasswordButton.setAttribute("aria-label", isHidden ? "Ocultar contraseña" : "Mostrar contraseña");
 });
 
 recoverButton.addEventListener("click", () => {

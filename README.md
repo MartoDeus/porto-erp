@@ -1,4 +1,4 @@
-# PORTO ERP
+# ALM ERP
 
 ERP web para administrar recursos operativos de muelle maritimo.
 
@@ -31,12 +31,12 @@ http://127.0.0.1:4173/
 
 ```txt
 Usuario: admin
-Contrasena: admin123
+Contraseña: admin123
 ```
 
 ```txt
 Usuario: operaciones
-Contrasena: muelle2026
+Contraseña: muelle2026
 ```
 
 ## Proximos modulos
