@@ -373,34 +373,6 @@ button {
   padding: clamp(24px, 5vw, 60px);
 }
 
-.welcome-module {
-  max-width: 860px;
-  padding: clamp(28px, 4vw, 46px);
-  background: white;
-  border: 1px solid #e4eaf0;
-  border-radius: 12px;
-  box-shadow: 0 16px 40px rgba(17, 28, 43, 0.08);
-}
-
-.welcome-module span {
-  color: var(--teal-dark);
-  font-weight: 800;
-  text-transform: uppercase;
-  font-size: 0.78rem;
-}
-
-.welcome-module h2 {
-  margin: 12px 0 10px;
-  font-size: clamp(1.8rem, 3vw, 2.6rem);
-}
-
-.welcome-module p {
-  max-width: 680px;
-  margin: 0;
-  color: var(--muted);
-  line-height: 1.7;
-}
-
 @media (max-width: 980px) {
   body {
     overflow: auto;
