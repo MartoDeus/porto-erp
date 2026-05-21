@@ -437,6 +437,14 @@ button {
   flex: 0 0 24px;
 }
 
+.custom-nav-icon {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .dashboard-workspace {
   min-width: 0;
   height: 100vh;
