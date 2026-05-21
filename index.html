@@ -112,18 +112,202 @@
   </main>
 
   <section class="dashboard-page" id="dashboardPage" hidden>
-    <header class="dashboard-header">
-      <div class="dashboard-brand">
-        <img class="dashboard-logo" src="assets/alm_logo.png" alt="ALM">
-        <div>
-          <strong>ALM ERP</strong>
-          <span id="welcomeText">Sesion iniciada</span>
-        </div>
+    <aside class="app-sidebar" aria-label="Menu principal">
+      <div class="sidebar-brand">
+        <img src="assets/alm_logo.png" alt="ALM">
+        <strong>ALM ERP</strong>
       </div>
-      <button class="secondary-button" id="logoutButton" type="button">Cerrar sesion</button>
-    </header>
 
-    <main class="dashboard-shell dashboard-shell-empty" aria-label="Pantalla principal"></main>
+      <nav class="sidebar-nav">
+        <a class="nav-item active" href="#">
+          <span class="nav-icon">⌂</span>
+          Dashboard
+        </a>
+
+        <p class="nav-section">Operaciones</p>
+        <a class="nav-item" href="#"><span class="nav-icon">▣</span>Recursos</a>
+        <a class="nav-item priority" href="#"><span class="nav-icon">▰</span>Diesel</a>
+        <a class="nav-item priority" href="#"><span class="nav-icon">▥</span>Lubricante</a>
+        <a class="nav-item priority" href="#"><span class="nav-icon">◒</span>Agua Tratada</a>
+        <a class="nav-item priority" href="#"><span class="nav-icon">◌</span>Agua de Consumo</a>
+        <a class="nav-item priority" href="#"><span class="nav-icon">◈</span>Buceo</a>
+        <a class="nav-item" href="#"><span class="nav-icon">☷</span>Pasajeros</a>
+        <a class="nav-item" href="#"><span class="nav-icon">◷</span>Horometros</a>
+        <a class="nav-item" href="#"><span class="nav-icon">▤</span>Cargas</a>
+
+        <p class="nav-section">Navegacion</p>
+        <a class="nav-item" href="#"><span class="nav-icon">◇</span>Mapa</a>
+        <a class="nav-item" href="#"><span class="nav-icon">△</span>Naves</a>
+        <a class="nav-item" href="#"><span class="nav-icon">↔</span>Rutas</a>
+
+        <p class="nav-section">Reportes</p>
+        <a class="nav-item" href="#"><span class="nav-icon">☰</span>Reportes</a>
+        <a class="nav-item" href="#"><span class="nav-icon">◴</span>Historial</a>
+
+        <p class="nav-section">Configuracion</p>
+        <a class="nav-item" href="#"><span class="nav-icon">♙</span>Usuarios</a>
+        <a class="nav-item" href="#"><span class="nav-icon">⚙</span>Ajustes</a>
+      </nav>
+    </aside>
+
+    <div class="dashboard-workspace">
+      <header class="app-topbar">
+        <div class="topbar-title">
+          <button class="menu-button" type="button" aria-label="Menu">☰</button>
+          <h2>Dashboard</h2>
+        </div>
+
+        <div class="topbar-actions">
+          <button class="topbar-icon" type="button" aria-label="Notificaciones">○</button>
+          <button class="topbar-icon" type="button" aria-label="Ayuda">?</button>
+          <div class="user-chip">
+            <span class="user-avatar">A</span>
+            <div>
+              <strong>Administrador</strong>
+              <span id="welcomeText">Sesion iniciada</span>
+            </div>
+          </div>
+          <button class="logout-link" id="logoutButton" type="button">Salir</button>
+        </div>
+      </header>
+
+      <main class="dashboard-content" aria-label="Dashboard principal">
+        <section class="dashboard-intro">
+          <div>
+            <h1>Bienvenido, Administrador</h1>
+            <p>Resumen general de operaciones del muelle</p>
+          </div>
+          <div class="date-pill">
+            <span>21 de mayo, 2026</span>
+            <span class="date-icon">□</span>
+          </div>
+        </section>
+
+        <section class="priority-grid" aria-label="Recursos prioritarios">
+          <article class="metric-card diesel">
+            <span class="metric-icon">▰</span>
+            <div>
+              <p>Diesel</p>
+              <strong>12,540 L</strong>
+              <small>Inventario operativo</small>
+              <em>+8.5% vs ayer</em>
+            </div>
+          </article>
+          <article class="metric-card lubricant">
+            <span class="metric-icon">▥</span>
+            <div>
+              <p>Lubricante</p>
+              <strong>1,280 L</strong>
+              <small>Stock disponible</small>
+              <em>+3.1% vs ayer</em>
+            </div>
+          </article>
+          <article class="metric-card treated">
+            <span class="metric-icon">◒</span>
+            <div>
+              <p>Agua Tratada</p>
+              <strong>8,300 L</strong>
+              <small>Produccion del dia</small>
+              <em>+5.2% vs ayer</em>
+            </div>
+          </article>
+          <article class="metric-card consumption">
+            <span class="metric-icon">◌</span>
+            <div>
+              <p>Agua de Consumo</p>
+              <strong>4,250 L</strong>
+              <small>Consumo controlado</small>
+              <em class="danger">-2.1% vs ayer</em>
+            </div>
+          </article>
+          <article class="metric-card diving">
+            <span class="metric-icon">◈</span>
+            <div>
+              <p>Buceo</p>
+              <strong>3 frentes</strong>
+              <small>Operaciones activas</small>
+              <em>+1 frente hoy</em>
+            </div>
+          </article>
+        </section>
+
+        <section class="dashboard-grid">
+          <article class="panel-card chart-panel">
+            <div class="panel-heading">
+              <h3>Consumo de recursos prioritarios</h3>
+              <span>Ultimos 7 dias</span>
+            </div>
+            <div class="chart-legend">
+              <span><i class="dot diesel-dot"></i>Diesel</span>
+              <span><i class="dot lubricant-dot"></i>Lubricante</span>
+              <span><i class="dot treated-dot"></i>Agua Tratada</span>
+              <span><i class="dot consumption-dot"></i>Agua de Consumo</span>
+            </div>
+            <svg class="line-chart" viewBox="0 0 760 260" role="img" aria-label="Grafico de consumo semanal">
+              <g class="chart-grid">
+                <path d="M40 30H730M40 80H730M40 130H730M40 180H730M40 230H730"/>
+              </g>
+              <path class="chart-area" d="M40 185 C130 160 145 148 220 160 S310 60 380 85 S465 175 540 115 S650 95 730 70 L730 230 L40 230 Z"/>
+              <path class="chart-line diesel-line" d="M40 185 C130 160 145 148 220 160 S310 60 380 85 S465 175 540 115 S650 95 730 70"/>
+              <path class="chart-line treated-line" d="M40 215 C120 198 150 176 220 205 S325 155 385 160 S475 190 545 170 S655 140 730 165"/>
+              <path class="chart-line consumption-line" d="M40 228 C120 218 150 210 220 220 S320 200 385 205 S475 215 545 200 S660 190 730 205"/>
+              <path class="chart-line lubricant-line" d="M40 238 C130 232 155 228 220 235 S320 218 390 224 S480 232 550 226 S650 216 730 224"/>
+            </svg>
+            <div class="chart-days">
+              <span>15 May</span><span>16 May</span><span>17 May</span><span>18 May</span><span>19 May</span><span>20 May</span><span>21 May</span>
+            </div>
+          </article>
+
+          <article class="panel-card operations-panel">
+            <div class="panel-heading">
+              <h3>Operaciones activas</h3>
+              <span>En curso</span>
+            </div>
+            <div class="operation-list">
+              <div class="operation-row">
+                <span class="operation-icon">▰</span>
+                <div><strong>Descarga de combustible</strong><small>Muelle 1</small></div>
+                <em>En progreso</em>
+              </div>
+              <div class="operation-row">
+                <span class="operation-icon">◒</span>
+                <div><strong>Control de agua tratada</strong><small>Planta norte</small></div>
+                <em>En progreso</em>
+              </div>
+              <div class="operation-row">
+                <span class="operation-icon">◈</span>
+                <div><strong>Inspeccion de buceo</strong><small>Zona de maniobras</small></div>
+                <em>Programado</em>
+              </div>
+              <div class="operation-row">
+                <span class="operation-icon">▤</span>
+                <div><strong>Carga de contenedores</strong><small>Muelle 2</small></div>
+                <em>En progreso</em>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel-card compact-panel">
+            <h3>Horometros</h3>
+            <p>Total horas operadas</p>
+            <strong>1,245 h</strong>
+            <span>+4.3% vs semana pasada</span>
+          </article>
+          <article class="panel-card compact-panel">
+            <h3>Cargas</h3>
+            <p>Total cargado</p>
+            <strong>2,450 TON</strong>
+            <span>+7.8% vs semana pasada</span>
+          </article>
+          <article class="panel-card compact-panel">
+            <h3>Roles del sistema</h3>
+            <p>Perfiles previstos</p>
+            <strong>5 usuarios</strong>
+            <span>Administrador, Analista, Controlador, Supervisor y Visitante</span>
+          </article>
+        </section>
+      </main>
+    </div>
   </section>
 
   <script src="script.js"></script>
