@@ -126,7 +126,7 @@
 
         <p class="nav-section">Operaciones</p>
         <a class="nav-item" href="#"><i class="nav-icon" data-lucide="boxes"></i>Recursos</a>
-        <a class="nav-item priority" href="#"><i class="nav-icon" data-lucide="cylinder"></i>Diesel</a>
+        <a class="nav-item priority" href="#" data-page="diesel"><i class="nav-icon" data-lucide="cylinder"></i>Diesel</a>
         <a class="nav-item priority" href="#">
           <svg class="nav-icon custom-nav-icon" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M8 6.5h8"/>
@@ -553,6 +553,121 @@
             <article class="passenger-stat"><i data-lucide="user-round-check"></i><div><p>Desembarcados hoy</p><strong>58</strong><span>+5.1% vs ayer</span></div></article>
             <article class="passenger-stat"><i data-lucide="route"></i><div><p>En transito</p><strong>24</strong><span>Actual</span></div></article>
             <article class="passenger-stat"><i data-lucide="warehouse"></i><div><p>Capacidad total</p><strong>320</strong><span>Por dia</span></div></article>
+          </section>
+        </section>
+
+        <section class="page-view" id="dieselView" data-view="diesel" hidden>
+          <section class="passenger-header diesel-header">
+            <div>
+              <h1>Registro de Diesel</h1>
+              <p>Operaciones &gt; Diesel &gt; Registro</p>
+            </div>
+            <div class="passenger-actions">
+              <button class="outline-action" type="button"><i data-lucide="download"></i>Exportar</button>
+              <button class="outline-action" type="button" id="clearDieselButton"><i data-lucide="eraser"></i>Limpiar</button>
+              <button class="green-action" type="button" id="saveDieselButton"><i data-lucide="save"></i>Guardar</button>
+            </div>
+          </section>
+
+          <section class="panel-card diesel-register-top">
+            <label>Fecha
+              <div class="field-with-icon">
+                <input id="dieselDate" type="date" value="2026-05-21">
+                <i data-lucide="calendar-days"></i>
+              </div>
+            </label>
+            <label>Nave Origen
+              <select id="dieselOriginSelect"></select>
+            </label>
+            <fieldset>
+              <legend>Turno</legend>
+              <label class="radio-row"><input type="radio" name="dieselShift" value="Diurno" checked>Diurno</label>
+              <label class="radio-row"><input type="radio" name="dieselShift" value="Nocturno">Nocturno</label>
+            </fieldset>
+            <label>Registrado Por
+              <select id="dieselRegisteredBy">
+                <option>JIMMY PEREZ MORAN</option>
+                <option>MARTIN CHECCO</option>
+                <option>ELIAS SANCHEZ</option>
+              </select>
+            </label>
+          </section>
+
+          <section class="diesel-layout">
+            <div class="diesel-side-forms">
+              <article class="panel-card diesel-module" data-module="recarga">
+                <div class="diesel-module-head"><h3>Recarga</h3><span class="module-state">Activo</span><label class="switch"><input type="checkbox" checked><b></b></label></div>
+                <label>Volumen (gal)<input id="dieselRecharge" type="number" min="0" value="100"></label>
+                <label>N Vale Recarga<input id="dieselRechargeVoucher" type="text" value="005"></label>
+              </article>
+
+              <article class="panel-card diesel-module" data-module="tripulacion">
+                <div class="diesel-module-head"><h3>Tripulacion</h3><span class="module-state">Activo</span><label class="switch"><input type="checkbox" checked><b></b></label></div>
+                <label>Capitan<input type="text" value="MARTIN CHECCO"></label>
+                <label>Motorista<input type="text" value="ELIAS SANCHEZ"></label>
+              </article>
+            </div>
+
+            <div class="diesel-side-forms">
+              <article class="panel-card diesel-module" data-module="sondaje">
+                <div class="diesel-module-head"><h3>Acta Sondaje</h3><span class="module-state">Activo</span><label class="switch"><input type="checkbox" checked><b></b></label></div>
+                <label>N Documento<input id="dieselDocument" type="text" value="005"></label>
+                <label>Reingreso (gal)<input id="dieselReturn" type="number" min="0" value="10"></label>
+                <label>Diferencia (gal)<input id="dieselDifference" class="positive-field" type="text" value="+10" readonly></label>
+              </article>
+
+              <article class="panel-card diesel-module" data-module="consumo">
+                <div class="diesel-module-head"><h3>Consumo</h3><span class="module-state">Activo</span><label class="switch"><input type="checkbox" checked><b></b></label></div>
+                <label>Volumen (gal)<input id="dieselConsumption" type="number" min="0" value="100"></label>
+              </article>
+            </div>
+
+            <article class="panel-card diesel-module diesel-dispatch" data-module="despacho">
+              <div class="diesel-module-head"><h3>Despacho</h3><span class="module-state">Activo</span><label class="switch"><input type="checkbox" checked><b></b></label></div>
+              <div class="diesel-entry-form">
+                <label>Nave Recibe<select id="dieselReceiveSelect"></select></label>
+                <label>Cantidad (gal)<input id="dieselDispatchQty" type="number" min="1" placeholder="Cantidad"></label>
+                <label># Vale<input id="dieselDispatchVoucher" type="text" placeholder="N Vale"></label>
+                <button class="add-square" type="button" id="addDieselDispatch"><i data-lucide="plus"></i></button>
+              </div>
+              <div class="passenger-table-wrap">
+                <table class="passenger-table diesel-table">
+                  <thead>
+                    <tr><th>Nave recibe</th><th>Cantidad (gal)</th><th>N Vale</th><th>Tipo</th><th>Accion</th></tr>
+                  </thead>
+                  <tbody id="dieselDispatchRows"></tbody>
+                </table>
+              </div>
+              <strong class="diesel-total">Total despachado: <span id="dieselDispatchedTotal">300</span></strong>
+            </article>
+
+            <article class="side-card diesel-summary">
+              <h3>Resumen <i data-lucide="fuel"></i></h3>
+              <dl>
+                <div><dt>Nave:</dt><dd id="dieselSummaryVessel">TALARA</dd></div>
+                <div><dt>Stock Inicial (gal):</dt><dd id="dieselSummaryInitial">7006</dd></div>
+                <div><dt>Recarga (gal):</dt><dd id="dieselSummaryRecharge">100</dd></div>
+                <div><dt>Total Despachado (gal):</dt><dd id="dieselSummaryDispatched">300</dd></div>
+                <div><dt>Total Transferido (gal):</dt><dd id="dieselSummaryTransferred">3000</dd></div>
+                <div><dt>Consumo (gal):</dt><dd id="dieselSummaryConsumption">100</dd></div>
+                <div><dt>Diferencia (gal):</dt><dd class="positive" id="dieselSummaryDifference">+10</dd></div>
+                <div class="final-stock"><dt>Stock Final (gal):</dt><dd id="dieselSummaryFinal">3716</dd></div>
+              </dl>
+            </article>
+          </section>
+
+          <section class="diesel-observations panel-card diesel-module" data-module="observaciones">
+            <div class="diesel-module-head"><h3>Observaciones</h3><span class="module-state">Activo</span><label class="switch"><input type="checkbox" checked><b></b></label></div>
+            <textarea id="dieselObservation" maxlength="500">Se observa que hubo un reingreso de 10 galones en la nave Talara</textarea>
+            <small><span id="dieselObservationCount">67</span> / 500</small>
+          </section>
+
+          <section class="passenger-stat-grid diesel-stat-grid">
+            <article class="passenger-stat"><i data-lucide="fuel"></i><div><p>Stock total actual</p><strong><span id="dieselStatFinal">3,716</span> gal</strong><span>+5.2% vs ayer</span></div></article>
+            <article class="passenger-stat"><i data-lucide="download"></i><div><p>Total recargado hoy</p><strong><span id="dieselStatRecharge">100</span> gal</strong><span>+8.3% vs ayer</span></div></article>
+            <article class="passenger-stat"><i data-lucide="upload"></i><div><p>Total despachado hoy</p><strong><span id="dieselStatDispatched">300</span> gal</strong><span class="danger-text">-4.1% vs ayer</span></div></article>
+            <article class="passenger-stat"><i data-lucide="truck"></i><div><p>Transferencias hoy</p><strong><span id="dieselStatTransferred">3,000</span> gal</strong><span>+12.2% vs ayer</span></div></article>
+            <article class="passenger-stat"><i data-lucide="droplet"></i><div><p>Consumo hoy</p><strong><span id="dieselStatConsumption">100</span> gal</strong><span class="danger-text">-2.1% vs ayer</span></div></article>
           </section>
         </section>
       </main>

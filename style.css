@@ -1437,6 +1437,269 @@ button {
   font-weight: 700;
 }
 
+.diesel-register-top {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(200px, 1fr) minmax(240px, 1.1fr) minmax(220px, 1.3fr);
+  gap: 28px;
+  align-items: end;
+  margin-bottom: 18px;
+}
+
+.diesel-register-top label,
+.diesel-register-top fieldset,
+.diesel-module label,
+.diesel-entry-form label {
+  display: grid;
+  gap: 9px;
+  color: #1f2c44;
+  font-weight: 700;
+}
+
+.diesel-register-top input,
+.diesel-register-top select,
+.diesel-module input,
+.diesel-entry-form input,
+.diesel-entry-form select,
+.diesel-observations textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 14px;
+  color: #1f2c44;
+  background: white;
+  border: 1px solid #d9e1eb;
+  border-radius: 6px;
+  font: inherit;
+}
+
+.diesel-register-top fieldset {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.diesel-layout {
+  display: grid;
+  grid-template-columns: minmax(170px, 0.72fr) minmax(170px, 0.72fr) minmax(430px, 1.65fr) minmax(250px, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.diesel-side-forms {
+  display: grid;
+  gap: 16px;
+}
+
+.diesel-module {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+}
+
+.diesel-module-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.diesel-module-head h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.module-state {
+  color: var(--teal-dark);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.switch {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0 !important;
+}
+
+.switch input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.switch b {
+  width: 38px;
+  height: 20px;
+  position: relative;
+  border-radius: 999px;
+  background: #cbd5e1;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.switch b::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 2px 5px rgba(15, 23, 42, 0.22);
+  transition: transform 0.2s ease;
+}
+
+.switch input:checked + b {
+  background: var(--teal-dark);
+}
+
+.switch input:checked + b::after {
+  transform: translateX(18px);
+}
+
+.diesel-module.is-blocked {
+  background: #f8fafc;
+}
+
+.diesel-module.is-blocked > :not(.diesel-module-head) {
+  opacity: 0.42;
+  pointer-events: none;
+}
+
+.diesel-module.is-blocked .module-state {
+  color: #dc2626;
+}
+
+.positive-field,
+.positive {
+  color: var(--teal-dark) !important;
+  background: #e5f6ef !important;
+  font-weight: 800;
+}
+
+.diesel-dispatch {
+  min-height: 432px;
+}
+
+.diesel-entry-form {
+  display: grid;
+  grid-template-columns: minmax(160px, 1.4fr) minmax(110px, 0.8fr) minmax(100px, 0.7fr) 42px;
+  gap: 14px;
+  align-items: end;
+}
+
+.add-square {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  color: white;
+  background: var(--teal-dark);
+  border: 0;
+  border-radius: 6px;
+}
+
+.diesel-table {
+  min-width: 560px;
+}
+
+.type-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 9px;
+  border-radius: 999px;
+  color: var(--teal-dark);
+  background: #ddf5ee;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.diesel-total {
+  display: block;
+  margin-top: 16px;
+  color: #1d4ea8;
+  text-align: center;
+}
+
+.diesel-summary {
+  min-height: 432px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.diesel-summary h3 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0;
+  padding: 20px;
+  background: linear-gradient(90deg, #e4f7f1, #f6fbfa);
+  border-bottom: 1px solid #dcece8;
+}
+
+.diesel-summary h3 svg {
+  width: 24px;
+  height: 24px;
+  color: var(--teal-dark);
+}
+
+.diesel-summary dl {
+  display: grid;
+  gap: 18px;
+  margin: 0;
+  padding: 20px;
+}
+
+.diesel-summary div {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.diesel-summary dt,
+.diesel-summary dd {
+  margin: 0;
+}
+
+.diesel-summary dd {
+  font-weight: 800;
+}
+
+.final-stock {
+  margin-top: 12px;
+  padding-top: 18px;
+  border-top: 1px solid #e6edf4;
+}
+
+.final-stock dd {
+  color: var(--teal-dark);
+}
+
+.diesel-observations {
+  position: relative;
+  margin-top: 18px;
+}
+
+.diesel-observations textarea {
+  min-height: 70px;
+  padding: 14px;
+  resize: vertical;
+}
+
+.diesel-observations small {
+  justify-self: end;
+  color: var(--muted);
+}
+
+.diesel-stat-grid .passenger-stat:nth-child(2) svg { color: #8468d5; }
+.diesel-stat-grid .passenger-stat:nth-child(3) svg { color: #ff7a1a; }
+.diesel-stat-grid .passenger-stat:nth-child(4) svg { color: #2b79d3; }
+.diesel-stat-grid .passenger-stat:nth-child(5) svg { color: #63a9e8; }
+.danger-text { color: #d92027 !important; }
+
 @media (max-width: 980px) {
   body {
     overflow: auto;
@@ -1508,16 +1771,25 @@ button {
   .priority-grid,
   .dashboard-grid,
   .passenger-layout,
-  .passenger-stat-grid {
+  .passenger-stat-grid,
+  .diesel-register-top,
+  .diesel-layout {
     grid-template-columns: 1fr 1fr;
   }
 
   .passenger-form-grid,
-  .entry-form {
+  .entry-form,
+  .diesel-entry-form {
     grid-template-columns: 1fr;
   }
 
   .passenger-side {
+    grid-column: 1 / -1;
+  }
+
+  .diesel-dispatch,
+  .diesel-summary,
+  .diesel-observations {
     grid-column: 1 / -1;
   }
 }
@@ -1618,7 +1890,9 @@ button {
   .priority-grid,
   .dashboard-grid,
   .passenger-layout,
-  .passenger-stat-grid {
+  .passenger-stat-grid,
+  .diesel-register-top,
+  .diesel-layout {
     grid-template-columns: 1fr;
   }
 

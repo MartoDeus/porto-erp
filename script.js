@@ -42,12 +42,60 @@ const passengerRefs = {
   statTotalPassengers: document.querySelector("#statTotalPassengers")
 };
 
+const dieselRefs = {
+  date: document.querySelector("#dieselDate"),
+  origin: document.querySelector("#dieselOriginSelect"),
+  receive: document.querySelector("#dieselReceiveSelect"),
+  recharge: document.querySelector("#dieselRecharge"),
+  consumption: document.querySelector("#dieselConsumption"),
+  difference: document.querySelector("#dieselDifference"),
+  qty: document.querySelector("#dieselDispatchQty"),
+  voucher: document.querySelector("#dieselDispatchVoucher"),
+  add: document.querySelector("#addDieselDispatch"),
+  clear: document.querySelector("#clearDieselButton"),
+  save: document.querySelector("#saveDieselButton"),
+  rows: document.querySelector("#dieselDispatchRows"),
+  dispatchedTotal: document.querySelector("#dieselDispatchedTotal"),
+  summaryVessel: document.querySelector("#dieselSummaryVessel"),
+  summaryRecharge: document.querySelector("#dieselSummaryRecharge"),
+  summaryDispatched: document.querySelector("#dieselSummaryDispatched"),
+  summaryTransferred: document.querySelector("#dieselSummaryTransferred"),
+  summaryConsumption: document.querySelector("#dieselSummaryConsumption"),
+  summaryDifference: document.querySelector("#dieselSummaryDifference"),
+  summaryFinal: document.querySelector("#dieselSummaryFinal"),
+  statFinal: document.querySelector("#dieselStatFinal"),
+  statRecharge: document.querySelector("#dieselStatRecharge"),
+  statDispatched: document.querySelector("#dieselStatDispatched"),
+  statTransferred: document.querySelector("#dieselStatTransferred"),
+  statConsumption: document.querySelector("#dieselStatConsumption"),
+  observation: document.querySelector("#dieselObservation"),
+  observationCount: document.querySelector("#dieselObservationCount")
+};
+
+const dieselShips = [
+  "TALARA",
+  "PARIÑAS",
+  "SHEYLA",
+  "BUCKLEY EXPRESS",
+  "LOBITOS EXPRESS CARGA",
+  "OLYMPIC",
+  "CABO BLANCO",
+  "NEPTUNE",
+  "LJ KELLEY"
+];
+
 let usersCache = [];
 let passengerEntries = [
   { id: crypto.randomUUID(), contractor: "PetroPeru", routine: "MT-LOBITOS", quantity: 4 },
   { id: crypto.randomUUID(), contractor: "Confipetrol", routine: "MT-LOBITOS", quantity: 2 },
   { id: crypto.randomUUID(), contractor: "IMI", routine: "MT-PROVIDENCIA", quantity: 2 },
   { id: crypto.randomUUID(), contractor: "IPCO", routine: "MT-PLAYA TORTUGA", quantity: 5 }
+];
+let dieselDispatches = [
+  { id: crypto.randomUUID(), vessel: "PARIÑAS", quantity: 1000, voucher: "005" },
+  { id: crypto.randomUUID(), vessel: "SHEYLA", quantity: 100, voucher: "006" },
+  { id: crypto.randomUUID(), vessel: "BUCKLEY EXPRESS", quantity: 200, voucher: "007" },
+  { id: crypto.randomUUID(), vessel: "LOBITOS EXPRESS CARGA", quantity: 2000, voucher: "008" }
 ];
 
 function setMessage(text, type = "") {
@@ -164,7 +212,12 @@ function setPage(pageName) {
   });
 
   if (topbarTitle) {
-    topbarTitle.textContent = pageName === "passengers" ? "Pasajeros" : "Dashboard";
+    const pageTitles = {
+      dashboard: "Dashboard",
+      passengers: "Pasajeros",
+      diesel: "Registro de Diesel"
+    };
+    topbarTitle.textContent = pageTitles[pageName] || "Dashboard";
   }
 
   closeNotificationPanel();
@@ -260,6 +313,184 @@ function clearPassengerForm() {
   passengerRefs.routine.value = "MT-LOBITOS";
   renderPassengerRows();
   updatePassengerSummary();
+}
+
+function toNumber(value) {
+  const numeric = Number(String(value).replace(/[,+]/g, ""));
+  return Number.isFinite(numeric) ? numeric : 0;
+}
+
+function formatNumber(value) {
+  return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(value);
+}
+
+function isDieselTransfer(origin, receive) {
+  return origin === "TALARA" && ["PARIÑAS", "LOBITOS EXPRESS CARGA"].includes(receive);
+}
+
+function populateDieselShips() {
+  if (!dieselRefs.origin || !dieselRefs.receive) {
+    return;
+  }
+
+  if (!dieselRefs.origin.options.length) {
+    dieselShips.forEach((ship) => {
+      dieselRefs.origin.add(new Option(ship, ship));
+    });
+    dieselRefs.origin.value = "TALARA";
+  }
+
+  const selectedReceive = dieselRefs.receive.value;
+  dieselRefs.receive.innerHTML = "";
+  dieselShips
+    .filter((ship) => ship !== dieselRefs.origin.value)
+    .forEach((ship) => dieselRefs.receive.add(new Option(ship, ship)));
+
+  if (selectedReceive && selectedReceive !== dieselRefs.origin.value) {
+    dieselRefs.receive.value = selectedReceive;
+  }
+}
+
+function renderDieselRows() {
+  if (!dieselRefs.rows) {
+    return;
+  }
+
+  dieselRefs.rows.innerHTML = "";
+
+  dieselDispatches.forEach((entry) => {
+    const transfer = isDieselTransfer(dieselRefs.origin.value, entry.vessel);
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${entry.vessel}</td>
+      <td>${formatNumber(entry.quantity)}</td>
+      <td>${entry.voucher || "-"}</td>
+      <td>${transfer ? '<span class="type-pill">Transferencia</span>' : "-"}</td>
+      <td>
+        <button class="delete-row" type="button" data-id="${entry.id}" aria-label="Eliminar despacho">
+          <i data-lucide="trash-2"></i>
+        </button>
+      </td>
+    `;
+    dieselRefs.rows.appendChild(row);
+  });
+
+  dieselRefs.rows.querySelectorAll(".delete-row").forEach((button) => {
+    button.addEventListener("click", () => {
+      dieselDispatches = dieselDispatches.filter((entry) => entry.id !== button.dataset.id);
+      renderDieselRows();
+      updateDieselSummary();
+    });
+  });
+
+  renderIcons();
+}
+
+function updateDieselSummary() {
+  if (!dieselRefs.summaryVessel) {
+    return;
+  }
+
+  const origin = dieselRefs.origin.value;
+  const initialStock = 7006;
+  const recharge = toNumber(dieselRefs.recharge.value);
+  const consumption = toNumber(dieselRefs.consumption.value);
+  const difference = toNumber(dieselRefs.difference.value);
+  const dispatched = dieselDispatches
+    .filter((entry) => !isDieselTransfer(origin, entry.vessel))
+    .reduce((sum, entry) => sum + entry.quantity, 0);
+  const transferred = dieselDispatches
+    .filter((entry) => isDieselTransfer(origin, entry.vessel))
+    .reduce((sum, entry) => sum + entry.quantity, 0);
+  const finalStock = initialStock + recharge - dispatched - transferred - consumption + difference;
+
+  dieselRefs.summaryVessel.textContent = origin;
+  dieselRefs.summaryRecharge.textContent = formatNumber(recharge);
+  dieselRefs.summaryDispatched.textContent = formatNumber(dispatched);
+  dieselRefs.summaryTransferred.textContent = formatNumber(transferred);
+  dieselRefs.summaryConsumption.textContent = formatNumber(consumption);
+  dieselRefs.summaryDifference.textContent = `${difference >= 0 ? "+" : ""}${formatNumber(difference)}`;
+  dieselRefs.summaryFinal.textContent = formatNumber(finalStock);
+  dieselRefs.dispatchedTotal.textContent = formatNumber(dispatched);
+  dieselRefs.statFinal.textContent = formatNumber(finalStock);
+  dieselRefs.statRecharge.textContent = formatNumber(recharge);
+  dieselRefs.statDispatched.textContent = formatNumber(dispatched);
+  dieselRefs.statTransferred.textContent = formatNumber(transferred);
+  dieselRefs.statConsumption.textContent = formatNumber(consumption);
+}
+
+function addDieselDispatch() {
+  const quantity = toNumber(dieselRefs.qty.value);
+
+  if (!dieselRefs.receive.value || quantity <= 0) {
+    dieselRefs.qty.focus();
+    return;
+  }
+
+  dieselDispatches.push({
+    id: crypto.randomUUID(),
+    vessel: dieselRefs.receive.value,
+    quantity,
+    voucher: dieselRefs.voucher.value.trim()
+  });
+
+  dieselRefs.qty.value = "";
+  dieselRefs.voucher.value = "";
+  renderDieselRows();
+  updateDieselSummary();
+}
+
+function clearDieselForm() {
+  dieselRefs.recharge.value = "0";
+  dieselRefs.consumption.value = "0";
+  dieselRefs.qty.value = "";
+  dieselRefs.voucher.value = "";
+  dieselDispatches = [];
+  renderDieselRows();
+  updateDieselSummary();
+}
+
+function updateModuleState(module) {
+  const toggle = module.querySelector('.switch input');
+  const state = module.querySelector(".module-state");
+  const isActive = Boolean(toggle?.checked);
+  module.classList.toggle("is-blocked", !isActive);
+  state.textContent = isActive ? "Activo" : "Bloqueado";
+}
+
+function bootDiesel() {
+  populateDieselShips();
+  renderDieselRows();
+  updateDieselSummary();
+
+  document.querySelectorAll(".diesel-module").forEach((module) => {
+    const toggle = module.querySelector('.switch input');
+    updateModuleState(module);
+    toggle?.addEventListener("change", () => updateModuleState(module));
+  });
+
+  dieselRefs.origin?.addEventListener("change", () => {
+    populateDieselShips();
+    renderDieselRows();
+    updateDieselSummary();
+  });
+  dieselRefs.add?.addEventListener("click", addDieselDispatch);
+  dieselRefs.clear?.addEventListener("click", clearDieselForm);
+  dieselRefs.save?.addEventListener("click", () => {
+    if (notificationPanel && notificationButton) {
+      closeProfileMenu();
+      notificationPanel.hidden = false;
+      notificationButton.setAttribute("aria-expanded", "true");
+    }
+  });
+
+  [dieselRefs.recharge, dieselRefs.consumption, dieselRefs.difference].forEach((control) => {
+    control?.addEventListener("input", updateDieselSummary);
+  });
+
+  dieselRefs.observation?.addEventListener("input", () => {
+    dieselRefs.observationCount.textContent = String(dieselRefs.observation.value.length);
+  });
 }
 
 async function authenticate(username, password) {
@@ -394,6 +625,7 @@ function boot() {
   }
 
   if (session) {
+    bootDiesel();
     showDashboard(session);
     renderPassengerRows();
     updatePassengerSummary();
@@ -401,6 +633,7 @@ function boot() {
   }
 
   usernameInput.focus();
+  bootDiesel();
   renderPassengerRows();
   updatePassengerSummary();
   renderIcons();
