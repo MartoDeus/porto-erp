@@ -1983,9 +1983,17 @@ button {
 .consult-kardex-table td:nth-child(14),
 .consult-kardex-table th:nth-child(13),
 .consult-kardex-table th:nth-child(14) {
-  min-width: 190px;
+  width: 148px;
+  min-width: 148px;
   font-size: 0.7rem;
   font-weight: 800;
+}
+
+.consult-kardex-table th:nth-child(16),
+.consult-kardex-table td:nth-child(16),
+.consult-kardex-table th:nth-child(17),
+.consult-kardex-table td:nth-child(17) {
+  width: 68px;
 }
 
 .consult-kardex-table tfoot td {
