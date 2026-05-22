@@ -2061,6 +2061,16 @@ button {
   font-weight: 900;
 }
 
+.crew-lines {
+  display: inline-block;
+  line-height: 1.35;
+  text-align: left;
+}
+
+.crew-lines b {
+  color: var(--teal-dark);
+}
+
 .table-icon {
   width: 28px;
   height: 28px;

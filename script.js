@@ -725,6 +725,11 @@ function renderDieselConsult() {
       return sum;
     }, { initialStock: 0, received: 0, day: 0, night: 0, consumption: 0, dispatched: 0, transferred: 0, finalStock: 0 });
 
+    const formatCrew = (crew) => {
+      const [captain = "-", driver = "-"] = String(crew || "-").split("/").map((value) => value.trim());
+      return `<span class="crew-lines"><b>CAP:</b> ${captain}<br><b>MOT:</b> ${driver}</span>`;
+    };
+
     const rows = units.map((unit) => {
       const day = selectedShift === "B" ? 0 : unit.day;
       const night = selectedShift === "A" ? 0 : unit.night;
@@ -744,8 +749,8 @@ function renderDieselConsult() {
           <td>${unit.transferred ? formatNumber(unit.transferred) : "-"}</td>
           <td>0</td>
           <td>${formatNumber(finalStock)}</td>
-          <td>${unit.dayCrew}</td>
-          <td>${unit.nightCrew}</td>
+          <td>${formatCrew(unit.dayCrew)}</td>
+          <td>${formatCrew(unit.nightCrew)}</td>
           <td>${unit.type}</td>
           <td><button class="table-icon edit" type="button" aria-label="Editar ${unit.ship}"><i data-lucide="pencil"></i></button></td>
           <td><button class="table-icon delete" type="button" aria-label="Eliminar ${unit.ship}"><i data-lucide="trash-2"></i></button></td>
