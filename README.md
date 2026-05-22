@@ -33,6 +33,14 @@ La opcion elegida para crecer es:
 Supabase + PostgreSQL
 ```
 
+Proyecto Supabase creado:
+
+```txt
+Organizacion: ALM RecursoS
+Proyecto: alm-erp
+URL: https://hkkgyjkwkezsomjmwnen.supabase.co
+```
+
 Motivos:
 
 - Tiene base de datos relacional real.
@@ -73,6 +81,36 @@ Tablas principales previstas:
 - `diesel_movimientos`
 - `diesel_auditoria`
 - `backups_log`
+
+Migracion inicial creada localmente:
+
+```txt
+supabase/migrations/202605221_initial_schema.sql
+```
+
+Incluye estructura inicial para:
+
+- `roles`
+- `perfiles`
+- `unidades`
+- `turnos`
+- `diesel_kardex`
+- `diesel_movimientos`
+- `horometros`
+- `pasajeros_registros`
+- `recurso_movimientos`
+- `cargas`
+- `rutas`
+- `ruta_puntos`
+- `auditoria`
+- `backups_log`
+
+Estado Supabase:
+
+- Migracion inicial ejecutada en el SQL Editor del proyecto `alm-erp`.
+- RLS activado en tablas principales.
+- Catalogo inicial cargado con 5 roles, 2 turnos y 19 unidades/naves.
+- Las politicas RLS especificas quedan pendientes antes de conectar el frontend.
 
 Regla base de Diesel:
 
