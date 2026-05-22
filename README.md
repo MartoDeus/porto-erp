@@ -311,6 +311,7 @@ data/users.json
 assets/alm_logo.png
 assets/fondo.jpeg
 assets/lucide.min.js
+supabase/migrations/202605221_initial_schema.sql
 ```
 
 ## Flujo de trabajo acordado
@@ -336,22 +337,22 @@ main / root
 C:\Users\User\AppData\Local\GitHubDesktop\app-3.5.8\resources\app\git\cmd\git.exe
 ```
 
-Ultimo commit conocido con la logica Diesel:
+Ultimo commit conocido con la migracion inicial Supabase:
 
 ```txt
-bbc2132 Implement diesel kardex logic
+cf41552 Add initial Supabase schema
 ```
 
 ## Contexto para retomar en otra computadora
 
 Prioridad del proyecto en la siguiente etapa:
 
-1. Disenar el esquema SQL de Supabase/PostgreSQL.
-2. Crear tablas con seguridad y auditoria desde el inicio.
-3. Conectar la web estatica a Supabase sin exponer claves sensibles.
-4. Migrar el guardado Diesel desde `localStorage` hacia Supabase.
-5. Mantener backup local y externo.
-6. Evitar borrado fisico de registros.
+1. Definir y aplicar politicas RLS especificas por rol antes de conectar datos reales.
+2. Conectar la web estatica a Supabase usando solo la anon public key en frontend.
+3. Migrar el guardado Diesel desde `localStorage` hacia Supabase.
+4. Mantener backup local y externo.
+5. Evitar borrado fisico de registros.
+6. Crear historial, reportes y filtros sobre las tablas reales.
 
 La conversacion actual definio que la responsabilidad principal de Codex sera la logica y persistencia de datos, no el diseno visual.
 
@@ -365,6 +366,8 @@ La conversacion actual definio que la responsabilidad principal de Codex sera la
   - Controlador
   - Supervisor
   - Visitante
+- Crear politicas RLS concretas para lectura, escritura, anulacion y auditoria.
+- Conectar frontend con Supabase usando variables/configuracion publica segura.
 - Conectar datos a Google Sheets.
 - Definir modelo de datos JSON/Sheets por modulo.
 - Agregar persistencia real de registros.
@@ -379,7 +382,7 @@ La conversacion actual definio que la responsabilidad principal de Codex sera la
 - Definir formula exacta de stock inicial/final.
 - Definir origen real del stock por nave.
 - Definir reglas completas para transferencia vs despacho.
-- Agregar guardado real del registro.
+- Migrar guardado real del registro a `diesel_kardex` y `diesel_movimientos`.
 - Agregar edicion de filas.
 - Agregar confirmacion antes de eliminar.
 - Agregar historial de diesel.
