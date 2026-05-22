@@ -128,6 +128,13 @@ Incluye:
 
 Logica ya implementada en Diesel:
 
+- Catalogo de 19 unidades para kardex Diesel.
+- Dos turnos diarios por unidad: Diurno y Nocturno.
+- Al iniciar o cambiar fecha se asegura una base de 38 registros por dia.
+- El guardado hace upsert por `fecha + nave + turno`.
+- Se guarda el registro aunque no tenga movimiento, manteniendo stock inicial/final.
+- La estructura guardada separa cabecera, totales, estados de modulos y detalle de despachos/transferencias, similar a una lista Power Apps.
+- Consulta Diesel muestra los 38 registros diarios y marca `Mov.` o `Sin mov.`.
 - Los toggles cambian el estado entre `Activo` y `Bloqueado`.
 - Si se bloquea un modulo, sus campos quedan deshabilitados visualmente.
 - `Nave Recibe` excluye automaticamente la nave seleccionada en `Nave Origen`.
@@ -150,10 +157,20 @@ Naves usadas hasta ahora:
 - SHEYLA
 - BUCKLEY EXPRESS
 - LOBITOS EXPRESS CARGA
+- LOBITOS EXPRESS CONSUMO
 - OLYMPIC
 - CABO BLANCO
 - NEPTUNE
 - LJ KELLEY
+- PENA NEGRA
+- PROVIDENCIA
+- PLAYA TORTUGA
+- BAHIA
+- LITORAL
+- ALBACORA
+- SAN PEDRO
+- PACIFICO
+- MANCORA
 
 ## Estructura de archivos
 

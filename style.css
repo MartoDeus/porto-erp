@@ -845,7 +845,7 @@ button {
 
 .dashboard-content {
   min-height: 0;
-  padding: 28px;
+  padding: 22px 28px;
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -1128,13 +1128,13 @@ button {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 18px;
-  margin-bottom: 28px;
+  gap: 16px;
+  margin-bottom: 25px;
 }
 
 .passenger-header h1 {
-  margin: 0 0 8px;
-  font-size: 1.75rem;
+  margin: 0;
+  font-size: 1.58rem;
 }
 
 .passenger-header p {
@@ -1272,8 +1272,8 @@ button {
 }
 
 .diesel-register-top .radio-row input {
-  width: 37px;
-  height: 37px;
+  width: 33px;
+  height: 33px;
 }
 
 .entry-form {
@@ -1445,9 +1445,10 @@ button {
 .diesel-register-top {
   display: grid;
   grid-template-columns: minmax(180px, 1fr) minmax(200px, 1fr) minmax(240px, 1.1fr) minmax(220px, 1.3fr);
-  gap: 28px;
+  gap: 26px;
   align-items: end;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
+  padding: 18px 24px;
 }
 
 .diesel-register-top label,
@@ -1455,8 +1456,9 @@ button {
 .diesel-module label,
 .diesel-entry-form label {
   display: grid;
-  gap: 9px;
+  gap: 5px;
   color: #1f2c44;
+  font-size: 0.9rem;
   font-weight: 700;
 }
 
@@ -1467,8 +1469,8 @@ button {
 .diesel-entry-form select,
 .diesel-observations textarea {
   width: 100%;
-  min-height: 44px;
-  padding: 0 14px;
+  min-height: 32px;
+  padding: 0 12px;
   color: #1f2c44;
   background: white;
   border: 1px solid #d9e1eb;
@@ -1479,7 +1481,7 @@ button {
 .diesel-register-top fieldset {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 22px;
   margin: 0;
   padding: 0;
   border: 0;
@@ -1487,9 +1489,34 @@ button {
 
 .diesel-layout {
   display: grid;
-  grid-template-columns: minmax(170px, 0.72fr) minmax(170px, 0.72fr) minmax(430px, 1.65fr) minmax(250px, 1fr);
+  grid-template-columns: 405px minmax(0, 1fr);
   gap: 16px;
   align-items: start;
+}
+
+.diesel-left-stack {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.diesel-main-stack {
+  display: grid;
+  grid-template-columns: 643px minmax(260px, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.diesel-pair {
+  display: grid;
+  grid-template-columns: 196px 196px;
+  gap: 13px;
+  align-items: start;
+}
+
+.diesel-right-stack {
+  display: grid;
+  gap: 10px;
 }
 
 .diesel-side-forms {
@@ -1499,26 +1526,51 @@ button {
 
 .diesel-module {
   display: grid;
-  gap: 16px;
-  padding: 20px;
+  gap: 8px;
+  padding: 12px 18px;
+  align-content: start;
+  grid-auto-rows: max-content;
+}
+
+.diesel-left-stack > [data-module="tripulacion"] {
+  width: 405px;
+  min-height: 168px;
+}
+
+.diesel-left-stack > [data-module="consumo"] {
+  width: 196px;
+  min-height: 106px;
+}
+
+.diesel-pair > [data-module="sondaje"],
+.diesel-pair > [data-module="recarga"] {
+  width: 196px;
+  min-height: 238px;
+}
+
+.diesel-pair .diesel-module {
+  gap: 7px;
+  padding: 11px 18px;
+}
+
+.diesel-pair .diesel-module input {
+  min-height: 30px;
 }
 
 .diesel-module-head {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
 }
 
 .diesel-module-head h3 {
   margin: 0;
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
 
 .module-state {
-  color: var(--teal-dark);
-  font-size: 0.78rem;
-  font-weight: 800;
+  display: none;
 }
 
 .switch {
@@ -1534,8 +1586,8 @@ button {
 }
 
 .switch b {
-  width: 38px;
-  height: 20px;
+  width: 34px;
+  height: 18px;
   position: relative;
   border-radius: 999px;
   background: #cbd5e1;
@@ -1548,8 +1600,8 @@ button {
   position: absolute;
   top: 3px;
   left: 3px;
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: white;
   box-shadow: 0 2px 5px rgba(15, 23, 42, 0.22);
@@ -1561,7 +1613,7 @@ button {
 }
 
 .switch input:checked + b::after {
-  transform: translateX(18px);
+  transform: translateX(16px);
 }
 
 .diesel-module.is-blocked {
@@ -1597,19 +1649,21 @@ button {
 }
 
 .diesel-dispatch {
-  min-height: 432px;
+  width: 643px;
+  min-height: 420px;
+  grid-template-rows: auto auto minmax(0, 1fr);
 }
 
 .diesel-entry-form {
   display: grid;
-  grid-template-columns: minmax(160px, 1.4fr) minmax(110px, 0.8fr) minmax(100px, 0.7fr) 42px;
+  grid-template-columns: minmax(160px, 1.4fr) minmax(110px, 0.8fr) minmax(100px, 0.7fr) 40px;
   gap: 14px;
   align-items: end;
 }
 
 .add-square {
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   display: grid;
   place-items: center;
   color: white;
@@ -1623,8 +1677,14 @@ button {
 }
 
 .diesel-table-wrap {
-  max-height: 218px;
+  max-height: 298px;
+  min-height: 0;
   overflow: auto;
+}
+
+.diesel-table th,
+.diesel-table td {
+  padding: 10px 16px;
 }
 
 .type-pill {
@@ -1640,7 +1700,7 @@ button {
 }
 
 .diesel-summary {
-  min-height: 432px;
+  min-height: 366px;
   padding: 0;
   overflow: hidden;
 }
@@ -1650,22 +1710,23 @@ button {
   align-items: center;
   justify-content: space-between;
   margin: 0;
-  padding: 20px;
+  padding: 14px 18px;
   background: linear-gradient(90deg, #e4f7f1, #f6fbfa);
   border-bottom: 1px solid #dcece8;
 }
 
 .diesel-summary h3 svg {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   color: var(--teal-dark);
 }
 
 .diesel-summary dl {
   display: grid;
-  gap: 18px;
+  gap: 9px;
   margin: 0;
-  padding: 20px;
+  padding: 14px 18px;
+  font-size: 0.88rem;
 }
 
 .diesel-summary div {
@@ -1684,8 +1745,8 @@ button {
 }
 
 .final-stock {
-  margin-top: 12px;
-  padding-top: 18px;
+  margin-top: 4px;
+  padding-top: 10px;
   border-top: 1px solid #e6edf4;
 }
 
@@ -1695,18 +1756,335 @@ button {
 
 .diesel-observations {
   position: relative;
-  margin-top: 18px;
+  grid-column: 1 / -1;
+  grid-row: 2;
+  width: 1211px;
+  height: 106px;
+  min-height: 0;
+  gap: 4px;
+  padding: 10px 18px;
+  margin-top: 0;
+  transform: translateX(-212px);
+  overflow: hidden;
+}
+
+.consulta-action {
+  min-width: 130px;
+  text-transform: uppercase;
+}
+
+.consult-header {
+  align-items: center;
+}
+
+.consult-filters {
+  display: grid;
+  grid-template-columns: 250px 250px 220px minmax(0, 1fr);
+  gap: 14px;
+  align-items: stretch;
+  margin-bottom: 18px;
+}
+
+.consult-filter-card {
+  min-height: 78px;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 16px;
+}
+
+.consult-filter-card:not(:first-child) {
+  grid-template-columns: 1fr;
+}
+
+.consult-filter-card > svg {
+  width: 18px;
+  height: 18px;
+  color: var(--navy);
+}
+
+.consult-filter-card label {
+  display: grid;
+  gap: 8px;
+  color: #1f2c44;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.consult-filter-card input,
+.consult-filter-card select {
+  width: 100%;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid #d9e1eb;
+  border-radius: 6px;
+  color: #263750;
+  background: white;
+  font: inherit;
+}
+
+.consult-tabs {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(150px, 1fr));
+  margin-bottom: 18px;
+  overflow: hidden;
+  border: 1px solid #e1e7ef;
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 16px 38px rgba(17, 28, 43, 0.05);
+}
+
+.consult-tab {
+  min-height: 64px;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 28px;
+  gap: 10px;
+  align-items: center;
+  padding: 0 16px;
+  border: 0;
+  border-right: 1px solid #e6edf4;
+  color: #0b1d3d;
+  background: white;
+  font-weight: 800;
+  text-align: left;
+}
+
+.consult-tab:last-child {
+  border-right: 0;
+}
+
+.consult-tab.active {
+  color: var(--teal-dark);
+  box-shadow: inset 0 0 0 2px var(--teal-dark);
+}
+
+.consult-tab svg {
+  width: 24px;
+  height: 24px;
+}
+
+.consult-tab strong {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #eef3f8;
+  color: #0b1d3d;
+}
+
+.consult-groups {
+  display: grid;
+  gap: 16px;
+}
+
+.consult-group-card {
+  overflow: hidden;
+  background: white;
+  border: 1px solid #dfe7f0;
+  border-radius: 8px;
+  box-shadow: 0 16px 38px rgba(17, 28, 43, 0.05);
+}
+
+.consult-group-card h3 {
+  margin: 0;
+  padding: 12px 18px;
+  color: var(--teal-dark);
+  background: linear-gradient(90deg, #e4f7f1, #f6fbfa);
+  border-bottom: 1px solid #dcece8;
+  font-size: 0.98rem;
+  text-transform: uppercase;
+}
+
+.consult-group-card:nth-child(2) h3 {
+  color: #0047b7;
+  background: linear-gradient(90deg, #eaf3ff, #f7fbff);
+}
+
+.consult-group-card:nth-child(3) h3 {
+  color: #2936cc;
+  background: linear-gradient(90deg, #f1edff, #fbfaff);
+}
+
+.consult-table-scroll {
+  overflow: auto;
+}
+
+.consult-kardex-table {
+  width: 100%;
+  min-width: 1520px;
+  border-collapse: collapse;
+  color: #071c3d;
+  font-size: 0.76rem;
+}
+
+.consult-kardex-table th,
+.consult-kardex-table td {
+  padding: 10px 8px;
+  border: 1px solid #e2e8f0;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.consult-kardex-table th {
+  color: #082257;
+  background: #f8fbff;
+  font-weight: 900;
+}
+
+.consult-kardex-table td:nth-child(2),
+.consult-kardex-table th:nth-child(2) {
+  min-width: 150px;
+  text-align: left;
+  font-weight: 800;
+}
+
+.consult-kardex-table td:nth-child(13),
+.consult-kardex-table td:nth-child(14),
+.consult-kardex-table th:nth-child(13),
+.consult-kardex-table th:nth-child(14) {
+  min-width: 190px;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.consult-kardex-table tfoot td {
+  background: #fbfdff;
+  font-weight: 900;
+}
+
+.table-icon {
+  width: 28px;
+  height: 28px;
+  display: inline-grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+}
+
+.table-icon svg {
+  width: 17px;
+  height: 17px;
+}
+
+.table-icon.edit {
+  color: #0047b7;
+}
+
+.table-icon.delete {
+  color: #ff1f1f;
+}
+
+.consult-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  padding: 16px 6px 0;
+  color: #40516a;
+  font-size: 0.88rem;
+}
+
+.consult-pager {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.consult-pager select,
+.consult-pager button,
+.consult-pager strong {
+  min-width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #dfe6ee;
+  border-radius: 6px;
+  background: white;
+  color: #263750;
+}
+
+.consult-pager select {
+  width: 126px;
+  padding: 0 10px;
+}
+
+.consult-pager strong {
+  color: white;
+  background: var(--teal-dark);
+  border-color: var(--teal-dark);
+}
+
+.consult-toolbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) 1fr;
+  gap: 18px;
+  align-items: end;
+  margin-bottom: 18px;
+}
+
+.consult-toolbar label {
+  display: grid;
+  gap: 8px;
+  color: #263750;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.consult-toolbar strong {
+  justify-self: end;
+  color: var(--teal-dark);
+  font-size: 0.95rem;
+}
+
+.consult-table-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.consult-table-wrap {
+  max-height: calc(100vh - 250px);
+  border: 0;
+  border-radius: 8px;
+}
+
+.consult-table {
+  min-width: 980px;
+}
+
+.consult-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.consult-table td:nth-child(n + 3):nth-child(-n + 9),
+.consult-table th:nth-child(n + 3):nth-child(-n + 9) {
+  text-align: right;
 }
 
 .diesel-observations textarea {
-  min-height: 70px;
-  padding: 14px;
-  resize: vertical;
+  min-height: 30px;
+  padding: 8px 12px;
+  resize: none;
 }
 
 .diesel-observations small {
   justify-self: end;
   color: var(--muted);
+  line-height: 1;
+}
+
+.diesel-actions-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.diesel-actions-card .outline-action,
+.diesel-actions-card .green-action {
+  width: 100%;
 }
 
 .diesel-stat-grid .passenger-stat:nth-child(2) svg { color: #8468d5; }
@@ -1788,13 +2166,16 @@ button {
   .passenger-layout,
   .passenger-stat-grid,
   .diesel-register-top,
-  .diesel-layout {
+  .diesel-layout,
+  .consult-toolbar {
     grid-template-columns: 1fr 1fr;
   }
 
   .passenger-form-grid,
   .entry-form,
-  .diesel-entry-form {
+  .diesel-entry-form,
+  .diesel-main-stack,
+  .diesel-pair {
     grid-template-columns: 1fr;
   }
 
@@ -1803,6 +2184,8 @@ button {
   }
 
   .diesel-dispatch,
+  .diesel-main-stack,
+  .diesel-right-stack,
   .diesel-summary,
   .diesel-observations {
     grid-column: 1 / -1;
