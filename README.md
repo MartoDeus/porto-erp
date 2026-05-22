@@ -9,7 +9,97 @@ Este proyecto se esta construyendo como una pagina web estatica con:
 - JavaScript
 - JSON
 - GitHub Pages
-- Futuro almacenamiento con Google Sheets
+- Futuro almacenamiento principal con Supabase/PostgreSQL
+- Exportaciones auxiliares a CSV/Excel/Google Sheets si se necesitan
+
+## Decision tecnica actual
+
+El usuario quiere que Codex se encargue principalmente de:
+
+- Logica del sistema.
+- Base de datos.
+- Guardado de informacion.
+- Consulta de registros.
+- Validaciones.
+- Auditoria.
+- Backups.
+- Seguridad de datos.
+
+La interfaz visual se toca solo cuando sea necesario para conectar o probar la logica.
+
+La opcion elegida para crecer es:
+
+```txt
+Supabase + PostgreSQL
+```
+
+Motivos:
+
+- Tiene base de datos relacional real.
+- Permite crecer mas ordenadamente que Google Sheets.
+- Incluye API automatica para conectar la web.
+- Permite autenticacion y permisos por usuario.
+- Permite politicas de seguridad por fila con RLS.
+- Facilita consultas, reportes, historial y auditoria.
+- Se puede respaldar con dumps SQL y exportaciones por tabla.
+
+Google Sheets queda solo como posible exportacion o respaldo auxiliar, no como base principal.
+
+## Reglas de seguridad de datos
+
+La informacion del proyecto puede ser delicada. Por eso se acuerda:
+
+- No guardar claves sensibles en el codigo.
+- Usar archivo local `.env` para credenciales.
+- No subir `.env` a GitHub.
+- Nunca usar `service_role key` en el frontend.
+- Separar permisos de lectura, escritura y administracion.
+- Hacer backup antes de cambios grandes de estructura.
+- No borrar registros reales de kardex.
+- Para eliminar, usar estado `anulado`.
+- Toda modificacion importante debe quedar en tabla de auditoria.
+- El kardex debe ser append-only en lo critico: se agregan movimientos y correcciones, no se reescribe la historia sin rastro.
+- Debe existir backup local periodico descargable a la computadora del usuario.
+- Debe existir segundo backup externo en Drive, OneDrive, disco externo u otra ubicacion.
+
+## Estrategia de base de datos propuesta
+
+Tablas principales previstas:
+
+- `usuarios`
+- `roles`
+- `unidades`
+- `diesel_kardex`
+- `diesel_movimientos`
+- `diesel_auditoria`
+- `backups_log`
+
+Regla base de Diesel:
+
+```txt
+1 fecha x 19 unidades x 2 turnos = 38 registros diarios
+```
+
+Clave logica del kardex:
+
+```txt
+fecha + unidad + turno
+```
+
+Cada registro debe guardarse aunque no tenga movimiento.
+
+## Backups previstos
+
+Cuando se conecte Supabase:
+
+- Backup SQL completo usando Supabase CLI o `pg_dump`.
+- Exportacion CSV/JSON por tablas criticas.
+- Carpeta local para backups en la computadora del usuario.
+- Copia externa adicional.
+- Registro de cada backup en `backups_log`.
+- Prueba periodica de restauracion, no solo descarga.
+
+Los backups deben permitir recuperar informacion aunque haya error humano, error de codigo o problema con la base.
 
 ## Enlace publicado
 
@@ -200,6 +290,32 @@ http://127.0.0.1:4173/
 ```txt
 main / root
 ```
+
+- Desde ahora, cada cambio importante debe actualizarse en GitHub para poder continuar desde otra computadora.
+- Si no aparece `git` en el PATH, usar Git portable de GitHub Desktop:
+
+```txt
+C:\Users\User\AppData\Local\GitHubDesktop\app-3.5.8\resources\app\git\cmd\git.exe
+```
+
+Ultimo commit conocido con la logica Diesel:
+
+```txt
+bbc2132 Implement diesel kardex logic
+```
+
+## Contexto para retomar en otra computadora
+
+Prioridad del proyecto en la siguiente etapa:
+
+1. Disenar el esquema SQL de Supabase/PostgreSQL.
+2. Crear tablas con seguridad y auditoria desde el inicio.
+3. Conectar la web estatica a Supabase sin exponer claves sensibles.
+4. Migrar el guardado Diesel desde `localStorage` hacia Supabase.
+5. Mantener backup local y externo.
+6. Evitar borrado fisico de registros.
+
+La conversacion actual definio que la responsabilidad principal de Codex sera la logica y persistencia de datos, no el diseno visual.
 
 ## Pendientes proximos
 
