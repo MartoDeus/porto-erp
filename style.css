@@ -1913,7 +1913,8 @@ button {
 
 .consult-kardex-table {
   width: 100%;
-  min-width: 1520px;
+  min-width: 1320px;
+  table-layout: fixed;
   border-collapse: collapse;
   color: #071c3d;
   font-size: 0.76rem;
@@ -1938,6 +1939,44 @@ button {
   min-width: 150px;
   text-align: left;
   font-weight: 800;
+}
+
+.consult-kardex-table th:nth-child(1),
+.consult-kardex-table td:nth-child(1) {
+  width: 42px;
+}
+
+.consult-kardex-table th:nth-child(2),
+.consult-kardex-table td:nth-child(2) {
+  width: 150px;
+}
+
+.consult-kardex-table th:nth-child(3),
+.consult-kardex-table td:nth-child(3),
+.consult-kardex-table th:nth-child(4),
+.consult-kardex-table td:nth-child(4),
+.consult-kardex-table th:nth-child(6),
+.consult-kardex-table td:nth-child(6),
+.consult-kardex-table th:nth-child(7),
+.consult-kardex-table td:nth-child(7),
+.consult-kardex-table th:nth-child(8),
+.consult-kardex-table td:nth-child(8),
+.consult-kardex-table th:nth-child(9),
+.consult-kardex-table td:nth-child(9),
+.consult-kardex-table th:nth-child(10),
+.consult-kardex-table td:nth-child(10),
+.consult-kardex-table th:nth-child(11),
+.consult-kardex-table td:nth-child(11),
+.consult-kardex-table th:nth-child(12),
+.consult-kardex-table td:nth-child(12),
+.consult-kardex-table th:nth-child(15),
+.consult-kardex-table td:nth-child(15) {
+  width: 72px;
+}
+
+.consult-kardex-table th:nth-child(5),
+.consult-kardex-table td:nth-child(5) {
+  width: 78px;
 }
 
 .consult-kardex-table td:nth-child(13),

@@ -768,7 +768,7 @@ function renderDieselConsult() {
                 <th>Consumo Total</th>
                 <th>Cantidad Despachada</th>
                 <th>Cantidad Transferida</th>
-                <th>Reingreso / Diferencia por Sondaje</th>
+                <th>Sondaje</th>
                 <th>Stock Final</th>
                 <th>Guardia Diurna<br><small>06:00 - 18:00 Hrs.<br>Capitán / Motorista</small></th>
                 <th>Guardia Nocturna<br><small>18:00 - 06:00 Hrs.<br>Capitán / Motorista</small></th>
