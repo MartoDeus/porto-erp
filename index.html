@@ -691,7 +691,11 @@
             <article class="panel-card consult-filter-card">
               <i data-lucide="calendar-days"></i>
               <label>Fecha
-                <input id="dieselConsultDate" type="text" value="21/05/2026 - 21/05/2026">
+                <span class="date-stepper">
+                  <button type="button" id="consultPrevDay" aria-label="Dia anterior"><i data-lucide="chevron-left"></i></button>
+                  <input id="dieselConsultDate" type="date" value="2026-05-21">
+                  <button type="button" id="consultNextDay" aria-label="Dia siguiente"><i data-lucide="chevron-right"></i></button>
+                </span>
               </label>
             </article>
             <article class="panel-card consult-filter-card">
@@ -709,6 +713,12 @@
                   <option value="B">Guardia Nocturna</option>
                 </select>
               </label>
+            </article>
+
+            <article class="panel-card consult-controllers">
+              <h3>Controladores de turno</h3>
+              <p><strong>Turno día:</strong> Javier Céspedes Rosales</p>
+              <p><strong>Turno noche:</strong> Jimmy Pérez Moran</p>
             </article>
           </section>
 

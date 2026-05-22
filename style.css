@@ -1779,7 +1779,7 @@ button {
 
 .consult-filters {
   display: grid;
-  grid-template-columns: 250px 250px 220px minmax(0, 1fr);
+  grid-template-columns: 250px 250px 220px minmax(360px, 1fr);
   gap: 14px;
   align-items: stretch;
   margin-bottom: 18px;
@@ -1824,8 +1824,59 @@ button {
   font: inherit;
 }
 
-.consult-tabs {
+.date-stepper {
   display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 34px;
+  gap: 6px;
+  align-items: center;
+}
+
+.date-stepper button {
+  width: 34px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #d9e1eb;
+  border-radius: 6px;
+  color: #263750;
+  background: white;
+}
+
+.date-stepper svg {
+  width: 16px;
+  height: 16px;
+}
+
+.consult-controllers {
+  min-height: 78px;
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  padding: 14px 18px;
+}
+
+.consult-controllers h3,
+.consult-controllers p {
+  margin: 0;
+}
+
+.consult-controllers h3 {
+  color: #0b1d3d;
+  font-size: 0.95rem;
+}
+
+.consult-controllers p {
+  color: #263750;
+  font-size: 0.9rem;
+}
+
+.consult-controllers strong {
+  color: var(--teal-dark);
+  text-transform: uppercase;
+}
+
+.consult-tabs {
+  display: none;
   grid-template-columns: repeat(6, minmax(150px, 1fr));
   margin-bottom: 18px;
   overflow: hidden;
@@ -1888,6 +1939,9 @@ button {
 }
 
 .consult-group-card h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin: 0;
   padding: 12px 18px;
   color: var(--teal-dark);
@@ -1895,6 +1949,12 @@ button {
   border-bottom: 1px solid #dcece8;
   font-size: 0.98rem;
   text-transform: uppercase;
+}
+
+.consult-group-card h3 svg {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
 }
 
 .consult-group-card:nth-child(2) h3 {

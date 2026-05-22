@@ -82,6 +82,8 @@ const dieselRefs = {
   consultDate: document.querySelector("#dieselConsultDate"),
   consultVessel: document.querySelector("#dieselConsultVessel"),
   consultShift: document.querySelector("#dieselConsultShift"),
+  consultPrevDay: document.querySelector("#consultPrevDay"),
+  consultNextDay: document.querySelector("#consultNextDay"),
   consultTabs: document.querySelector("#dieselConsultTabs"),
   consultGroups: document.querySelector("#dieselConsultGroups"),
   consultSummary: document.querySelector("#dieselConsultSummary"),
@@ -89,8 +91,8 @@ const dieselRefs = {
 };
 
 const dieselCatalog = [
-  { item: 1, group: "A) FLOTA MARITIMA - REMOLCADOR", tab: "Remolcador", icon: "anchor", ship: "LOBITOS EXPRESS (CARGA)", initialStock: 20000, type: "Desp.", dayCrew: "ANDRES YENQUE / JUAN MORE ZAPATA", nightCrew: "AN GONZALES ALVARADO / ALEXANDER MORALES CASTRO", received: 0, receivedFrom: "-", day: 0, night: 0, dispatched: 400, transferred: 0 },
-  { item: 2, group: "A) FLOTA MARITIMA - REMOLCADOR", tab: "Remolcador", icon: "anchor", ship: "LOBITOS EXPRESS (CONSUMO)", initialStock: 2580, type: "Desp.", dayCrew: "ANDRES YENQUE / JUAN MORE ZAPATA", nightCrew: "AN GONZALES ALVARADO / ALEXANDER MORALES CASTRO", received: 200, receivedFrom: "LOBITOS EXPRESS", day: 68, night: 48, dispatched: 0, transferred: 0 },
+  { item: 1, group: "REMOLCADOR", tab: "Remolcador", icon: "anchor", ship: "LOBITOS EXPRESS (CARGA)", initialStock: 20000, type: "Desp.", dayCrew: "ANDRES YENQUE / JUAN MORE ZAPATA", nightCrew: "AN GONZALES ALVARADO / ALEXANDER MORALES CASTRO", received: 0, receivedFrom: "-", day: 0, night: 0, dispatched: 400, transferred: 0 },
+  { item: 2, group: "REMOLCADOR", tab: "Remolcador", icon: "anchor", ship: "LOBITOS EXPRESS (CONSUMO)", initialStock: 2580, type: "Desp.", dayCrew: "ANDRES YENQUE / JUAN MORE ZAPATA", nightCrew: "AN GONZALES ALVARADO / ALEXANDER MORALES CASTRO", received: 200, receivedFrom: "LOBITOS EXPRESS", day: 68, night: 48, dispatched: 0, transferred: 0 },
   { item: 3, group: "NAVE PASAJEROS/DESPACHADORES", tab: "Pasajeros / Despachadores", icon: "users", ship: "PARIÑAS", initialStock: 8919, type: "Desp.", dayCrew: "CESAR PERICHE SOSA / MIGUEL SALDARRIAGA", nightCrew: "WILFREDO BOULANGGER / JULIO MORALES CASTRO", received: 0, receivedFrom: "-", day: 149, night: 62, dispatched: 150, transferred: 20 },
   { item: 4, group: "NAVE PASAJEROS/DESPACHADORES", tab: "Pasajeros / Despachadores", icon: "users", ship: "TALARA", initialStock: 6824, type: "Transfer.", dayCrew: "CARLOS CHUNGA RUIZ / JOSE CORDOVA GALVEZ", nightCrew: "DONALD ZAPATA / SEGUNDO CESPEDES FRIAS", received: 0, receivedFrom: "-", day: 158, night: 20, dispatched: 970, transferred: 0 },
   { item: 5, group: "NAVE PASAJEROS/DESPACHADORES", tab: "Pasajeros / Despachadores", icon: "users", ship: "NEPTUNE EXPRESS", initialStock: 600, type: "Desp.", dayCrew: "CUSTODIA", nightCrew: "CUSTODIA", received: 0, receivedFrom: "-", day: 0, night: 0, dispatched: 0, transferred: 0 },
@@ -377,6 +379,12 @@ function formatNumber(value) {
 
 function isDieselTransfer(origin, receive) {
   return origin === "TALARA" && ["PARIÑAS", "LOBITOS EXPRESS (CARGA)"].includes(receive);
+}
+
+function shiftDateValue(value, days) {
+  const date = value ? new Date(`${value}T00:00:00`) : new Date();
+  date.setDate(date.getDate() + days);
+  return date.toISOString().slice(0, 10);
 }
 
 function getDieselKardex() {
@@ -694,13 +702,7 @@ function renderDieselConsult() {
   ];
   const visibleUnits = dieselCatalog.filter((unit) => !selectedShip || unit.ship === selectedShip);
 
-  dieselRefs.consultTabs.innerHTML = tabs.map((tab, index) => `
-      <button class="consult-tab ${index === 0 ? "active" : ""}" type="button">
-        <i data-lucide="${tab.icon}"></i>
-        <span>${tab.tab}</span>
-        <strong>${tab.count}</strong>
-      </button>
-    `).join("");
+  dieselRefs.consultTabs.innerHTML = "";
 
   dieselRefs.consultGroups.innerHTML = groups.map((group) => {
     const units = visibleUnits.filter((unit) => unit.group === group);
@@ -753,7 +755,7 @@ function renderDieselConsult() {
 
     return `
       <article class="consult-group-card">
-        <h3>${group}</h3>
+        <h3><i data-lucide="${units[0].icon}"></i>${group}</h3>
         <div class="consult-table-scroll">
           <table class="consult-kardex-table">
             <thead>
@@ -895,6 +897,14 @@ function bootDiesel() {
   });
 
   dieselRefs.consultDate?.addEventListener("change", renderDieselConsult);
+  dieselRefs.consultPrevDay?.addEventListener("click", () => {
+    dieselRefs.consultDate.value = shiftDateValue(dieselRefs.consultDate.value, -1);
+    renderDieselConsult();
+  });
+  dieselRefs.consultNextDay?.addEventListener("click", () => {
+    dieselRefs.consultDate.value = shiftDateValue(dieselRefs.consultDate.value, 1);
+    renderDieselConsult();
+  });
   dieselRefs.consultVessel?.addEventListener("change", renderDieselConsult);
   dieselRefs.consultShift?.addEventListener("change", renderDieselConsult);
   dieselRefs.consultRefresh?.addEventListener("click", renderDieselConsult);
