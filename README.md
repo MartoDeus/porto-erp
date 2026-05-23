@@ -88,6 +88,12 @@ Migracion inicial creada localmente:
 supabase/migrations/202605221_initial_schema.sql
 ```
 
+Migracion de consultas/exportaciones Diesel:
+
+```txt
+supabase/migrations/202605231_diesel_reporting_exports.sql
+```
+
 Incluye estructura inicial para:
 
 - `roles`
@@ -125,6 +131,39 @@ fecha + unidad + turno
 ```
 
 Cada registro debe guardarse aunque no tenga movimiento.
+
+## Exportaciones Diesel previstas
+
+La web debe permitir que el usuario descargue dos archivos cuando lo decida:
+
+1. Kardex detallado con toda la informacion guardada.
+2. PDF con resumen consolidado de un dia concreto.
+
+Para esto se agrego una capa SQL de consulta:
+
+- `v_diesel_kardex_detalle`
+- `v_diesel_resumen_diario`
+- `v_diesel_resumen_diario_totales`
+
+Regla importante:
+
+```txt
+La base guarda detalle por fecha + unidad + turno.
+La consulta/PDF muestra resumen consolidado por fecha + unidad.
+```
+
+La vista `v_diesel_kardex_detalle` sirve para exportar todo el detalle operativo.
+
+La vista `v_diesel_resumen_diario` sirve para el PDF diario:
+
+- Una fila por unidad por dia.
+- Consolida Diurno y Nocturno.
+- No suma stock inicial dos veces.
+- Calcula consumo dia, consumo noche y consumo total.
+- Calcula stock final diario con formula.
+- Muestra guardia dia y guardia noche.
+
+La vista `v_diesel_resumen_diario_totales` sirve para los totales inferiores del PDF.
 
 ## Backups previstos
 
