@@ -87,7 +87,9 @@ const dieselRefs = {
   consultTabs: document.querySelector("#dieselConsultTabs"),
   consultGroups: document.querySelector("#dieselConsultGroups"),
   consultSummary: document.querySelector("#dieselConsultSummary"),
-  consultRefresh: document.querySelector("#refreshDieselConsult")
+  consultRefresh: document.querySelector("#refreshDieselConsult"),
+  consultExcel: document.querySelector("#exportDieselExcel"),
+  consultPdf: document.querySelector("#downloadDieselPdf")
 };
 
 const dieselCatalog = [
@@ -375,6 +377,11 @@ function toNumber(value) {
 
 function formatNumber(value) {
   return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(value);
+}
+
+function parseCrew(crew) {
+  const [captain = "-", driver = "-"] = String(crew || "-").split("/").map((value) => value.trim());
+  return { captain, driver };
 }
 
 function isDieselTransfer(origin, receive) {
@@ -684,6 +691,74 @@ function saveDieselRecord() {
   }
 }
 
+function buildDieselConsultData() {
+  const selectedShip = dieselRefs.consultVessel?.value || "";
+  const selectedShift = dieselRefs.consultShift?.value || "";
+  const groups = [...new Set(dieselCatalog.map((unit) => unit.group))];
+  const visibleUnits = dieselCatalog.filter((unit) => !selectedShip || unit.ship === selectedShip);
+
+  const reportGroups = groups.map((group) => {
+    const units = visibleUnits.filter((unit) => unit.group === group);
+    const rows = units.map((unit) => {
+      const day = selectedShift === "B" ? 0 : unit.day;
+      const night = selectedShift === "A" ? 0 : unit.night;
+      const consumption = day + night;
+      const finalStock = unit.initialStock + unit.received - consumption - unit.dispatched - unit.transferred;
+      const dayCrew = parseCrew(unit.dayCrew);
+      const nightCrew = parseCrew(unit.nightCrew);
+
+      return {
+        item: unit.item,
+        ship: unit.ship,
+        initialStock: unit.initialStock,
+        received: unit.received,
+        receivedFrom: unit.receivedFrom,
+        day,
+        night,
+        consumption,
+        dispatched: unit.dispatched,
+        transferred: unit.transferred,
+        sondage: 0,
+        finalStock,
+        dayCrew,
+        nightCrew,
+        type: unit.type,
+        icon: unit.icon
+      };
+    });
+
+    const totals = rows.reduce((sum, row) => {
+      sum.initialStock += row.initialStock;
+      sum.received += row.received;
+      sum.day += row.day;
+      sum.night += row.night;
+      sum.consumption += row.consumption;
+      sum.dispatched += row.dispatched;
+      sum.transferred += row.transferred;
+      sum.sondage += row.sondage;
+      sum.finalStock += row.finalStock;
+      return sum;
+    }, { initialStock: 0, received: 0, day: 0, night: 0, consumption: 0, dispatched: 0, transferred: 0, sondage: 0, finalStock: 0 });
+
+    return { group, icon: rows[0]?.icon || "ship", rows, totals };
+  }).filter((group) => group.rows.length);
+
+  const totals = reportGroups.reduce((sum, group) => {
+    sum.initialStock += group.totals.initialStock;
+    sum.received += group.totals.received;
+    sum.day += group.totals.day;
+    sum.night += group.totals.night;
+    sum.consumption += group.totals.consumption;
+    sum.dispatched += group.totals.dispatched;
+    sum.transferred += group.totals.transferred;
+    sum.sondage += group.totals.sondage;
+    sum.finalStock += group.totals.finalStock;
+    return sum;
+  }, { initialStock: 0, received: 0, day: 0, night: 0, consumption: 0, dispatched: 0, transferred: 0, sondage: 0, finalStock: 0 });
+
+  return { selectedShip, selectedShift, visibleUnits, groups: reportGroups, totals };
+}
+
 function renderDieselConsult() {
   if (!dieselRefs.consultGroups || !dieselRefs.consultTabs) {
     return;
@@ -751,7 +826,6 @@ function renderDieselConsult() {
           <td>${formatNumber(finalStock)}</td>
           <td>${formatCrew(unit.dayCrew)}</td>
           <td>${formatCrew(unit.nightCrew)}</td>
-          <td>${unit.type}</td>
           <td><button class="table-icon edit" type="button" aria-label="Editar ${unit.ship}"><i data-lucide="pencil"></i></button></td>
           <td><button class="table-icon delete" type="button" aria-label="Eliminar ${unit.ship}"><i data-lucide="trash-2"></i></button></td>
         </tr>
@@ -760,7 +834,10 @@ function renderDieselConsult() {
 
     return `
       <article class="consult-group-card">
-        <h3><i data-lucide="${units[0].icon}"></i>${group}</h3>
+        <button class="consult-group-toggle" type="button" aria-expanded="true">
+          <span><i data-lucide="${units[0].icon}"></i>${group}</span>
+          <b>−</b>
+        </button>
         <div class="consult-table-scroll">
           <table class="consult-kardex-table">
             <thead>
@@ -779,7 +856,6 @@ function renderDieselConsult() {
                 <th>Stock Final</th>
                 <th>Guardia Diurna<br><small>06:00 - 18:00 Hrs.<br>Capitán / Motorista</small></th>
                 <th>Guardia Nocturna<br><small>18:00 - 06:00 Hrs.<br>Capitán / Motorista</small></th>
-                <th>Tipo</th>
                 <th>Editar</th>
                 <th>Eliminar</th>
               </tr>
@@ -800,7 +876,6 @@ function renderDieselConsult() {
                 <td>${formatNumber(totals.finalStock)}</td>
                 <td>-</td>
                 <td>-</td>
-                <td>-</td>
                 <td></td>
                 <td></td>
               </tr>
@@ -815,7 +890,272 @@ function renderDieselConsult() {
     dieselRefs.consultSummary.textContent = `Mostrando 1 a ${visibleUnits.length} de ${visibleUnits.length} registros`;
   }
 
+  dieselRefs.consultGroups.querySelectorAll(".consult-group-toggle").forEach((button) => {
+    button.addEventListener("click", () => {
+      const card = button.closest(".consult-group-card");
+      const isCollapsed = card.classList.toggle("is-collapsed");
+      button.setAttribute("aria-expanded", String(!isCollapsed));
+      button.querySelector("b").innerHTML = isCollapsed ? "+" : "&minus;";
+    });
+  });
+
   renderIcons();
+}
+
+function getConsultReportName(extension) {
+  const date = dieselRefs.consultDate?.value || new Date().toISOString().slice(0, 10);
+  return `reporte-diesel-${date}.${extension}`;
+}
+
+function getConsultShiftLabel() {
+  const value = dieselRefs.consultShift?.value || "";
+  if (value === "A") {
+    return "Guardia Diurna";
+  }
+  if (value === "B") {
+    return "Guardia Nocturna";
+  }
+  return "Todos";
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 30000);
+  return url;
+}
+
+function downloadDieselConsultPdf() {
+  if (!window.jspdf?.jsPDF) {
+    window.alert("No se pudo cargar el generador de PDF. Revisa tu conexion a internet e intenta otra vez.");
+    return;
+  }
+
+  const report = buildDieselConsultData();
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+  const filename = getConsultReportName("pdf");
+  const pdfWindow = window.open("", "_blank");
+  const selectedDate = formatDisplayDate(dieselRefs.consultDate?.value || "");
+  const selectedShip = report.selectedShip || "Todas";
+  const generatedAt = new Date().toLocaleString("es-PE", { dateStyle: "short", timeStyle: "short" });
+  const headerColor = [0, 128, 111];
+  let y = 12;
+
+  doc.setTextColor(7, 28, 61);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(18);
+  doc.text("ALM ERP", 14, y);
+  doc.setFontSize(8);
+  doc.text("SISTEMA DE GESTION PORTUARIA", 14, y + 6);
+  doc.setFontSize(17);
+  doc.text("REPORTE DE CONSULTA", 86, y);
+  doc.setTextColor(...headerColor);
+  doc.setFontSize(11);
+  doc.text("REGISTRO DE DIESEL", 86, y + 7);
+  doc.setTextColor(7, 28, 61);
+  doc.setFontSize(8);
+  doc.text(`Fecha del reporte: ${generatedAt}`, 218, y);
+  doc.text("Generado por: Administrador", 218, y + 5);
+
+  doc.setDrawColor(210, 220, 232);
+  doc.roundedRect(14, 28, 269, 19, 2, 2);
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "bold");
+  doc.text("FECHA:", 20, 36);
+  doc.text("NAVE / BCZA.:", 66, 36);
+  doc.text("TURNO:", 118, 36);
+  doc.text("CONTROLADORES DE TURNO:", 166, 34);
+  doc.setFont("helvetica", "normal");
+  doc.text(selectedDate || "-", 20, 42);
+  doc.text(selectedShip, 66, 42);
+  doc.text(getConsultShiftLabel(), 118, 42);
+  doc.text("TURNO DIA: Javier Cespedes Rosales", 166, 39);
+  doc.text("TURNO NOCHE: Jimmy Perez Moran", 166, 44);
+
+  y = 55;
+  report.groups.forEach((group) => {
+    const body = group.rows.map((row) => [
+      row.item,
+      row.ship,
+      formatNumber(row.initialStock),
+      row.received ? formatNumber(row.received) : "-",
+      row.receivedFrom,
+      formatNumber(row.day),
+      formatNumber(row.night),
+      formatNumber(row.consumption),
+      row.dispatched ? formatNumber(row.dispatched) : "-",
+      row.transferred ? formatNumber(row.transferred) : "-",
+      formatNumber(row.sondage),
+      formatNumber(row.finalStock),
+      `CAP: ${row.dayCrew.captain}\nMOT: ${row.dayCrew.driver}`,
+      `CAP: ${row.nightCrew.captain}\nMOT: ${row.nightCrew.driver}`
+    ]);
+
+    body.push([
+      { content: "TOTALES", colSpan: 2, styles: { halign: "center", fontStyle: "bold" } },
+      formatNumber(group.totals.initialStock),
+      formatNumber(group.totals.received),
+      "-",
+      formatNumber(group.totals.day),
+      formatNumber(group.totals.night),
+      formatNumber(group.totals.consumption),
+      formatNumber(group.totals.dispatched),
+      formatNumber(group.totals.transferred),
+      formatNumber(group.totals.sondage),
+      formatNumber(group.totals.finalStock),
+      "-",
+      "-"
+    ]);
+
+    doc.autoTable({
+      startY: y,
+      margin: { left: 14, right: 14 },
+      head: [[
+        "Item", "Nave / BCZA.", "Stock Inicial", "Cant. Recibida", "Recibido de",
+        "Consumo Dia", "Consumo Noche", "Consumo Total", "Cant. Despachada",
+        "Cant. Transferida", "Sondaje", "Stock Final", "Guardia Diurna", "Guardia Nocturna"
+      ]],
+      body,
+      theme: "grid",
+      tableWidth: "auto",
+      styles: { fontSize: 5.2, cellPadding: 1.2, textColor: [7, 28, 61], lineColor: [224, 232, 240], lineWidth: 0.1, valign: "middle" },
+      headStyles: { fillColor: [248, 251, 255], textColor: [8, 34, 87], fontStyle: "bold", halign: "center" },
+      footStyles: { fillColor: [251, 253, 255] },
+      alternateRowStyles: { fillColor: [255, 255, 255] },
+      columnStyles: {
+        0: { cellWidth: 8, halign: "center" },
+        1: { cellWidth: 28 },
+        2: { cellWidth: 15, halign: "center" },
+        3: { cellWidth: 15, halign: "center" },
+        4: { cellWidth: 18, halign: "center" },
+        5: { cellWidth: 14, halign: "center" },
+        6: { cellWidth: 14, halign: "center" },
+        7: { cellWidth: 14, halign: "center" },
+        8: { cellWidth: 17, halign: "center" },
+        9: { cellWidth: 17, halign: "center" },
+        10: { cellWidth: 13, halign: "center" },
+        11: { cellWidth: 15, halign: "center" },
+        12: { cellWidth: 35 },
+        13: { cellWidth: 35 }
+      },
+      didDrawPage: (data) => {
+        doc.setFontSize(8);
+        doc.setTextColor(7, 28, 61);
+        doc.text(`Pagina ${doc.internal.getNumberOfPages()}`, 264, 202);
+      },
+      didDrawCell: (data) => {
+        if (data.section === "head" && data.column.index === 0) {
+          doc.setFillColor(228, 247, 241);
+        }
+      },
+      willDrawPage: () => {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9);
+        doc.setTextColor(...headerColor);
+        doc.text(group.group, 14, y - 4);
+      }
+    });
+
+    y = doc.lastAutoTable.finalY + 12;
+    if (y > 180) {
+      doc.addPage();
+      y = 18;
+    }
+  });
+
+  const summaryY = Math.min(y, 184);
+  doc.setDrawColor(210, 220, 232);
+  doc.roundedRect(14, summaryY, 269, 13, 2, 2);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8);
+  doc.text(`Stock Inicial Total: ${formatNumber(report.totals.initialStock)} gal`, 18, summaryY + 8);
+  doc.text(`Cantidad Recibida Total: ${formatNumber(report.totals.received)} gal`, 70, summaryY + 8);
+  doc.text(`Consumo Total: ${formatNumber(report.totals.consumption)} gal`, 128, summaryY + 8);
+  doc.text(`Cantidad Despachada Total: ${formatNumber(report.totals.dispatched)} gal`, 172, summaryY + 8);
+  doc.text(`Stock Final Total: ${formatNumber(report.totals.finalStock)} gal`, 236, summaryY + 8);
+
+  const blob = doc.output("blob");
+  const url = downloadBlob(blob, filename);
+  if (pdfWindow) {
+    pdfWindow.location.href = url;
+  }
+}
+
+function exportDieselConsultExcel() {
+  if (!window.XLSX) {
+    window.alert("No se pudo cargar el exportador de Excel. Revisa tu conexion a internet e intenta otra vez.");
+    return;
+  }
+
+  const report = buildDieselConsultData();
+  const selectedDate = dieselRefs.consultDate?.value || "";
+  const workbook = XLSX.utils.book_new();
+  const rows = [
+    ["GUARDIA", "FECHA", "ANO", "MES", "TIPO AGRUPADO", "TIPO", "USUARIO", "NAVE", "STOCK I.", "CANT. RECIBIDA", "RECIBIDO DE", "CONSUMO POR GUARDIA", "STOCK F.", "N VALE", "CAPITAN", "MOTORISTA"]
+  ];
+
+  report.groups.forEach((group) => {
+    group.rows.forEach((row) => {
+      const base = {
+        year: selectedDate ? selectedDate.slice(0, 4) : "",
+        month: selectedDate ? new Date(`${selectedDate}T00:00:00`).toLocaleDateString("es-PE", { month: "long" }) : ""
+      };
+
+      rows.push([
+        "A",
+        selectedDate,
+        base.year,
+        base.month,
+        group.group,
+        row.type,
+        "PRODUCCION",
+        row.ship,
+        row.initialStock,
+        row.received || "",
+        row.receivedFrom === "-" ? "" : row.receivedFrom,
+        row.day,
+        row.initialStock + row.received - row.day - row.dispatched - row.transferred,
+        "",
+        row.dayCrew.captain,
+        row.dayCrew.driver
+      ]);
+
+      rows.push([
+        "B",
+        selectedDate,
+        base.year,
+        base.month,
+        group.group,
+        row.type,
+        "PRODUCCION",
+        row.ship,
+        row.initialStock + row.received - row.day - row.dispatched - row.transferred,
+        "",
+        "",
+        row.night,
+        row.finalStock,
+        "",
+        row.nightCrew.captain,
+        row.nightCrew.driver
+      ]);
+    });
+  });
+
+  const sheet = XLSX.utils.aoa_to_sheet(rows);
+  sheet["!cols"] = [
+    { wch: 8 }, { wch: 12 }, { wch: 8 }, { wch: 12 }, { wch: 28 }, { wch: 14 },
+    { wch: 14 }, { wch: 28 }, { wch: 12 }, { wch: 15 }, { wch: 18 }, { wch: 18 },
+    { wch: 12 }, { wch: 10 }, { wch: 28 }, { wch: 28 }
+  ];
+  sheet["!autofilter"] = { ref: XLSX.utils.encode_range({ s: { c: 0, r: 0 }, e: { c: 15, r: rows.length - 1 } }) };
+  XLSX.utils.book_append_sheet(workbook, sheet, "KARDEX");
+  XLSX.writeFile(workbook, getConsultReportName("xlsx"));
 }
 
 function clearDieselForm() {
@@ -913,6 +1253,8 @@ function bootDiesel() {
   dieselRefs.consultVessel?.addEventListener("change", renderDieselConsult);
   dieselRefs.consultShift?.addEventListener("change", renderDieselConsult);
   dieselRefs.consultRefresh?.addEventListener("click", renderDieselConsult);
+  dieselRefs.consultPdf?.addEventListener("click", downloadDieselConsultPdf);
+  dieselRefs.consultExcel?.addEventListener("click", exportDieselConsultExcel);
 
   [dieselRefs.recharge, dieselRefs.consumption].forEach((control) => {
     control?.addEventListener("input", updateDieselSummary);

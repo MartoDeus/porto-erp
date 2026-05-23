@@ -1779,7 +1779,7 @@ button {
 
 .consult-filters {
   display: grid;
-  grid-template-columns: 250px 250px 220px minmax(360px, 1fr);
+  grid-template-columns: 300px 250px 220px minmax(360px, 1fr);
   gap: 14px;
   align-items: stretch;
   margin-bottom: 18px;
@@ -1938,31 +1938,55 @@ button {
   box-shadow: 0 16px 38px rgba(17, 28, 43, 0.05);
 }
 
-.consult-group-card h3 {
+.consult-group-toggle {
+  width: 100%;
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 12px;
   margin: 0;
   padding: 12px 18px;
+  border: 0;
+  border-bottom: 1px solid #dcece8;
   color: var(--teal-dark);
   background: linear-gradient(90deg, #e4f7f1, #f6fbfa);
-  border-bottom: 1px solid #dcece8;
   font-size: 0.98rem;
+  font-weight: 900;
+  text-align: left;
   text-transform: uppercase;
+  cursor: pointer;
 }
 
-.consult-group-card h3 svg {
+.consult-group-toggle span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.consult-group-toggle svg {
   width: 17px;
   height: 17px;
   flex: 0 0 17px;
 }
 
-.consult-group-card:nth-child(2) h3 {
+.consult-group-toggle b {
+  width: 24px;
+  height: 24px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(0, 128, 111, 0.1);
+  color: currentColor;
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.consult-group-card:nth-child(2) .consult-group-toggle {
   color: #0047b7;
   background: linear-gradient(90deg, #eaf3ff, #f7fbff);
 }
 
-.consult-group-card:nth-child(3) h3 {
+.consult-group-card:nth-child(3) .consult-group-toggle {
   color: #2936cc;
   background: linear-gradient(90deg, #f1edff, #fbfaff);
 }
@@ -1971,9 +1995,13 @@ button {
   overflow: auto;
 }
 
+.consult-group-card.is-collapsed .consult-table-scroll {
+  display: none;
+}
+
 .consult-kardex-table {
   width: 100%;
-  min-width: 1320px;
+  min-width: 1140px;
   table-layout: fixed;
   border-collapse: collapse;
   color: #071c3d;
@@ -1996,7 +2024,7 @@ button {
 
 .consult-kardex-table td:nth-child(2),
 .consult-kardex-table th:nth-child(2) {
-  min-width: 150px;
+  min-width: 125px;
   text-align: left;
   font-weight: 800;
 }
@@ -2008,7 +2036,7 @@ button {
 
 .consult-kardex-table th:nth-child(2),
 .consult-kardex-table td:nth-child(2) {
-  width: 150px;
+  width: 125px;
 }
 
 .consult-kardex-table th:nth-child(3),
@@ -2028,10 +2056,8 @@ button {
 .consult-kardex-table th:nth-child(11),
 .consult-kardex-table td:nth-child(11),
 .consult-kardex-table th:nth-child(12),
-.consult-kardex-table td:nth-child(12),
-.consult-kardex-table th:nth-child(15),
-.consult-kardex-table td:nth-child(15) {
-  width: 72px;
+.consult-kardex-table td:nth-child(12) {
+  width: 66px;
 }
 
 .consult-kardex-table th:nth-child(5),
@@ -2045,20 +2071,22 @@ button {
 .consult-kardex-table th:nth-child(14) {
   width: 148px;
   min-width: 148px;
+  text-align: left;
   font-size: 0.7rem;
   font-weight: 800;
 }
 
+.consult-kardex-table th:nth-child(15),
+.consult-kardex-table td:nth-child(15),
 .consult-kardex-table th:nth-child(16),
-.consult-kardex-table td:nth-child(16),
-.consult-kardex-table th:nth-child(17),
-.consult-kardex-table td:nth-child(17) {
-  width: 68px;
+.consult-kardex-table td:nth-child(16) {
+  width: 50px;
 }
 
 .consult-kardex-table tfoot td {
   background: #fbfdff;
   font-weight: 900;
+  text-align: center;
 }
 
 .crew-lines {
