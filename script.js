@@ -536,8 +536,18 @@ function parseCrew(crew) {
   return { captain, driver };
 }
 
+function normalizeDieselName(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/gi, "_")
+    .replace(/^_+|_+$/g, "")
+    .toUpperCase();
+}
+
 function isDieselTransfer(origin, receive) {
-  return origin === "TALARA" && ["PARIÑAS", "LOBITOS EXPRESS (CARGA)"].includes(receive);
+  const motherShips = new Set(["TALARA", "PARINAS", "LOBITOS_EXPRESS_CARGA"]);
+  return motherShips.has(normalizeDieselName(origin)) && motherShips.has(normalizeDieselName(receive));
 }
 
 function shiftDateValue(value, days) {
@@ -643,6 +653,53 @@ function getDieselTotals() {
     transferred,
     finalStock
   };
+}
+
+function getActiveDieselModules() {
+  return getDieselModuleStates();
+}
+
+function validateDieselRecord() {
+  const modules = getActiveDieselModules();
+  const errors = [];
+  const totals = getDieselTotals();
+
+  if (!dieselRefs.date.value) {
+    errors.push("Fecha");
+  }
+
+  if (!dieselRefs.origin.value) {
+    errors.push("Nave");
+  }
+
+  if (!getCheckedValue("dieselShift")) {
+    errors.push("Turno");
+  }
+
+  if (modules.tripulacion && (!dieselRefs.captain.value.trim() || !dieselRefs.driver.value.trim())) {
+    errors.push("Capitan y motorista");
+  }
+
+  if (modules.recarga && totals.recharge > 0 && !dieselRefs.rechargeVoucher.value.trim()) {
+    errors.push("Vale de recarga");
+  }
+
+  if (modules.sondaje && (totals.returnVolume > 0 || totals.difference > 0) && !dieselRefs.document.value.trim()) {
+    errors.push("Acta de sondaje");
+  }
+
+  if (modules.sondaje && totals.returnVolume > 0 && totals.difference > 0) {
+    errors.push("Reingreso o diferencia, no ambos");
+  }
+
+  if (modules.despacho) {
+    const invalidDispatch = dieselDispatches.some((entry) => entry.quantity <= 0 || !entry.voucher);
+    if (invalidDispatch) {
+      errors.push("Destino, cantidad y vale de cada despacho");
+    }
+  }
+
+  return errors;
 }
 
 function populateDieselShips() {
@@ -816,9 +873,57 @@ function buildDieselRecordFromForm() {
   };
 }
 
-function saveDieselRecord() {
+function buildDieselPayload(record) {
+  return {
+    fecha: record.date,
+    nave: record.ship,
+    turno: record.shift,
+    registrado_por: record.registeredBy,
+    capitan: record.captain,
+    motorista: record.driver,
+    acta_sondaje: record.document,
+    vale_recarga: record.rechargeVoucher,
+    vale_despacho: record.dispatches.map((entry) => entry.voucher).filter(Boolean).join(" / "),
+    recarga: record.recharge,
+    recibido: 0,
+    recibido_de: "",
+    consumo: record.consumption,
+    reingreso: record.returnVolume,
+    diferencia: record.difference,
+    stock_inicial: record.initialStock,
+    observaciones: record.observation,
+    modulos_estado: record.moduleStates,
+    cabecera: {
+      registrado_por_texto: record.registeredBy,
+      origen_web_id: record.id
+    },
+    movimientos: record.dispatches.map((entry) => ({
+      destino: entry.vessel,
+      cantidad: entry.quantity,
+      vale: entry.voucher,
+      tipo: entry.type
+    }))
+  };
+}
+
+async function saveDieselRecord() {
   if (!dieselRefs.date.value || !dieselRefs.origin.value || !getCheckedValue("dieselShift")) {
     dieselRefs.date.focus();
+    return;
+  }
+
+  const session = getSession();
+
+  if (!session?.accessToken) {
+    alert("Vuelve a iniciar sesion para guardar diesel.");
+    showLogin();
+    return;
+  }
+
+  const validationErrors = validateDieselRecord();
+
+  if (validationErrors.length > 0) {
+    alert(`Faltan datos para guardar diesel: ${validationErrors.join(", ")}.`);
     return;
   }
 
@@ -826,23 +931,46 @@ function saveDieselRecord() {
   const kardex = getDieselKardex();
   const record = buildDieselRecordFromForm();
   const existingIndex = kardex.findIndex((entry) => entry.id === record.id);
+  const originalHtml = dieselRefs.save.innerHTML;
 
-  if (existingIndex >= 0) {
-    kardex[existingIndex] = record;
-  } else {
-    kardex.push(record);
-  }
+  dieselRefs.save.disabled = true;
+  dieselRefs.save.textContent = "Guardando...";
 
-  setDieselKardex(kardex);
-  renderDieselConsult();
+  try {
+    await supabaseRequest("/rest/v1/rpc/registrar_diesel", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`
+      },
+      body: JSON.stringify({
+        payload: buildDieselPayload(record)
+      })
+    });
 
-  if (notificationPanel && notificationButton) {
-    closeProfileMenu();
-    notificationPanel.hidden = false;
-    notificationButton.setAttribute("aria-expanded", "true");
+    if (existingIndex >= 0) {
+      kardex[existingIndex] = record;
+    } else {
+      kardex.push(record);
+    }
+
+    setDieselKardex(kardex);
+    renderDieselConsult();
+
+    if (notificationPanel && notificationButton) {
+      closeProfileMenu();
+      notificationPanel.hidden = false;
+      notificationButton.setAttribute("aria-expanded", "true");
+    }
+
+    alert("Registro diesel guardado en Supabase.");
+  } catch (error) {
+    alert(error.message || "No se pudo guardar el registro diesel.");
+  } finally {
+    dieselRefs.save.disabled = false;
+    dieselRefs.save.innerHTML = originalHtml;
+    renderIcons();
   }
 }
-
 function buildDieselConsultData() {
   const selectedShip = dieselRefs.consultVessel?.value || "";
   const selectedShift = dieselRefs.consultShift?.value || "";
