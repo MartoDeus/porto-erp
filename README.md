@@ -114,6 +114,7 @@ Incluye estructura inicial para:
 Estado Supabase:
 
 - Migracion inicial ejecutada en el SQL Editor del proyecto `alm-erp`.
+- Migracion `diesel_reporting_exports` aplicada desde Codex en Supabase.
 - RLS activado en tablas principales.
 - Catalogo inicial cargado con 5 roles, 2 turnos y 19 unidades/naves.
 - Las politicas RLS especificas quedan pendientes antes de conectar el frontend.
@@ -164,6 +165,33 @@ La vista `v_diesel_resumen_diario` sirve para el PDF diario:
 - Muestra guardia dia y guardia noche.
 
 La vista `v_diesel_resumen_diario_totales` sirve para los totales inferiores del PDF.
+
+Nota de almacenamiento:
+
+- Las vistas SQL no duplican la informacion ni guardan filas nuevas.
+- Una vista es una consulta guardada en la base.
+- Por eso ayudan a exportar y resumir datos sin llenar rapido el almacenamiento.
+- Si en el futuro no se usan, se pueden eliminar con `drop view`.
+
+## Que es una migracion SQL
+
+Una migracion SQL es un archivo que describe un cambio controlado en la base de datos.
+
+Ejemplos:
+
+- Crear una tabla.
+- Agregar una columna.
+- Crear una vista.
+- Crear indices.
+- Agregar restricciones.
+
+Sirve para que el cambio quede documentado, repetible y trazable. Si se trabaja desde otra computadora, basta con revisar la carpeta `supabase/migrations` para saber que estructura debe tener la base.
+
+Regla del proyecto:
+
+```txt
+Los cambios importantes de base de datos deben quedar como migraciones SQL en el repo y aplicarse en Supabase.
+```
 
 ## Backups previstos
 
