@@ -94,6 +94,12 @@ Migracion de consultas/exportaciones Diesel:
 supabase/migrations/202605231_diesel_reporting_exports.sql
 ```
 
+Migracion de usuarios/perfiles:
+
+```txt
+supabase/migrations/202605231_user_profiles_policies.sql
+```
+
 Incluye estructura inicial para:
 
 - `roles`
@@ -145,6 +151,47 @@ Para esto se agrego una capa SQL de consulta:
 - `v_diesel_kardex_detalle`
 - `v_diesel_resumen_diario`
 - `v_diesel_resumen_diario_totales`
+
+## Usuarios y perfiles
+
+Supabase Auth sera responsable de credenciales, login y passwords.
+
+La tabla `public.perfiles` guarda la informacion ERP del usuario:
+
+- email
+- username
+- nombre
+- rol
+- estado
+
+Se agrego un trigger:
+
+```txt
+auth.users -> public.perfiles
+```
+
+Cuando se crea un usuario en Supabase Auth, se crea automaticamente su perfil ERP con rol inicial:
+
+```txt
+visitante
+```
+
+Luego un administrador puede cambiar su rol a:
+
+- administrador
+- analista
+- controlador
+- supervisor
+- visitante
+
+Politicas RLS iniciales:
+
+- Usuarios autenticados pueden leer roles.
+- Cada usuario autenticado puede leer su propio perfil.
+- Administrador y supervisor pueden leer perfiles.
+- Solo administrador puede actualizar perfiles.
+
+Nota: crear usuarios reales se debe hacer desde Supabase Auth o desde una funcion segura de backend. No se deben guardar passwords en `public.perfiles`.
 
 Regla importante:
 
