@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=consulta-accordion">
+  <link rel="stylesheet" href="style.css?v=sidebar-toggle">
 </head>
 <body>
   <main class="auth-page" id="authPage">
@@ -75,7 +75,7 @@
         <div class="form-field">
           <label for="username">Usuario</label>
           <div class="input-wrap">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Zm0 3.3V17h16V8.3l-8 5-8-5Zm1.1-1.3 6.9 4.3L18.9 7H5.1Z"/></svg>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10Zm0-2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm9 11H3v-2a7 7 0 0 1 14 0v2Zm-2.2-2a5 5 0 0 0-9.6 0h9.6Z"/></svg>
             <input id="username" name="username" type="text" autocomplete="username" placeholder="usuario" required>
           </div>
         </div>
@@ -125,9 +125,8 @@
         </a>
 
         <p class="nav-section">Operaciones</p>
-        <a class="nav-item" href="#"><i class="nav-icon" data-lucide="boxes"></i>Recursos</a>
         <a class="nav-item priority" href="#" data-page="diesel"><i class="nav-icon" data-lucide="cylinder"></i>Diesel</a>
-        <a class="nav-item priority" href="#">
+        <a class="nav-item priority" href="#" data-page="lubricante">
           <svg class="nav-icon custom-nav-icon" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M8 6.5h8"/>
             <path d="M9 6.5V4.8c0-.8.6-1.4 1.4-1.4h3.2c.8 0 1.4.6 1.4 1.4v1.7"/>
@@ -137,25 +136,26 @@
           </svg>
           Lubricante
         </a>
-        <a class="nav-item priority" href="#"><i class="nav-icon" data-lucide="paint-bucket"></i>Agua Tratada</a>
-        <a class="nav-item priority" href="#"><i class="nav-icon" data-lucide="glass-water"></i>Agua de Consumo</a>
-        <a class="nav-item priority" href="#"><i class="nav-icon" data-lucide="rectangle-goggles"></i>Buceo</a>
+        <a class="nav-item priority" href="#" data-page="agua-tratada"><i class="nav-icon" data-lucide="paint-bucket"></i>Agua Tratada</a>
+        <a class="nav-item priority" href="#" data-page="agua-consumo"><i class="nav-icon" data-lucide="glass-water"></i>Agua de Consumo</a>
+        <a class="nav-item priority" href="#" data-page="buceo"><i class="nav-icon" data-lucide="rectangle-goggles"></i>Buceo</a>
         <a class="nav-item" href="#" data-page="passengers"><i class="nav-icon" data-lucide="users"></i>Pasajeros</a>
-        <a class="nav-item" href="#"><i class="nav-icon" data-lucide="timer"></i>Horómetros</a>
-        <a class="nav-item" href="#"><i class="nav-icon" data-lucide="container"></i>Cargas</a>
+        <a class="nav-item" href="#" data-page="horometros"><i class="nav-icon" data-lucide="timer"></i>Horómetros</a>
+        <a class="nav-item" href="#" data-page="cargas"><i class="nav-icon" data-lucide="container"></i>Cargas</a>
+        <a class="nav-item" href="#" data-page="bitacora"><i class="nav-icon" data-lucide="book-open-text"></i>Bitácora</a>
 
         <p class="nav-section">Navegación</p>
-        <a class="nav-item" href="#"><i class="nav-icon" data-lucide="map"></i>Mapa</a>
-        <a class="nav-item" href="#"><i class="nav-icon" data-lucide="ship"></i>Naves</a>
-        <a class="nav-item" href="#"><i class="nav-icon" data-lucide="route"></i>Rutas</a>
+        <a class="nav-item" href="#" data-page="mapa"><i class="nav-icon" data-lucide="map"></i>Mapa</a>
+        <a class="nav-item" href="#" data-page="naves"><i class="nav-icon" data-lucide="ship"></i>Naves</a>
+        <a class="nav-item" href="#" data-page="rutas"><i class="nav-icon" data-lucide="route"></i>Rutas</a>
 
         <p class="nav-section">Reportes</p>
-        <a class="nav-item" href="#"><i class="nav-icon" data-lucide="file-chart-column"></i>Reportes</a>
-        <a class="nav-item" href="#"><i class="nav-icon" data-lucide="history"></i>Historial</a>
+        <a class="nav-item" href="#" data-page="reportes"><i class="nav-icon" data-lucide="file-chart-column"></i>Reportes</a>
+        <a class="nav-item" href="#" data-page="historial"><i class="nav-icon" data-lucide="history"></i>Historial</a>
 
         <p class="nav-section">Configuración</p>
-        <a class="nav-item" href="#"><i class="nav-icon" data-lucide="user-cog"></i>Usuarios</a>
-        <a class="nav-item" href="#"><i class="nav-icon" data-lucide="settings"></i>Ajustes</a>
+        <a class="nav-item" href="#" data-page="usuarios"><i class="nav-icon" data-lucide="user-cog"></i>Usuarios</a>
+        <a class="nav-item" href="#" data-page="ajustes"><i class="nav-icon" data-lucide="settings"></i>Ajustes</a>
       </nav>
     </aside>
 
@@ -268,7 +268,7 @@
         <section class="page-view active" id="dashboardView" data-view="dashboard">
         <section class="dashboard-intro">
           <div>
-            <h1>Bienvenido, Administrador</h1>
+            <h1 id="dashboardGreeting">Bienvenido</h1>
             <p>Resumen general de operaciones del muelle</p>
           </div>
           <div class="date-pill">
@@ -741,6 +741,49 @@
             </div>
           </section>
         </section>
+
+        <section class="page-view placeholder-view" data-view="lubricante" hidden>
+          <article class="panel-card placeholder-card"><i data-lucide="container"></i><h1>Lubricante</h1><p>Pantalla preparada para el control de lubricantes.</p></article>
+        </section>
+        <section class="page-view placeholder-view" data-view="agua-tratada" hidden>
+          <article class="panel-card placeholder-card"><i data-lucide="paint-bucket"></i><h1>Agua Tratada</h1><p>Pantalla preparada para registros y seguimiento de agua tratada.</p></article>
+        </section>
+        <section class="page-view placeholder-view" data-view="agua-consumo" hidden>
+          <article class="panel-card placeholder-card"><i data-lucide="glass-water"></i><h1>Agua de Consumo</h1><p>Pantalla preparada para consumos diarios de agua.</p></article>
+        </section>
+        <section class="page-view placeholder-view" data-view="buceo" hidden>
+          <article class="panel-card placeholder-card"><i data-lucide="rectangle-goggles"></i><h1>Buceo</h1><p>Pantalla preparada para operaciones de buceo.</p></article>
+        </section>
+        <section class="page-view placeholder-view" data-view="horometros" hidden>
+          <article class="panel-card placeholder-card"><i data-lucide="timer"></i><h1>Horómetros</h1><p>Pantalla preparada para lectura y control de horómetros.</p></article>
+        </section>
+        <section class="page-view placeholder-view" data-view="cargas" hidden>
+          <article class="panel-card placeholder-card"><i data-lucide="container"></i><h1>Cargas</h1><p>Pantalla preparada para gestión de cargas.</p></article>
+        </section>
+        <section class="page-view placeholder-view" data-view="bitacora" hidden>
+          <article class="panel-card placeholder-card"><i data-lucide="book-open-text"></i><h1>Bitácora</h1><p>Pantalla preparada para novedades y eventos operativos.</p></article>
+        </section>
+        <section class="page-view placeholder-view" data-view="mapa" hidden>
+          <article class="panel-card placeholder-card"><i data-lucide="map"></i><h1>Mapa</h1><p>Pantalla preparada para vista geográfica de operaciones.</p></article>
+        </section>
+        <section class="page-view placeholder-view" data-view="naves" hidden>
+          <article class="panel-card placeholder-card"><i data-lucide="ship"></i><h1>Naves</h1><p>Pantalla preparada para catálogo y estado de naves.</p></article>
+        </section>
+        <section class="page-view placeholder-view" data-view="rutas" hidden>
+          <article class="panel-card placeholder-card"><i data-lucide="route"></i><h1>Rutas</h1><p>Pantalla preparada para rutas y recorridos.</p></article>
+        </section>
+        <section class="page-view placeholder-view" data-view="reportes" hidden>
+          <article class="panel-card placeholder-card"><i data-lucide="file-chart-column"></i><h1>Reportes</h1><p>Pantalla preparada para reportes generales.</p></article>
+        </section>
+        <section class="page-view placeholder-view" data-view="historial" hidden>
+          <article class="panel-card placeholder-card"><i data-lucide="history"></i><h1>Historial</h1><p>Pantalla preparada para auditoría e historial de movimientos.</p></article>
+        </section>
+        <section class="page-view placeholder-view" data-view="usuarios" hidden>
+          <article class="panel-card placeholder-card"><i data-lucide="user-cog"></i><h1>Usuarios</h1><p>Pantalla preparada para administración de usuarios.</p></article>
+        </section>
+        <section class="page-view placeholder-view" data-view="ajustes" hidden>
+          <article class="panel-card placeholder-card"><i data-lucide="settings"></i><h1>Ajustes</h1><p>Pantalla preparada para configuración del sistema.</p></article>
+        </section>
       </main>
     </div>
   </section>
@@ -749,6 +792,6 @@
   <script src="vendor/jspdf.umd.min.js"></script>
   <script src="vendor/jspdf.plugin.autotable.min.js"></script>
   <script src="vendor/xlsx.full.min.js"></script>
-  <script src="script.js?v=consulta-export"></script>
+  <script src="script.js?v=sidebar-toggle-force"></script>
 </body>
 </html>

@@ -336,9 +336,15 @@ button {
   color: var(--ink);
   background: #f4f7f9;
   overflow: hidden;
+  transition: grid-template-columns 0.2s ease;
+}
+
+.dashboard-page.sidebar-collapsed {
+  grid-template-columns: 78px minmax(0, 1fr);
 }
 
 .app-sidebar {
+  min-width: 0;
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -350,6 +356,7 @@ button {
     #0b1a22;
   border-right: 1px solid rgba(255, 255, 255, 0.08);
   overflow: hidden;
+  transition: padding 0.2s ease;
 }
 
 .sidebar-brand {
@@ -359,6 +366,7 @@ button {
   gap: 12px;
   padding: 0 8px;
   font-size: 1.35rem;
+  white-space: nowrap;
 }
 
 .sidebar-brand img {
@@ -416,6 +424,37 @@ button {
   text-decoration: none;
   border-radius: 6px;
   font-weight: 600;
+  white-space: nowrap;
+}
+
+.dashboard-page.sidebar-collapsed .app-sidebar {
+  padding-inline: 12px;
+  width: 78px;
+}
+
+.dashboard-page.sidebar-collapsed .sidebar-brand {
+  justify-content: center;
+  padding: 0;
+}
+
+.dashboard-page.sidebar-collapsed .sidebar-brand strong,
+.dashboard-page.sidebar-collapsed .nav-section,
+.dashboard-page.sidebar-collapsed .nav-item {
+  font-size: 0;
+}
+
+.dashboard-page.sidebar-collapsed .sidebar-brand img {
+  width: 42px;
+}
+
+.dashboard-page.sidebar-collapsed .nav-item {
+  justify-content: center;
+  gap: 0;
+  padding: 0;
+}
+
+.dashboard-page.sidebar-collapsed .nav-icon {
+  margin: 0;
 }
 
 .nav-item.active,
@@ -424,16 +463,12 @@ button {
   background: linear-gradient(135deg, var(--teal), var(--teal-dark));
 }
 
-.nav-item.priority .nav-icon {
-  color: var(--teal-bright);
-}
-
 .nav-icon {
   width: 24px;
   height: 24px;
   display: inline-grid;
   place-items: center;
-  color: rgba(255, 255, 255, 0.86);
+  color: currentColor;
   flex: 0 0 24px;
 }
 
@@ -848,6 +883,37 @@ button {
   padding: 22px 28px;
   overflow-y: auto;
   overflow-x: hidden;
+}
+
+.placeholder-view {
+  min-height: calc(100vh - 118px);
+  display: grid;
+  place-items: center;
+}
+
+.placeholder-card {
+  width: min(520px, 100%);
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 42px;
+  text-align: center;
+}
+
+.placeholder-card > svg {
+  width: 44px;
+  height: 44px;
+  color: var(--teal);
+}
+
+.placeholder-card h1 {
+  margin: 0;
+  color: var(--navy);
+}
+
+.placeholder-card p {
+  margin: 0;
+  color: #56657c;
 }
 
 .page-view {
@@ -2281,7 +2347,12 @@ button {
     overflow: auto;
   }
 
+  .dashboard-page.sidebar-collapsed {
+    grid-template-columns: 1fr;
+  }
+
   .app-sidebar {
+    width: auto;
     height: auto;
     overflow: visible;
   }

@@ -8,6 +8,7 @@ const INTERNAL_AUTH_DOMAIN = "alm.local";
 const loginForm = document.querySelector("#loginForm");
 const authPage = document.querySelector("#authPage");
 const dashboardPage = document.querySelector("#dashboardPage");
+const appSidebar = document.querySelector(".app-sidebar");
 const usernameInput = document.querySelector("#username");
 const passwordInput = document.querySelector("#password");
 const rememberInput = document.querySelector("#rememberMe");
@@ -19,6 +20,7 @@ const welcomeText = document.querySelector("#welcomeText");
 const navItems = document.querySelectorAll(".nav-item[data-page]");
 const pageViews = document.querySelectorAll(".page-view");
 const topbarTitle = document.querySelector(".topbar-title h2");
+const menuButton = document.querySelector(".menu-button");
 const notificationButton = document.querySelector("#notificationButton");
 const notificationPanel = document.querySelector("#notificationPanel");
 const profileButton = document.querySelector("#profileButton");
@@ -27,6 +29,7 @@ const consultDieselButton = document.querySelector("#consultDieselButton");
 const profileName = document.querySelector("#profileName");
 const profileMenuName = document.querySelector("#profileMenuName");
 const profileMenuRole = document.querySelector("#profileMenuRole");
+const dashboardGreeting = document.querySelector("#dashboardGreeting");
 
 const passengerRefs = {
   date: document.querySelector("#passengerDate"),
@@ -291,10 +294,14 @@ function showDashboard(session) {
   authPage.hidden = true;
   dashboardPage.hidden = false;
   setPage("dashboard");
+  const firstName = (session.name || session.username || "Usuario").trim().split(/\s+/)[0];
   welcomeText.textContent = session.role;
   profileName.textContent = session.name;
   profileMenuName.textContent = session.name;
   profileMenuRole.textContent = session.role === "Administrador" ? "Administrador General" : session.role;
+  if (dashboardGreeting) {
+    dashboardGreeting.textContent = `Bienvenido, ${firstName}`;
+  }
   renderIcons();
 }
 
@@ -309,6 +316,29 @@ function showLogin() {
   usernameInput.focus();
   renderIcons();
 }
+
+function setSidebarCollapsed(isCollapsed) {
+  if (!dashboardPage || !menuButton) {
+    return;
+  }
+  dashboardPage.classList.toggle("sidebar-collapsed", isCollapsed);
+  if (window.innerWidth > 900) {
+    dashboardPage.style.gridTemplateColumns = isCollapsed ? "78px minmax(0, 1fr)" : "252px minmax(0, 1fr)";
+    if (appSidebar) {
+      appSidebar.style.width = isCollapsed ? "78px" : "252px";
+    }
+  } else {
+    dashboardPage.style.gridTemplateColumns = "";
+    if (appSidebar) {
+      appSidebar.style.width = "";
+    }
+  }
+  menuButton.setAttribute("aria-expanded", String(!isCollapsed));
+  menuButton.setAttribute("aria-label", isCollapsed ? "Expandir menú" : "Contraer menú");
+  sessionStorage.setItem("portoErp.sidebarCollapsed", String(isCollapsed));
+}
+
+setSidebarCollapsed(sessionStorage.getItem("portoErp.sidebarCollapsed") === "true");
 
 function renderIcons() {
   if (window.lucide) {
@@ -350,7 +380,21 @@ function setPage(pageName) {
       dashboard: "Dashboard",
       passengers: "Pasajeros",
       diesel: "Registro de Diesel",
-      consulta: "Consulta"
+      consulta: "Consulta",
+      lubricante: "Lubricante",
+      "agua-tratada": "Agua Tratada",
+      "agua-consumo": "Agua de Consumo",
+      buceo: "Buceo",
+      horometros: "Horómetros",
+      cargas: "Cargas",
+      bitacora: "Bitácora",
+      mapa: "Mapa",
+      naves: "Naves",
+      rutas: "Rutas",
+      reportes: "Reportes",
+      historial: "Historial",
+      usuarios: "Usuarios",
+      ajustes: "Ajustes"
     };
     topbarTitle.textContent = pageTitles[pageName] || "Dashboard";
   }
@@ -534,6 +578,10 @@ function formatNumber(value) {
 function parseCrew(crew) {
   const [captain = "-", driver = "-"] = String(crew || "-").split("/").map((value) => value.trim());
   return { captain, driver };
+}
+
+function isDieselTransfer(origin, receive) {
+  return origin === "TALARA" && ["PARIÑAS", "LOBITOS EXPRESS (CARGA)"].includes(receive);
 }
 
 function normalizeDieselName(value) {
@@ -971,6 +1019,7 @@ async function saveDieselRecord() {
     renderIcons();
   }
 }
+
 function buildDieselConsultData() {
   const selectedShip = dieselRefs.consultVessel?.value || "";
   const selectedShift = dieselRefs.consultShift?.value || "";
@@ -1198,6 +1247,15 @@ function getConsultShiftLabel() {
   return "Todos";
 }
 
+function formatReportDateShort(value) {
+  if (!value) {
+    return "";
+  }
+  const date = new Date(`${value}T00:00:00`);
+  const month = date.toLocaleDateString("es-PE", { month: "long" }).toLowerCase();
+  return `${date.getDate()} de ${month} del ${date.getFullYear()}`;
+}
+
 function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -1210,55 +1268,87 @@ function downloadBlob(blob, filename) {
   return url;
 }
 
-function downloadDieselConsultPdf() {
+function loadImageDataUrl(src) {
+  return new Promise((resolve) => {
+    const image = new Image();
+    image.crossOrigin = "anonymous";
+    image.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+      const context = canvas.getContext("2d");
+      context.drawImage(image, 0, 0);
+      resolve(canvas.toDataURL("image/png"));
+    };
+    image.onerror = () => resolve("");
+    image.src = src;
+  });
+}
+
+async function downloadDieselConsultPdf() {
   if (!window.jspdf?.jsPDF) {
     window.alert("No se pudo cargar el generador de PDF. Revisa tu conexion a internet e intenta otra vez.");
     return;
   }
 
+  const pdfWindow = window.open("", "_blank");
   const report = buildDieselConsultData();
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const filename = getConsultReportName("pdf");
-  const pdfWindow = window.open("", "_blank");
+  const logoData = await loadImageDataUrl("assets/alm_logo.png");
   const selectedDate = formatDisplayDate(dieselRefs.consultDate?.value || "");
+  const reportDateTitle = formatReportDateShort(dieselRefs.consultDate?.value || "");
   const selectedShip = report.selectedShip || "Todas";
   const generatedAt = new Date().toLocaleString("es-PE", { dateStyle: "short", timeStyle: "short" });
   const headerColor = [0, 128, 111];
-  let y = 12;
+  const navy = [7, 28, 61];
+  let y = 40;
 
-  doc.setTextColor(7, 28, 61);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(18);
-  doc.text("ALM ERP", 14, y);
-  doc.setFontSize(8);
-  doc.text("SISTEMA DE GESTION PORTUARIA", 14, y + 6);
-  doc.setFontSize(17);
-  doc.text("REPORTE DE CONSULTA", 86, y);
-  doc.setTextColor(...headerColor);
-  doc.setFontSize(11);
-  doc.text("REGISTRO DE DIESEL", 86, y + 7);
-  doc.setTextColor(7, 28, 61);
-  doc.setFontSize(8);
-  doc.text(`Fecha del reporte: ${generatedAt}`, 218, y);
-  doc.text("Generado por: Administrador", 218, y + 5);
+  const drawHeader = () => {
+    doc.setFillColor(248, 251, 255);
+    doc.rect(0, 0, 210, 24, "F");
+    if (logoData) {
+      doc.addImage(logoData, "PNG", 10, 7, 8, 8);
+    }
+    doc.setTextColor(...navy);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8.5);
+    doc.text("ALM ERP", 21, 10);
+    doc.setFontSize(4.8);
+    doc.text("SISTEMA DE GESTION PORTUARIA", 21, 14);
+    doc.setFontSize(9.5);
+    doc.text("REPORTE DIARIO DIESEL", 105, 10, { align: "center" });
+    doc.setTextColor(...headerColor);
+    doc.setFontSize(6.8);
+    doc.text(reportDateTitle, 105, 15, { align: "center" });
+    doc.setTextColor(...navy);
+    doc.setFontSize(5.2);
+    doc.text(`Fecha del reporte: ${generatedAt}`, 151, 9);
+    doc.text("Generado por: Administrador", 151, 13);
+    doc.text(`Pagina: ${doc.internal.getNumberOfPages()}`, 151, 17);
+    doc.setDrawColor(222, 231, 240);
+    doc.line(10, 21, 200, 21);
+  };
+
+  drawHeader();
 
   doc.setDrawColor(210, 220, 232);
-  doc.roundedRect(14, 28, 269, 19, 2, 2);
-  doc.setFontSize(8);
+  doc.roundedRect(10, 26, 190, 9, 1.5, 1.5);
+  doc.setFontSize(5.2);
   doc.setFont("helvetica", "bold");
-  doc.text("FECHA:", 20, 36);
-  doc.text("NAVE / BCZA.:", 66, 36);
-  doc.text("TURNO:", 118, 36);
-  doc.text("CONTROLADORES DE TURNO:", 166, 34);
+  doc.setTextColor(...navy);
+  doc.text("FECHA:", 14, 30);
+  doc.text("NAVE / BCZA.:", 48, 30);
+  doc.text("TURNO:", 85, 30);
+  doc.text("CONTROLADORES DE TURNO:", 116, 30);
   doc.setFont("helvetica", "normal");
-  doc.text(selectedDate || "-", 20, 42);
-  doc.text(selectedShip, 66, 42);
-  doc.text(getConsultShiftLabel(), 118, 42);
-  doc.text("TURNO DIA: Javier Cespedes Rosales", 166, 39);
-  doc.text("TURNO NOCHE: Jimmy Perez Moran", 166, 44);
+  doc.text(selectedDate || "-", 14, 33.5);
+  doc.text(selectedShip, 48, 33.5);
+  doc.text(getConsultShiftLabel(), 85, 33.5);
+  doc.text("TURNO DIA: Javier Cespedes Rosales", 116, 32);
+  doc.text("TURNO NOCHE: Jimmy Perez Moran", 116, 34.5);
 
-  y = 55;
   report.groups.forEach((group) => {
     const body = group.rows.map((row) => [
       row.item,
@@ -1293,9 +1383,20 @@ function downloadDieselConsultPdf() {
       "-"
     ]);
 
+    if (y > 250) {
+      doc.addPage();
+      drawHeader();
+      y = 30;
+    }
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8.2);
+    doc.setTextColor(...headerColor);
+    doc.text(group.group, 10, y - 2);
+
     doc.autoTable({
       startY: y,
-      margin: { left: 14, right: 14 },
+      margin: { top: 28, left: 10, right: 10, bottom: 8 },
       head: [[
         "Item", "Nave / BCZA.", "Stock Inicial", "Cant. Recibida", "Recibido de",
         "Consumo Dia", "Consumo Noche", "Consumo Total", "Cant. Despachada",
@@ -1304,61 +1405,53 @@ function downloadDieselConsultPdf() {
       body,
       theme: "grid",
       tableWidth: "auto",
-      styles: { fontSize: 5.2, cellPadding: 1.2, textColor: [7, 28, 61], lineColor: [224, 232, 240], lineWidth: 0.1, valign: "middle" },
-      headStyles: { fillColor: [248, 251, 255], textColor: [8, 34, 87], fontStyle: "bold", halign: "center" },
+      styles: { fontSize: 5.25, cellPadding: 0.92, textColor: navy, lineColor: [224, 232, 240], lineWidth: 0.1, valign: "middle" },
+      headStyles: { fillColor: [248, 251, 255], textColor: [8, 34, 87], fontStyle: "bold", halign: "center", fontSize: 4.65 },
       footStyles: { fillColor: [251, 253, 255] },
       alternateRowStyles: { fillColor: [255, 255, 255] },
       columnStyles: {
-        0: { cellWidth: 8, halign: "center" },
-        1: { cellWidth: 28 },
-        2: { cellWidth: 15, halign: "center" },
-        3: { cellWidth: 15, halign: "center" },
-        4: { cellWidth: 18, halign: "center" },
-        5: { cellWidth: 14, halign: "center" },
-        6: { cellWidth: 14, halign: "center" },
-        7: { cellWidth: 14, halign: "center" },
-        8: { cellWidth: 17, halign: "center" },
-        9: { cellWidth: 17, halign: "center" },
-        10: { cellWidth: 13, halign: "center" },
-        11: { cellWidth: 15, halign: "center" },
-        12: { cellWidth: 35 },
-        13: { cellWidth: 35 }
+        0: { cellWidth: 5, halign: "center" },
+        1: { cellWidth: 25 },
+        2: { cellWidth: 8, halign: "center" },
+        3: { cellWidth: 8, halign: "center" },
+        4: { cellWidth: 11, halign: "center" },
+        5: { cellWidth: 7.4, halign: "center" },
+        6: { cellWidth: 7.4, halign: "center" },
+        7: { cellWidth: 7.4, halign: "center" },
+        8: { cellWidth: 8, halign: "center" },
+        9: { cellWidth: 8, halign: "center" },
+        10: { cellWidth: 7.4, halign: "center" },
+        11: { cellWidth: 8, halign: "center" },
+        12: { cellWidth: 39.7 },
+        13: { cellWidth: 39.7 }
       },
       didDrawPage: (data) => {
-        doc.setFontSize(8);
-        doc.setTextColor(7, 28, 61);
-        doc.text(`Pagina ${doc.internal.getNumberOfPages()}`, 264, 202);
-      },
-      didDrawCell: (data) => {
-        if (data.section === "head" && data.column.index === 0) {
-          doc.setFillColor(228, 247, 241);
+        if (data.pageNumber > 1) {
+          drawHeader();
         }
-      },
-      willDrawPage: () => {
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(9);
-        doc.setTextColor(...headerColor);
-        doc.text(group.group, 14, y - 4);
       }
     });
 
-    y = doc.lastAutoTable.finalY + 12;
-    if (y > 180) {
-      doc.addPage();
-      y = 18;
-    }
+    y = doc.lastAutoTable.finalY + 9;
   });
 
-  const summaryY = Math.min(y, 184);
+  if (y > 272) {
+    doc.addPage();
+    drawHeader();
+    y = 30;
+  }
+
+  const summaryY = y;
   doc.setDrawColor(210, 220, 232);
-  doc.roundedRect(14, summaryY, 269, 13, 2, 2);
+  doc.roundedRect(10, summaryY, 190, 13, 1.5, 1.5);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(8);
-  doc.text(`Stock Inicial Total: ${formatNumber(report.totals.initialStock)} gal`, 18, summaryY + 8);
-  doc.text(`Cantidad Recibida Total: ${formatNumber(report.totals.received)} gal`, 70, summaryY + 8);
-  doc.text(`Consumo Total: ${formatNumber(report.totals.consumption)} gal`, 128, summaryY + 8);
-  doc.text(`Cantidad Despachada Total: ${formatNumber(report.totals.dispatched)} gal`, 172, summaryY + 8);
-  doc.text(`Stock Final Total: ${formatNumber(report.totals.finalStock)} gal`, 236, summaryY + 8);
+  doc.setFontSize(5.4);
+  doc.setTextColor(...navy);
+  doc.text(`Stock Inicial Total: ${formatNumber(report.totals.initialStock)} gal`, 14, summaryY + 5.5);
+  doc.text(`Cantidad Recibida Total: ${formatNumber(report.totals.received)} gal`, 67, summaryY + 5.5);
+  doc.text(`Consumo Total: ${formatNumber(report.totals.consumption)} gal`, 130, summaryY + 5.5);
+  doc.text(`Cantidad Despachada Total: ${formatNumber(report.totals.dispatched)} gal`, 14, summaryY + 10.5);
+  doc.text(`Stock Final Total: ${formatNumber(report.totals.finalStock)} gal`, 93, summaryY + 10.5);
 
   const blob = doc.output("blob");
   const url = downloadBlob(blob, filename);
@@ -1674,6 +1767,10 @@ if (profileButton && profileMenu) {
   });
 }
 
+menuButton?.addEventListener("click", () => {
+  setSidebarCollapsed(!dashboardPage.classList.contains("sidebar-collapsed"));
+});
+
 passengerRefs.add?.addEventListener("click", addPassengerEntry);
 passengerRefs.clear?.addEventListener("click", clearPassengerForm);
 passengerRefs.new?.addEventListener("click", clearPassengerForm);
@@ -1699,6 +1796,7 @@ function boot() {
   if (session) {
     bootDiesel();
     showDashboard(session);
+    setSidebarCollapsed(sessionStorage.getItem("portoErp.sidebarCollapsed") === "true");
     renderPassengerRows();
     updatePassengerSummary();
     return;
@@ -1712,4 +1810,3 @@ function boot() {
 }
 
 boot();
-
