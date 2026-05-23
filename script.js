@@ -441,6 +441,78 @@ function addPassengerEntry() {
   updatePassengerSummary();
 }
 
+function buildPassengerRecords(session) {
+  const fecha = passengerRefs.date?.value;
+  const embarcacion = passengerRefs.vessel?.value;
+  const movimiento = getCheckedValue("movement");
+  const tipoPasajero = getCheckedValue("passengerType");
+  const turno = getCheckedValue("shift");
+
+  if (!fecha || !embarcacion || passengerEntries.length === 0) {
+    return [];
+  }
+
+  return passengerEntries.map((entry) => ({
+    fecha,
+    movimiento,
+    tipo_pasajero: tipoPasajero,
+    embarcacion,
+    turno,
+    contratista: entry.contractor,
+    rutina: entry.routine,
+    cantidad: entry.quantity,
+    detalle: {
+      origen: "web",
+      modulo: "pasajeros"
+    },
+    estado: "vigente",
+    created_by: session.id,
+    updated_by: session.id
+  }));
+}
+
+async function savePassengerRecords() {
+  const session = getSession();
+
+  if (!session?.accessToken) {
+    alert("Vuelve a iniciar sesion para guardar pasajeros.");
+    showLogin();
+    return;
+  }
+
+  const records = buildPassengerRecords(session);
+
+  if (records.length === 0) {
+    passengerRefs.quantity?.focus();
+    alert("Agrega al menos una linea de pasajeros antes de guardar.");
+    return;
+  }
+
+  const originalHtml = passengerRefs.save.innerHTML;
+  passengerRefs.save.disabled = true;
+  passengerRefs.save.textContent = "Guardando...";
+
+  try {
+    await supabaseRequest("/rest/v1/pasajeros_registros", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+        Prefer: "return=minimal"
+      },
+      body: JSON.stringify(records)
+    });
+
+    clearPassengerForm();
+    alert("Registro de pasajeros guardado en Supabase.");
+  } catch (error) {
+    alert(error.message || "No se pudo guardar el registro de pasajeros.");
+  } finally {
+    passengerRefs.save.disabled = false;
+    passengerRefs.save.innerHTML = originalHtml;
+    renderIcons();
+  }
+}
+
 function clearPassengerForm() {
   passengerEntries = [];
   passengerRefs.quantity.value = "";
@@ -1477,13 +1549,7 @@ if (profileButton && profileMenu) {
 passengerRefs.add?.addEventListener("click", addPassengerEntry);
 passengerRefs.clear?.addEventListener("click", clearPassengerForm);
 passengerRefs.new?.addEventListener("click", clearPassengerForm);
-passengerRefs.save?.addEventListener("click", () => {
-  if (notificationPanel && notificationButton) {
-    closeProfileMenu();
-    notificationPanel.hidden = false;
-    notificationButton.setAttribute("aria-expanded", "true");
-  }
-});
+passengerRefs.save?.addEventListener("click", savePassengerRecords);
 
 [
   passengerRefs.date,
