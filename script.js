@@ -1,6 +1,9 @@
 const SESSION_KEY = "portoErp.session";
 const REMEMBER_KEY = "portoErp.rememberedUser";
 const DIESEL_KARDEX_KEY = "portoErp.dieselKardex";
+const SUPABASE_URL = "https://hkkgyjkwkezsomjmwnen.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_RjChk1_7hpPnWrqdkJiT5g__tKanqgX";
+const INTERNAL_AUTH_DOMAIN = "alm.local";
 
 const loginForm = document.querySelector("#loginForm");
 const authPage = document.querySelector("#authPage");
@@ -184,12 +187,89 @@ async function loadUsers() {
   return usersCache;
 }
 
+function buildAuthEmail(username) {
+  const userKey = normalize(username);
+  return userKey.includes("@") ? userKey : `${userKey}@${INTERNAL_AUTH_DOMAIN}`;
+}
+
+function formatRoleName(roleName) {
+  if (!roleName) {
+    return "Visitante";
+  }
+
+  return roleName
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+}
+
+function getFriendlyAuthError(message) {
+  if (/invalid login credentials/i.test(message)) {
+    return "Usuario o contraseña incorrectos.";
+  }
+
+  if (/email not confirmed/i.test(message)) {
+    return "El usuario todavia no esta confirmado en Supabase.";
+  }
+
+  if (/failed to fetch|network/i.test(message)) {
+    return "No se pudo conectar con Supabase. Revisa tu conexion.";
+  }
+
+  return message;
+}
+
+async function supabaseRequest(path, options = {}) {
+  const headers = {
+    apikey: SUPABASE_PUBLISHABLE_KEY,
+    "Content-Type": "application/json",
+    ...options.headers
+  };
+
+  const response = await fetch(`${SUPABASE_URL}${path}`, {
+    ...options,
+    headers
+  });
+
+  const text = await response.text();
+  const payload = text ? JSON.parse(text) : null;
+
+  if (!response.ok) {
+    const message = payload?.error_description || payload?.msg || payload?.message || "No se pudo conectar con Supabase.";
+    throw new Error(getFriendlyAuthError(message));
+  }
+
+  return payload;
+}
+
+async function loadSupabaseProfile(authUser, accessToken) {
+  const query = new URLSearchParams({
+    select: "id,email,username,nombre,estado,roles(codigo,nombre)",
+    id: `eq.${authUser.id}`,
+    limit: "1"
+  });
+  const profiles = await supabaseRequest(`/rest/v1/perfiles?${query}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`
+    }
+  });
+  const profile = profiles?.[0];
+
+  if (!profile || profile.estado !== "activo") {
+    throw new Error("Tu usuario no tiene un perfil activo en el ERP.");
+  }
+
+  return profile;
+}
+
 function saveSession(user, remember) {
   const session = {
     id: user.id,
     name: user.name,
     username: user.username,
     role: user.role,
+    accessToken: user.accessToken,
+    authProvider: user.authProvider || "supabase",
     startedAt: new Date().toISOString()
   };
 
@@ -1279,14 +1359,27 @@ function bootDiesel() {
 }
 
 async function authenticate(username, password) {
-  const users = await loadUsers();
-  const userKey = normalize(username);
-  const passwordHash = await sha256(password);
-
-  return users.find((user) => {
-    const matchesUser = normalize(user.username) === userKey || normalize(user.email) === userKey;
-    return matchesUser && user.passwordHash === passwordHash && user.active;
+  const email = buildAuthEmail(username);
+  const authData = await supabaseRequest("/auth/v1/token?grant_type=password", {
+    method: "POST",
+    body: JSON.stringify({
+      email,
+      password
+    })
   });
+  const profile = await loadSupabaseProfile(authData.user, authData.access_token);
+  const roleName = formatRoleName(profile.roles?.nombre || profile.roles?.codigo);
+
+  return {
+    id: profile.id,
+    name: profile.nombre || profile.username || authData.user.email,
+    username: profile.username || normalize(username),
+    email: profile.email || authData.user.email,
+    role: roleName,
+    accessToken: authData.access_token,
+    refreshToken: authData.refresh_token,
+    authProvider: "supabase"
+  };
 }
 
 loginForm.addEventListener("submit", async (event) => {
@@ -1320,7 +1413,7 @@ loginForm.addEventListener("submit", async (event) => {
       showDashboard(getSession());
     }, 350);
   } catch (error) {
-    setMessage("No se pudo validar el acceso. Abre la pagina desde un servidor local.", "error");
+    setMessage(error.message || "No se pudo validar el acceso con Supabase.", "error");
   } finally {
     submitButton.disabled = false;
   }
@@ -1425,3 +1518,4 @@ function boot() {
 }
 
 boot();
+

@@ -297,10 +297,13 @@ El login actual es solo para prototipo estatico. Antes de usar datos reales, la 
 
 - Pantalla de inicio de sesion con fondo portuario.
 - Logo ALM.
-- Validacion de usuario desde `data/users.json`.
+- Login conectado a Supabase Auth.
+- El usuario visible es el DNI.
+- Internamente el DNI se transforma a `DNI@alm.local` para autenticar en Supabase.
+- El nombre y rol se leen desde `public.perfiles`.
 - Sesion con `sessionStorage`.
 - Opcion "Recordarme" con `localStorage`.
-- Credenciales temporales `admin/admin`.
+- `data/users.json` queda solo como referencia historica del prototipo.
 
 ### Layout ERP
 
