@@ -145,6 +145,7 @@ const dieselInitialStockByShip = {
   MANCORA: 600
 };
 let usersCache = [];
+const dieselInitialStockCache = new Map();
 let passengerEntries = [
   { id: crypto.randomUUID(), contractor: "PetroPeru", routine: "MT-LOBITOS", quantity: 4 },
   { id: crypto.randomUUID(), contractor: "Confipetrol", routine: "MT-LOBITOS", quantity: 2 },
@@ -614,7 +615,33 @@ function setDieselKardex(records) {
 }
 
 function getDieselInitialStock(ship) {
-  return 0;
+  return dieselInitialStockCache.get(normalizeDieselName(ship)) || 0;
+}
+
+async function refreshDieselInitialStock() {
+  const session = getSession();
+  const ship = dieselRefs.origin?.value;
+
+  if (!session?.accessToken || !ship) {
+    return;
+  }
+
+  const query = new URLSearchParams({
+    p_nave: ship
+  });
+
+  try {
+    const rows = await supabaseRequest(`/rest/v1/rpc/ultimo_stock_diesel?${query}`, {
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`
+      }
+    });
+    const stock = Number(rows?.[0]?.stock_final ?? 0);
+    dieselInitialStockCache.set(normalizeDieselName(ship), Number.isFinite(stock) ? stock : 0);
+    updateDieselSummary();
+  } catch (error) {
+    console.warn("No se pudo cargar el stock inicial diesel.", error);
+  }
 }
 
 function getDieselRecordId(date, ship, shift) {
@@ -862,6 +889,7 @@ function addDieselDispatch() {
   dieselRefs.voucher.value = "";
   renderDieselRows();
   updateDieselSummary();
+  refreshDieselInitialStock();
 }
 
 function getDieselModuleStates() {
@@ -1002,6 +1030,7 @@ async function saveDieselRecord() {
     }
 
     setDieselKardex(kardex);
+    dieselInitialStockCache.set(normalizeDieselName(record.ship), record.finalStock);
     renderDieselConsult();
 
     if (notificationPanel && notificationButton) {
@@ -1553,6 +1582,7 @@ function clearDieselForm() {
   updateSondageInputs();
   renderDieselRows();
   updateDieselSummary();
+  refreshDieselInitialStock();
 }
 
 function updateModuleState(module) {
@@ -1590,6 +1620,7 @@ function bootDiesel() {
   populateDieselConsultFilters();
   renderDieselRows();
   updateDieselSummary();
+  refreshDieselInitialStock();
 
   document.querySelectorAll(".diesel-module").forEach((module) => {
     const toggle = module.querySelector('.switch input');
@@ -1601,6 +1632,7 @@ function bootDiesel() {
     populateDieselShips();
     renderDieselRows();
     updateDieselSummary();
+    refreshDieselInitialStock();
   });
   dieselRefs.add?.addEventListener("click", addDieselDispatch);
   dieselRefs.clear?.addEventListener("click", clearDieselForm);
@@ -1612,16 +1644,19 @@ function bootDiesel() {
       dieselRefs.consultDate.value = dieselRefs.date.value;
     }
     renderDieselConsult();
+    refreshDieselInitialStock();
   });
 
   dieselRefs.consultDate?.addEventListener("change", renderDieselConsult);
   dieselRefs.consultPrevDay?.addEventListener("click", () => {
     dieselRefs.consultDate.value = shiftDateValue(dieselRefs.consultDate.value, -1);
     renderDieselConsult();
+    refreshDieselInitialStock();
   });
   dieselRefs.consultNextDay?.addEventListener("click", () => {
     dieselRefs.consultDate.value = shiftDateValue(dieselRefs.consultDate.value, 1);
     renderDieselConsult();
+    refreshDieselInitialStock();
   });
   dieselRefs.consultVessel?.addEventListener("change", renderDieselConsult);
   dieselRefs.consultShift?.addEventListener("change", renderDieselConsult);
