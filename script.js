@@ -1,4 +1,4 @@
-const SESSION_KEY = "portoErp.session";
+﻿const SESSION_KEY = "portoErp.session";
 const REMEMBER_KEY = "portoErp.rememberedUser";
 const DIESEL_KARDEX_KEY = "portoErp.dieselKardex";
 const SUPABASE_URL = "https://hkkgyjkwkezsomjmwnen.supabase.co";
@@ -52,6 +52,8 @@ const passengerRefs = {
 
 const dieselRefs = {
   date: document.querySelector("#dieselDate"),
+  prevDay: document.querySelector("#dieselPrevDay"),
+  nextDay: document.querySelector("#dieselNextDay"),
   origin: document.querySelector("#dieselOriginSelect"),
   receive: document.querySelector("#dieselReceiveSelect"),
   registeredBy: document.querySelector("#dieselRegisteredBy"),
@@ -95,7 +97,9 @@ const dieselRefs = {
   consultSummary: document.querySelector("#dieselConsultSummary"),
   consultRefresh: document.querySelector("#refreshDieselConsult"),
   consultExcel: document.querySelector("#exportDieselExcel"),
-  consultPdf: document.querySelector("#downloadDieselPdf")
+  consultPdf: document.querySelector("#downloadDieselPdf"),
+  consultBack: document.querySelector("#backFromConsult"),
+  consultModeToggle: document.querySelector("#toggleDieselConsultMode")
 };
 
 const dieselCatalog = [
@@ -106,7 +110,7 @@ const dieselCatalog = [
   { item: 5, group: "NAVE PASAJEROS/DESPACHADORES", tab: "Pasajeros / Despachadores", icon: "users", ship: "NEPTUNE EXPRESS", initialStock: 600, type: "Desp.", dayCrew: "CUSTODIA", nightCrew: "CUSTODIA", received: 0, receivedFrom: "-", day: 0, night: 0, dispatched: 0, transferred: 0 },
   { item: 6, group: "NAVE PASAJEROS/DESPACHADORES", tab: "Pasajeros / Despachadores", icon: "users", ship: "OLYMPIC EXPRESS", initialStock: 2048, type: "Desp.", dayCrew: "JORGE REQUENA MORALES / JOSE SOLANO", nightCrew: "OSCAR BOULANGGER / MARLON SANTILLAN", received: 150, receivedFrom: "TALARA", day: 165, night: 18, dispatched: 0, transferred: 0 },
   { item: 7, group: "NAVE RECORRIDO", tab: "Naves Recorrido", icon: "route", ship: "DONALD ROBIN", initialStock: 408, type: "Desp.", dayCrew: "ANGEL ZETA VALLADOLID / CESAR AREVALO BENITES", nightCrew: "T.DIA", received: 200, receivedFrom: "TALARA", day: 72, night: 0, dispatched: 0, transferred: 0 },
-  { item: 8, group: "NAVE RECORRIDO", tab: "Naves Recorrido", icon: "route", ship: "SHEILA R", initialStock: 260, type: "Desp.", dayCrew: "JUAN CORONADO / JULIO NUÑEZ", nightCrew: "ELEUTERIO SANDOVAL / EDWIN NIZAMA", received: 200, receivedFrom: "LOBITOS EXPRESS", day: 61, night: 35, dispatched: 0, transferred: 0 },
+  { item: 8, group: "NAVE RECORRIDO", tab: "Naves Recorrido", icon: "route", ship: "SHEILA R", initialStock: 260, type: "Desp.", dayCrew: "JUAN CORONADO / JULIO NUÃ‘EZ", nightCrew: "ELEUTERIO SANDOVAL / EDWIN NIZAMA", received: 200, receivedFrom: "LOBITOS EXPRESS", day: 61, night: 35, dispatched: 0, transferred: 0 },
   { item: 9, group: "NAVE RECORRIDO", tab: "Naves Recorrido", icon: "route", ship: "IRIS", initialStock: 425, type: "Desp.", dayCrew: "HUMBERTO CASTILLO / JULIO PAREDES", nightCrew: "JULIO RAMOS / ANDRES SERNAQUE", received: 200, receivedFrom: "TALARA", day: 55, night: 62, dispatched: 0, transferred: 0 },
   { item: 10, group: "NAVE RECORRIDO", tab: "Naves Recorrido", icon: "route", ship: "VILMA", initialStock: 0, type: "Desp.", dayCrew: "JAIME PANTA / ARMANDO ALTAMIRANO", nightCrew: "VARADERO", received: 0, receivedFrom: "-", day: 0, night: 0, dispatched: 0, transferred: 0 },
   { item: 11, group: "NAVE RECORRIDO", tab: "Naves Recorrido", icon: "route", ship: "ROSLYN", initialStock: 633, type: "Desp.", dayCrew: "PERSONAL DE CAMPO", nightCrew: "PERSONAL DE CAMPO", received: 0, receivedFrom: "-", day: 0, night: 0, dispatched: 0, transferred: 0 },
@@ -125,7 +129,7 @@ const dieselShips = dieselCatalog.map((unit) => unit.ship);
 const dieselShifts = ["Diurno", "Nocturno"];
 const dieselInitialStockByShip = {
   TALARA: 7006,
-  PARINAS: 2800,
+  "PARIÑAS": 2800,
   SHEYLA: 1450,
   "BUCKLEY EXPRESS": 1800,
   "LOBITOS EXPRESS CARGA": 3200,
@@ -146,18 +150,9 @@ const dieselInitialStockByShip = {
 };
 let usersCache = [];
 const dieselInitialStockCache = new Map();
-let passengerEntries = [
-  { id: crypto.randomUUID(), contractor: "PetroPeru", routine: "MT-LOBITOS", quantity: 4 },
-  { id: crypto.randomUUID(), contractor: "Confipetrol", routine: "MT-LOBITOS", quantity: 2 },
-  { id: crypto.randomUUID(), contractor: "IMI", routine: "MT-PROVIDENCIA", quantity: 2 },
-  { id: crypto.randomUUID(), contractor: "IPCO", routine: "MT-PLAYA TORTUGA", quantity: 5 }
-];
-let dieselDispatches = [
-  { id: crypto.randomUUID(), vessel: "PARIÑAS", quantity: 1000, voucher: "005" },
-  { id: crypto.randomUUID(), vessel: "SHEILA R", quantity: 100, voucher: "006" },
-  { id: crypto.randomUUID(), vessel: "BUCKLEY EXPRESS", quantity: 200, voucher: "007" },
-  { id: crypto.randomUUID(), vessel: "LOBITOS EXPRESS (CARGA)", quantity: 2000, voucher: "008" }
-];
+let passengerEntries = [];
+let dieselDispatches = [];
+let showAllDieselConsultItems = false;
 
 function setMessage(text, type = "") {
   formMessage.textContent = text;
@@ -209,7 +204,7 @@ function formatRoleName(roleName) {
 
 function getFriendlyAuthError(message) {
   if (/invalid login credentials/i.test(message)) {
-    return "Usuario o contraseña incorrectos.";
+    return "Usuario o contraseÃ±a incorrectos.";
   }
 
   if (/email not confirmed/i.test(message)) {
@@ -335,7 +330,7 @@ function setSidebarCollapsed(isCollapsed) {
     }
   }
   menuButton.setAttribute("aria-expanded", String(!isCollapsed));
-  menuButton.setAttribute("aria-label", isCollapsed ? "Expandir menú" : "Contraer menú");
+  menuButton.setAttribute("aria-label", isCollapsed ? "Expandir menÃº" : "Contraer menÃº");
   sessionStorage.setItem("portoErp.sidebarCollapsed", String(isCollapsed));
 }
 
@@ -386,9 +381,9 @@ function setPage(pageName) {
       "agua-tratada": "Agua Tratada",
       "agua-consumo": "Agua de Consumo",
       buceo: "Buceo",
-      horometros: "Horómetros",
+      horometros: "HorÃ³metros",
       cargas: "Cargas",
-      bitacora: "Bitácora",
+      bitacora: "BitÃ¡cora",
       mapa: "Mapa",
       naves: "Naves",
       rutas: "Rutas",
@@ -561,8 +556,12 @@ async function savePassengerRecords() {
 function clearPassengerForm() {
   passengerEntries = [];
   passengerRefs.quantity.value = "";
-  passengerRefs.contractor.value = "PetroPeru";
-  passengerRefs.routine.value = "MT-LOBITOS";
+  passengerRefs.vessel.selectedIndex = -1;
+  passengerRefs.contractor.selectedIndex = -1;
+  passengerRefs.routine.selectedIndex = -1;
+  document.querySelectorAll('input[name="movement"], input[name="passengerType"], input[name="shift"]').forEach((input) => {
+    input.checked = false;
+  });
   renderPassengerRows();
   updatePassengerSummary();
 }
@@ -576,13 +575,15 @@ function formatNumber(value) {
   return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(value);
 }
 
+function getTodayValue() {
+  const today = new Date();
+  const offset = today.getTimezoneOffset();
+  return new Date(today.getTime() - offset * 60000).toISOString().slice(0, 10);
+}
+
 function parseCrew(crew) {
   const [captain = "-", driver = "-"] = String(crew || "-").split("/").map((value) => value.trim());
   return { captain, driver };
-}
-
-function isDieselTransfer(origin, receive) {
-  return origin === "TALARA" && ["PARIÑAS", "LOBITOS EXPRESS (CARGA)"].includes(receive);
 }
 
 function normalizeDieselName(value) {
@@ -592,6 +593,14 @@ function normalizeDieselName(value) {
     .replace(/[^a-z0-9]+/gi, "_")
     .replace(/^_+|_+$/g, "")
     .toUpperCase();
+}
+
+function normalizeDieselDisplayName(value) {
+  const text = String(value || "");
+  if (normalizeDieselName(text) === "PARINAS" || text.includes(`PARI${String.fromCharCode(195)}`)) {
+    return "PARIÑAS";
+  }
+  return text;
 }
 
 function isDieselTransfer(origin, receive) {
@@ -607,7 +616,14 @@ function shiftDateValue(value, days) {
 
 function getDieselKardex() {
   const rawKardex = localStorage.getItem(DIESEL_KARDEX_KEY);
-  return rawKardex ? JSON.parse(rawKardex) : [];
+  const records = rawKardex ? JSON.parse(rawKardex) : [];
+  return records.map((record) => ({
+    ...record,
+    ship: normalizeDieselDisplayName(record.ship),
+    dispatches: Array.isArray(record.dispatches)
+      ? record.dispatches.map((entry) => ({ ...entry, vessel: normalizeDieselDisplayName(entry.vessel) }))
+      : []
+  }));
 }
 
 function setDieselKardex(records) {
@@ -889,7 +905,6 @@ function addDieselDispatch() {
   dieselRefs.voucher.value = "";
   renderDieselRows();
   updateDieselSummary();
-  refreshDieselInitialStock();
 }
 
 function getDieselModuleStates() {
@@ -901,6 +916,18 @@ function getDieselModuleStates() {
     }
     return states;
   }, {});
+}
+
+function hasDieselMovement(record) {
+  return Boolean(record?.hasMovement) || [
+    record?.recharge,
+    record?.consumption,
+    record?.returnVolume,
+    record?.difference,
+    record?.sondage,
+    record?.dispatched,
+    record?.transferred
+  ].some((value) => toNumber(value) > 0);
 }
 
 function buildDieselRecordFromForm() {
@@ -1003,7 +1030,6 @@ async function saveDieselRecord() {
     return;
   }
 
-  ensureDieselDaySkeleton(dieselRefs.date.value);
   const kardex = getDieselKardex();
   const record = buildDieselRecordFromForm();
   const existingIndex = kardex.findIndex((entry) => entry.id === record.id);
@@ -1052,38 +1078,77 @@ async function saveDieselRecord() {
 function buildDieselConsultData() {
   const selectedShip = dieselRefs.consultVessel?.value || "";
   const selectedShift = dieselRefs.consultShift?.value || "";
-  const groups = [...new Set(dieselCatalog.map((unit) => unit.group))];
-  const visibleUnits = dieselCatalog.filter((unit) => !selectedShip || unit.ship === selectedShip);
+  const selectedDate = dieselRefs.consultDate?.value || getTodayValue();
+  const recordsForDate = getDieselKardex().filter((record) => {
+    if (!record.savedAt) return false;
+    if (selectedDate && record.date !== selectedDate) return false;
+    if (selectedShip && record.ship !== selectedShip) return false;
+    if (selectedShift === "A" && record.shift !== "Diurno") return false;
+    if (selectedShift === "B" && record.shift !== "Nocturno") return false;
+    return true;
+  });
 
-  const reportGroups = groups.map((group) => {
-    const units = visibleUnits.filter((unit) => unit.group === group);
-    const rows = units.map((unit) => {
-      const day = selectedShift === "B" ? 0 : unit.day;
-      const night = selectedShift === "A" ? 0 : unit.night;
-      const consumption = day + night;
-      const finalStock = unit.initialStock + unit.received - consumption - unit.dispatched - unit.transferred;
-      const dayCrew = parseCrew(unit.dayCrew);
-      const nightCrew = parseCrew(unit.nightCrew);
+  const recordsByShip = recordsForDate.reduce((map, record) => {
+    if (!map.has(record.ship)) {
+      map.set(record.ship, []);
+    }
+    map.get(record.ship).push(record);
+    return map;
+  }, new Map());
 
-      return {
-        item: unit.item,
-        ship: unit.ship,
-        initialStock: unit.initialStock,
-        received: unit.received,
-        receivedFrom: unit.receivedFrom,
-        day,
-        night,
-        consumption,
-        dispatched: unit.dispatched,
-        transferred: unit.transferred,
-        sondage: 0,
-        finalStock,
-        dayCrew,
-        nightCrew,
-        type: unit.type,
-        icon: unit.icon
-      };
-    });
+  const catalogByShip = new Map(dieselCatalog.map((unit) => [unit.ship, unit]));
+  const unitsToRender = showAllDieselConsultItems
+    ? dieselCatalog.filter((unit) => !selectedShip || unit.ship === selectedShip)
+    : [...recordsByShip.keys()]
+        .map((ship) => catalogByShip.get(ship) || { ship, group: "SIN AGRUPAR", icon: "ship", item: "" })
+        .filter((unit) => {
+          const records = recordsByShip.get(unit.ship) || [];
+          return records.some(hasDieselMovement);
+        });
+
+  const rowsByGroup = new Map();
+  unitsToRender.forEach((catalog) => {
+    const ship = catalog.ship;
+    const records = recordsByShip.get(ship) || [];
+    const dayRecord = records.find((record) => record.shift === "Diurno") || {};
+    const nightRecord = records.find((record) => record.shift === "Nocturno") || {};
+    const initialStock = records.length > 0 ? toNumber(records[0]?.initialStock) : 0;
+    const received = records.reduce((sum, record) => sum + toNumber(record.recharge), 0);
+    const day = selectedShift === "B" ? 0 : toNumber(dayRecord.consumption);
+    const night = selectedShift === "A" ? 0 : toNumber(nightRecord.consumption);
+    const consumption = day + night;
+    const dispatched = records.reduce((sum, record) => sum + toNumber(record.dispatched), 0);
+    const transferred = records.reduce((sum, record) => sum + toNumber(record.transferred), 0);
+    const sondage = records.reduce((sum, record) => sum + toNumber(record.sondage), 0);
+    const finalStock = initialStock + received - consumption - dispatched - transferred + sondage;
+    const group = catalog.group || "SIN AGRUPAR";
+    const row = {
+      item: catalog.item || "",
+      ship,
+      initialStock,
+      received,
+      receivedFrom: records.map((record) => record.receiveFrom || record.receivedFrom).filter(Boolean).join(" / ") || "-",
+      day,
+      night,
+      consumption,
+      dispatched,
+      transferred,
+      sondage,
+      finalStock,
+      dayCrew: { captain: dayRecord.captain || "-", driver: dayRecord.driver || "-" },
+      nightCrew: { captain: nightRecord.captain || "-", driver: nightRecord.driver || "-" },
+      type: catalog.type || "-",
+      icon: catalog.icon || "ship"
+    };
+
+    if (!rowsByGroup.has(group)) {
+      rowsByGroup.set(group, []);
+    }
+    rowsByGroup.get(group).push(row);
+  });
+
+  const reportGroups = [...rowsByGroup.entries()].map(([group, rows]) => {
+    rows.sort((a, b) => Number(a.item || 999) - Number(b.item || 999));
 
     const totals = rows.reduce((sum, row) => {
       sum.initialStock += row.initialStock;
@@ -1099,7 +1164,7 @@ function buildDieselConsultData() {
     }, { initialStock: 0, received: 0, day: 0, night: 0, consumption: 0, dispatched: 0, transferred: 0, sondage: 0, finalStock: 0 });
 
     return { group, icon: rows[0]?.icon || "ship", rows, totals };
-  }).filter((group) => group.rows.length);
+  });
 
   const totals = reportGroups.reduce((sum, group) => {
     sum.initialStock += group.totals.initialStock;
@@ -1114,7 +1179,8 @@ function buildDieselConsultData() {
     return sum;
   }, { initialStock: 0, received: 0, day: 0, night: 0, consumption: 0, dispatched: 0, transferred: 0, sondage: 0, finalStock: 0 });
 
-  return { selectedShip, selectedShift, visibleUnits, groups: reportGroups, totals };
+  const visibleRows = reportGroups.reduce((count, group) => count + group.rows.length, 0);
+  return { selectedShip, selectedShift, selectedDate, visibleUnits: recordsForDate, visibleRows, groups: reportGroups, totals };
 }
 
 function renderDieselConsult() {
@@ -1122,70 +1188,53 @@ function renderDieselConsult() {
     return;
   }
 
-  const selectedShip = dieselRefs.consultVessel?.value || "";
-  const selectedShift = dieselRefs.consultShift?.value || "";
-  const groups = [...new Set(dieselCatalog.map((unit) => unit.group))];
-  const tabs = [
-    { tab: "Remolcador", icon: "anchor", count: 2 },
-    { tab: "Naves", icon: "ship", count: 4 },
-    { tab: "Pasajeros / Despachadores", icon: "users", count: 4 },
-    { tab: "Naves Recorrido", icon: "route", count: 8 },
-    { tab: "Barcaza", icon: "ship", count: 4 },
-    { tab: "Flota Talara", icon: "ship-wheel", count: 1 }
-  ];
-  const visibleUnits = dieselCatalog.filter((unit) => !selectedShip || unit.ship === selectedShip);
-
+  const report = buildDieselConsultData();
   dieselRefs.consultTabs.innerHTML = "";
 
-  dieselRefs.consultGroups.innerHTML = groups.map((group) => {
-    const units = visibleUnits.filter((unit) => unit.group === group);
-    if (!units.length) {
-      return "";
+  if (dieselRefs.consultModeToggle) {
+    dieselRefs.consultModeToggle.setAttribute("aria-pressed", String(showAllDieselConsultItems));
+    dieselRefs.consultModeToggle.innerHTML = showAllDieselConsultItems
+      ? '<i data-lucide="activity"></i>Ver solo movimientos'
+      : '<i data-lucide="list-filter"></i>Ver todas las naves';
+  }
+
+  if (!report.groups.length) {
+    dieselRefs.consultGroups.innerHTML = `
+      <article class="panel-card empty-consult-card">
+        <i data-lucide="database"></i>
+        <h3>${showAllDieselConsultItems ? "Sin naves para mostrar" : "Sin movimientos guardados"}</h3>
+        <p>${showAllDieselConsultItems ? "No hay naves que coincidan con los filtros actuales." : "Cambia a ver todas las naves o guarda movimientos reales para esta fecha."}</p>
+      </article>
+    `;
+    if (dieselRefs.consultSummary) {
+      dieselRefs.consultSummary.textContent = "Mostrando 0 registros";
     }
-    const totals = units.reduce((sum, unit) => {
-      const day = selectedShift === "B" ? 0 : unit.day;
-      const night = selectedShift === "A" ? 0 : unit.night;
-      const consumption = day + night;
-      const finalStock = unit.initialStock + unit.received - consumption - unit.dispatched - unit.transferred;
-      sum.initialStock += unit.initialStock;
-      sum.received += unit.received;
-      sum.day += day;
-      sum.night += night;
-      sum.consumption += consumption;
-      sum.dispatched += unit.dispatched;
-      sum.transferred += unit.transferred;
-      sum.finalStock += finalStock;
-      return sum;
-    }, { initialStock: 0, received: 0, day: 0, night: 0, consumption: 0, dispatched: 0, transferred: 0, finalStock: 0 });
+    renderIcons();
+    return;
+  }
 
-    const formatCrew = (crew) => {
-      const [captain = "-", driver = "-"] = String(crew || "-").split("/").map((value) => value.trim());
-      return `<span class="crew-lines"><b>CAP:</b> ${captain}<br><b>MOT:</b> ${driver}</span>`;
-    };
+  const formatCrew = (crew) => `<span class="crew-lines"><b>CAP:</b> ${crew.captain || "-"}<br><b>MOT:</b> ${crew.driver || "-"}</span>`;
 
-    const rows = units.map((unit) => {
-      const day = selectedShift === "B" ? 0 : unit.day;
-      const night = selectedShift === "A" ? 0 : unit.night;
-      const consumption = day + night;
-      const finalStock = unit.initialStock + unit.received - consumption - unit.dispatched - unit.transferred;
+  dieselRefs.consultGroups.innerHTML = report.groups.map(({ group, icon, rows, totals }) => {
+    const tableRows = rows.map((row) => {
       return `
         <tr>
-          <td>${unit.item}</td>
-          <td>${unit.ship}</td>
-          <td>${formatNumber(unit.initialStock)}</td>
-          <td>${unit.received ? formatNumber(unit.received) : "-"}</td>
-          <td>${unit.receivedFrom}</td>
-          <td>${formatNumber(day)}</td>
-          <td>${formatNumber(night)}</td>
-          <td>${formatNumber(consumption)}</td>
-          <td>${unit.dispatched ? formatNumber(unit.dispatched) : "-"}</td>
-          <td>${unit.transferred ? formatNumber(unit.transferred) : "-"}</td>
-          <td>0</td>
-          <td>${formatNumber(finalStock)}</td>
-          <td>${formatCrew(unit.dayCrew)}</td>
-          <td>${formatCrew(unit.nightCrew)}</td>
-          <td><button class="table-icon edit" type="button" aria-label="Editar ${unit.ship}"><i data-lucide="pencil"></i></button></td>
-          <td><button class="table-icon delete" type="button" aria-label="Eliminar ${unit.ship}"><i data-lucide="trash-2"></i></button></td>
+          <td>${row.item}</td>
+          <td>${row.ship}</td>
+          <td>${formatNumber(row.initialStock)}</td>
+          <td>${row.received ? formatNumber(row.received) : "-"}</td>
+          <td>${row.receivedFrom}</td>
+          <td>${formatNumber(row.day)}</td>
+          <td>${formatNumber(row.night)}</td>
+          <td>${formatNumber(row.consumption)}</td>
+          <td>${row.dispatched ? formatNumber(row.dispatched) : "-"}</td>
+          <td>${row.transferred ? formatNumber(row.transferred) : "-"}</td>
+          <td>${formatNumber(row.sondage)}</td>
+          <td>${formatNumber(row.finalStock)}</td>
+          <td>${formatCrew(row.dayCrew)}</td>
+          <td>${formatCrew(row.nightCrew)}</td>
+          <td><button class="table-icon edit" type="button" aria-label="Editar ${row.ship}"><i data-lucide="pencil"></i></button></td>
+          <td><button class="table-icon delete" type="button" aria-label="Eliminar ${row.ship}"><i data-lucide="trash-2"></i></button></td>
         </tr>
       `;
     }).join("");
@@ -1193,8 +1242,8 @@ function renderDieselConsult() {
     return `
       <article class="consult-group-card">
         <button class="consult-group-toggle" type="button" aria-expanded="true">
-          <span><i data-lucide="${units[0].icon}"></i>${group}</span>
-          <b>−</b>
+          <span><i data-lucide="${icon}"></i>${group}</span>
+          <b>&minus;</b>
         </button>
         <div class="consult-table-scroll">
           <table class="consult-kardex-table">
@@ -1218,7 +1267,7 @@ function renderDieselConsult() {
                 <th>Eliminar</th>
               </tr>
             </thead>
-            <tbody>${rows}</tbody>
+            <tbody>${tableRows}</tbody>
             <tfoot>
               <tr>
                 <td colspan="2">TOTALES</td>
@@ -1230,7 +1279,7 @@ function renderDieselConsult() {
                 <td>${formatNumber(totals.consumption)}</td>
                 <td>${formatNumber(totals.dispatched)}</td>
                 <td>${formatNumber(totals.transferred)}</td>
-                <td>0</td>
+                <td>${formatNumber(totals.sondage)}</td>
                 <td>${formatNumber(totals.finalStock)}</td>
                 <td>-</td>
                 <td>-</td>
@@ -1245,7 +1294,8 @@ function renderDieselConsult() {
   }).join("");
 
   if (dieselRefs.consultSummary) {
-    dieselRefs.consultSummary.textContent = `Mostrando 1 a ${visibleUnits.length} de ${visibleUnits.length} registros`;
+    const modeText = showAllDieselConsultItems ? "todas las naves" : "solo movimientos";
+    dieselRefs.consultSummary.textContent = `Mostrando ${report.visibleRows} registros (${modeText})`;
   }
 
   dieselRefs.consultGroups.querySelectorAll(".consult-group-toggle").forEach((button) => {
@@ -1577,12 +1627,17 @@ function clearDieselForm() {
   dieselRefs.voucher.value = "";
   dieselRefs.observation.value = "";
   dieselRefs.observationCount.textContent = "0";
-  dieselRefs.shiftDay.checked = true;
+  document.querySelectorAll('input[name="dieselShift"]').forEach((input) => {
+    input.checked = false;
+  });
+  document.querySelectorAll(".diesel-module .switch input").forEach((input) => {
+    input.checked = false;
+    updateModuleState(input.closest(".diesel-module"));
+  });
   dieselDispatches = [];
   updateSondageInputs();
   renderDieselRows();
   updateDieselSummary();
-  refreshDieselInitialStock();
 }
 
 function updateModuleState(module) {
@@ -1639,28 +1694,40 @@ function bootDiesel() {
   dieselRefs.save?.addEventListener("click", saveDieselRecord);
 
   dieselRefs.date?.addEventListener("change", () => {
-    ensureDieselDaySkeleton(dieselRefs.date.value);
     if (dieselRefs.consultDate) {
       dieselRefs.consultDate.value = dieselRefs.date.value;
     }
     renderDieselConsult();
     refreshDieselInitialStock();
   });
+  dieselRefs.prevDay?.addEventListener("click", () => {
+    dieselRefs.date.value = shiftDateValue(dieselRefs.date.value, -1);
+    dieselRefs.date.dispatchEvent(new Event("change", { bubbles: true }));
+    updateDieselSummary();
+  });
+  dieselRefs.nextDay?.addEventListener("click", () => {
+    dieselRefs.date.value = shiftDateValue(dieselRefs.date.value, 1);
+    dieselRefs.date.dispatchEvent(new Event("change", { bubbles: true }));
+    updateDieselSummary();
+  });
 
   dieselRefs.consultDate?.addEventListener("change", renderDieselConsult);
   dieselRefs.consultPrevDay?.addEventListener("click", () => {
     dieselRefs.consultDate.value = shiftDateValue(dieselRefs.consultDate.value, -1);
     renderDieselConsult();
-    refreshDieselInitialStock();
   });
   dieselRefs.consultNextDay?.addEventListener("click", () => {
     dieselRefs.consultDate.value = shiftDateValue(dieselRefs.consultDate.value, 1);
     renderDieselConsult();
-    refreshDieselInitialStock();
   });
   dieselRefs.consultVessel?.addEventListener("change", renderDieselConsult);
   dieselRefs.consultShift?.addEventListener("change", renderDieselConsult);
   dieselRefs.consultRefresh?.addEventListener("click", renderDieselConsult);
+  dieselRefs.consultBack?.addEventListener("click", () => setPage("diesel"));
+  dieselRefs.consultModeToggle?.addEventListener("click", () => {
+    showAllDieselConsultItems = !showAllDieselConsultItems;
+    renderDieselConsult();
+  });
   dieselRefs.consultPdf?.addEventListener("click", downloadDieselConsultPdf);
   dieselRefs.consultExcel?.addEventListener("click", exportDieselConsultExcel);
 
@@ -1674,16 +1741,21 @@ function bootDiesel() {
 
   updateSondageInputs();
   if (dieselRefs.consultDate) {
-    dieselRefs.consultDate.value = dieselRefs.date.value;
+    dieselRefs.consultDate.value = getTodayValue();
   }
-  ensureDieselDaySkeleton(dieselRefs.date.value);
   renderDieselConsult();
 
   dieselRefs.observation?.addEventListener("input", () => {
     dieselRefs.observationCount.textContent = String(dieselRefs.observation.value.length);
   });
 
-  consultDieselButton?.addEventListener("click", () => setPage("consulta"));
+  consultDieselButton?.addEventListener("click", () => {
+    if (dieselRefs.consultDate) {
+      dieselRefs.consultDate.value = dieselRefs.date?.value || getTodayValue();
+    }
+    setPage("consulta");
+    renderDieselConsult();
+  });
 }
 
 async function authenticate(username, password) {
@@ -1717,7 +1789,7 @@ loginForm.addEventListener("submit", async (event) => {
   const password = passwordInput.value;
 
   if (!username || !password) {
-    setMessage("Ingresa tu usuario y contraseña para continuar.", "error");
+    setMessage("Ingresa tu usuario y contraseÃ±a para continuar.", "error");
     return;
   }
 
@@ -1729,13 +1801,13 @@ loginForm.addEventListener("submit", async (event) => {
     const user = await authenticate(username, password);
 
     if (!user) {
-      setMessage("Usuario o contraseña incorrectos.", "error");
+      setMessage("Usuario o contraseÃ±a incorrectos.", "error");
       passwordInput.select();
       return;
     }
 
     saveSession(user, rememberInput.checked);
-    setMessage("Sesión iniciada correctamente.", "success");
+    setMessage("SesiÃ³n iniciada correctamente.", "success");
 
     window.setTimeout(() => {
       showDashboard(getSession());
@@ -1750,11 +1822,11 @@ loginForm.addEventListener("submit", async (event) => {
 togglePasswordButton.addEventListener("click", () => {
   const isHidden = passwordInput.type === "password";
   passwordInput.type = isHidden ? "text" : "password";
-  togglePasswordButton.setAttribute("aria-label", isHidden ? "Ocultar contraseña" : "Mostrar contraseña");
+  togglePasswordButton.setAttribute("aria-label", isHidden ? "Ocultar contraseÃ±a" : "Mostrar contraseÃ±a");
 });
 
 recoverButton.addEventListener("click", () => {
-    setMessage("Recuperación pendiente: luego la conectaremos con tu flujo real de usuarios.", "success");
+    setMessage("RecuperaciÃ³n pendiente: luego la conectaremos con tu flujo real de usuarios.", "success");
 });
 
 logoutButton.addEventListener("click", showLogin);

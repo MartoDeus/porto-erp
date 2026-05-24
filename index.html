@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=sidebar-toggle">
+  <link rel="stylesheet" href="style.css?v=diesel-date-stepper">
 </head>
 <body>
   <main class="auth-page" id="authPage">
@@ -282,9 +282,9 @@
             <span class="metric-icon"><i data-lucide="cylinder"></i></span>
             <div>
               <p>Diesel</p>
-              <strong>12,540 L</strong>
-              <small>Inventario operativo</small>
-              <em>+8.5% vs ayer</em>
+              <strong>0 L</strong>
+              <small>Sin registros reales</small>
+              <em>Esperando datos</em>
             </div>
           </article>
           <article class="metric-card lubricant">
@@ -299,27 +299,27 @@
             </span>
             <div>
               <p>Lubricante</p>
-              <strong>1,280 L</strong>
-              <small>Stock disponible</small>
-              <em>+3.1% vs ayer</em>
+              <strong>0 L</strong>
+              <small>Sin registros reales</small>
+              <em>Esperando datos</em>
             </div>
           </article>
           <article class="metric-card treated">
             <span class="metric-icon"><i data-lucide="paint-bucket"></i></span>
             <div>
               <p>Agua Tratada</p>
-              <strong>8,300 L</strong>
+              <strong>0 L</strong>
               <small>Producción del día</small>
-              <em>+5.2% vs ayer</em>
+              <em>Esperando datos</em>
             </div>
           </article>
           <article class="metric-card consumption">
             <span class="metric-icon"><i data-lucide="glass-water"></i></span>
             <div>
               <p>Agua de Consumo</p>
-              <strong>4,250 L</strong>
-              <small>Consumo controlado</small>
-              <em class="danger">-2.1% vs ayer</em>
+              <strong>0 L</strong>
+              <small>Sin registros reales</small>
+              <em>Esperando datos</em>
             </div>
           </article>
         </section>
@@ -354,28 +354,28 @@
           <article class="panel-card operations-panel">
             <div class="panel-heading">
               <h3>Operaciones activas</h3>
-              <span>En curso</span>
+              <span>Sin datos</span>
             </div>
             <div class="operation-list">
               <div class="operation-row">
                 <span class="operation-icon"><i data-lucide="fuel"></i></span>
-                <div><strong>Descarga de combustible</strong><small>Muelle 1</small></div>
-                <em>En progreso</em>
+                <div><strong>Sin operaciones registradas</strong><small>Se mostrarán cuando existan datos reales</small></div>
+                <em>Vacío</em>
               </div>
               <div class="operation-row">
                 <span class="operation-icon"><i data-lucide="droplet"></i></span>
-                <div><strong>Control de agua tratada</strong><small>Planta norte</small></div>
-                <em>En progreso</em>
+                <div><strong>Sin datos reales</strong><small>Pendiente de registros</small></div>
+                <em>Vacío</em>
               </div>
               <div class="operation-row">
                 <span class="operation-icon"><i data-lucide="rectangle-goggles"></i></span>
-                <div><strong>Inspección de buceo</strong><small>Zona de maniobras</small></div>
-                <em>Programado</em>
+                <div><strong>Sin datos reales</strong><small>Pendiente de registros</small></div>
+                <em>Vacío</em>
               </div>
               <div class="operation-row">
                 <span class="operation-icon"><i data-lucide="container"></i></span>
-                <div><strong>Carga de contenedores</strong><small>Muelle 2</small></div>
-                <em>En progreso</em>
+                <div><strong>Sin datos reales</strong><small>Pendiente de registros</small></div>
+                <em>Vacío</em>
               </div>
             </div>
           </article>
@@ -383,14 +383,14 @@
           <article class="panel-card compact-panel">
             <h3>Horómetros</h3>
             <p>Total horas operadas</p>
-            <strong>1,245 h</strong>
-            <span>+4.3% vs semana pasada</span>
+            <strong>0 h</strong>
+            <span>Esperando datos reales</span>
           </article>
           <article class="panel-card compact-panel">
             <h3>Cargas</h3>
             <p>Total cargado</p>
-            <strong>2,450 TON</strong>
-            <span>+7.8% vs semana pasada</span>
+            <strong>0 TON</strong>
+            <span>Esperando datos reales</span>
           </article>
           <article class="panel-card compact-panel">
             <h3>Roles del sistema</h3>
@@ -405,9 +405,6 @@
           <section class="passenger-header">
             <div>
               <h1>Registro de Pasajeros</h1>
-            </div>
-            <div class="passenger-actions">
-              <button class="green-action" type="button" id="newPassengerButton"><i data-lucide="plus"></i>Nuevo Pasajero</button>
             </div>
           </section>
 
@@ -566,10 +563,11 @@
 
           <section class="panel-card diesel-register-top">
             <label>Fecha
-              <div class="field-with-icon">
+              <span class="date-stepper diesel-date-stepper">
+                <button type="button" id="dieselPrevDay" aria-label="Dia anterior"><i data-lucide="chevron-left"></i></button>
                 <input id="dieselDate" type="date" value="2026-05-21">
-                <i data-lucide="calendar-days"></i>
-              </div>
+                <button type="button" id="dieselNextDay" aria-label="Dia siguiente"><i data-lucide="chevron-right"></i></button>
+              </span>
             </label>
             <label>Nave Origen
               <select id="dieselOriginSelect"></select>
@@ -641,13 +639,13 @@
                   <h3>Resumen <i data-lucide="fuel"></i></h3>
                   <dl>
                     <div><dt>Nave:</dt><dd id="dieselSummaryVessel">TALARA</dd></div>
-                    <div><dt>Stock Inicial (gal):</dt><dd id="dieselSummaryInitial">7006</dd></div>
-                    <div><dt>Recarga (gal):</dt><dd id="dieselSummaryRecharge">100</dd></div>
-                    <div><dt>Total Despachado (gal):</dt><dd id="dieselSummaryDispatched">300</dd></div>
-                    <div><dt>Total Transferido (gal):</dt><dd id="dieselSummaryTransferred">3000</dd></div>
-                    <div><dt>Consumo (gal):</dt><dd id="dieselSummaryConsumption">100</dd></div>
-                    <div><dt>Sondaje (gal):</dt><dd class="positive" id="dieselSummaryDifference">+10</dd></div>
-                    <div class="final-stock"><dt>Stock Final (gal):</dt><dd id="dieselSummaryFinal">3716</dd></div>
+                    <div><dt>Stock Inicial (gal):</dt><dd id="dieselSummaryInitial">0</dd></div>
+                    <div><dt>Recarga (gal):</dt><dd id="dieselSummaryRecharge">0</dd></div>
+                    <div><dt>Total Despachado (gal):</dt><dd id="dieselSummaryDispatched">0</dd></div>
+                    <div><dt>Total Transferido (gal):</dt><dd id="dieselSummaryTransferred">0</dd></div>
+                    <div><dt>Consumo (gal):</dt><dd id="dieselSummaryConsumption">0</dd></div>
+                    <div><dt>Sondaje (gal):</dt><dd class="positive" id="dieselSummaryDifference">0</dd></div>
+                    <div class="final-stock"><dt>Stock Final (gal):</dt><dd id="dieselSummaryFinal">0</dd></div>
                   </dl>
                 </article>
 
@@ -659,31 +657,37 @@
 
               <section class="diesel-observations panel-card diesel-module is-always-active" data-module="observaciones">
                 <div class="diesel-module-head"><h3>Observaciones</h3><span class="module-state">Siempre activo</span></div>
-                <textarea id="dieselObservation" maxlength="500">Se observa que hubo un reingreso de 10 galones en la nave Talara</textarea>
-                <small><span id="dieselObservationCount">67</span> / 500</small>
+                <textarea id="dieselObservation" maxlength="500"></textarea>
+                <small><span id="dieselObservationCount">0</span> / 500</small>
               </section>
 
             </div>
           </section>
 
           <section class="passenger-stat-grid diesel-stat-grid">
-            <article class="passenger-stat"><i data-lucide="fuel"></i><div><p>Stock total actual</p><strong><span id="dieselStatFinal">3,716</span> gal</strong><span>+5.2% vs ayer</span></div></article>
-            <article class="passenger-stat"><i data-lucide="download"></i><div><p>Total recargado hoy</p><strong><span id="dieselStatRecharge">100</span> gal</strong><span>+8.3% vs ayer</span></div></article>
-            <article class="passenger-stat"><i data-lucide="upload"></i><div><p>Total despachado hoy</p><strong><span id="dieselStatDispatched">300</span> gal</strong><span class="danger-text">-4.1% vs ayer</span></div></article>
-            <article class="passenger-stat"><i data-lucide="truck"></i><div><p>Transferencias hoy</p><strong><span id="dieselStatTransferred">3,000</span> gal</strong><span>+12.2% vs ayer</span></div></article>
-            <article class="passenger-stat"><i data-lucide="droplet"></i><div><p>Consumo hoy</p><strong><span id="dieselStatConsumption">100</span> gal</strong><span class="danger-text">-2.1% vs ayer</span></div></article>
+            <article class="passenger-stat"><i data-lucide="fuel"></i><div><p>Stock total actual</p><strong><span id="dieselStatFinal">0</span> gal</strong><span>Esperando datos reales</span></div></article>
+            <article class="passenger-stat"><i data-lucide="download"></i><div><p>Total recargado hoy</p><strong><span id="dieselStatRecharge">0</span> gal</strong><span>Esperando datos reales</span></div></article>
+            <article class="passenger-stat"><i data-lucide="upload"></i><div><p>Total despachado hoy</p><strong><span id="dieselStatDispatched">0</span> gal</strong><span>Esperando datos reales</span></div></article>
+            <article class="passenger-stat"><i data-lucide="truck"></i><div><p>Transferencias hoy</p><strong><span id="dieselStatTransferred">0</span> gal</strong><span>Esperando datos reales</span></div></article>
+            <article class="passenger-stat"><i data-lucide="droplet"></i><div><p>Consumo hoy</p><strong><span id="dieselStatConsumption">0</span> gal</strong><span>Esperando datos reales</span></div></article>
           </section>
         </section>
 
         <section class="page-view" id="consultView" data-view="consulta" hidden>
           <section class="passenger-header consult-header">
-            <div>
+            <div class="consult-title-wrap">
+              <button class="back-action" type="button" id="backFromConsult" aria-label="Volver a registro de diesel">
+                <i data-lucide="arrow-left"></i>
+              </button>
               <h1>Consulta</h1>
             </div>
             <div class="passenger-actions">
               <button class="outline-action" type="button" id="exportDieselExcel"><i data-lucide="download"></i>Exportar Excel</button>
               <button class="outline-action" type="button" id="downloadDieselPdf"><i data-lucide="printer"></i>Descargar PDF</button>
               <button class="green-action" type="button" id="refreshDieselConsult"><i data-lucide="refresh-cw"></i>Actualizar</button>
+              <button class="outline-action consult-mode-action" type="button" id="toggleDieselConsultMode" aria-pressed="false">
+                <i data-lucide="list-filter"></i>Ver todas las naves
+              </button>
             </div>
           </section>
 
@@ -693,7 +697,7 @@
               <label>Fecha
                 <span class="date-stepper">
                   <button type="button" id="consultPrevDay" aria-label="Dia anterior"><i data-lucide="chevron-left"></i></button>
-                  <input id="dieselConsultDate" type="date" value="2026-05-21">
+                  <input id="dieselConsultDate" type="date">
                   <button type="button" id="consultNextDay" aria-label="Dia siguiente"><i data-lucide="chevron-right"></i></button>
                 </span>
               </label>
@@ -727,7 +731,7 @@
           <section class="consult-groups" id="dieselConsultGroups"></section>
 
           <section class="consult-footer">
-            <span id="dieselConsultSummary">Mostrando 1 a 19 de 19 registros</span>
+            <span id="dieselConsultSummary">Mostrando 0 registros</span>
             <div class="consult-pager">
               <select>
                 <option>20 por página</option>
@@ -792,6 +796,6 @@
   <script src="vendor/jspdf.umd.min.js"></script>
   <script src="vendor/jspdf.plugin.autotable.min.js"></script>
   <script src="vendor/xlsx.full.min.js"></script>
-  <script src="script.js?v=sidebar-toggle-force"></script>
+  <script src="script.js?v=diesel-date-stepper"></script>
 </body>
 </html>
