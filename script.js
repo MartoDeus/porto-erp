@@ -614,7 +614,7 @@ function setDieselKardex(records) {
 }
 
 function getDieselInitialStock(ship) {
-  return dieselCatalog.find((unit) => unit.ship === ship)?.initialStock || 0;
+  return 0;
 }
 
 function getDieselRecordId(date, ship, shift) {
