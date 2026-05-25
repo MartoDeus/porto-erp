@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=passenger-titles-removed">
+  <link rel="stylesheet" href="style.css?v=bitacora-filters-20260525">
 </head>
 <body>
   <main class="auth-page" id="authPage">
@@ -765,55 +765,143 @@
               <p>Registra eventos operacionales de forma rápida y sencilla</p>
             </div>
             <div class="bitacora-status-strip">
-              <span><i data-lucide="calendar-days"></i>22/05/2026</span>
-              <span><i data-lucide="clock-3"></i>10:25 AM</span>
-              <span><i data-lucide="sun"></i>Turno: Diurno</span>
+              <span><i data-lucide="calendar-days"></i><b id="bitacoraTodayLabel">--/--/----</b></span>
+              <span><i data-lucide="sun"></i><b id="bitacoraShiftLabel">Turno: --</b></span>
+              <button class="bitacora-categorize-button" id="bitacoraCategorizeButton" type="button"><i data-lucide="tags"></i>Categorizar</button>
             </div>
           </section>
 
           <section class="bitacora-layout">
             <article class="panel-card bitacora-form-card">
-              <h3>1. Selecciona el tipo de evento</h3>
-              <div class="event-type-grid" id="bitacoraEventTypes">
-                <button class="event-type-card active diesel" type="button" data-type="DIESEL"><i data-lucide="fuel"></i><span>Diesel</span></button>
-                <button class="event-type-card maniobra" type="button" data-type="MANIOBRA"><i data-lucide="anchor"></i><span>Maniobra</span></button>
-                <button class="event-type-card pasajeros" type="button" data-type="PASAJEROS"><i data-lucide="users"></i><span>Pasajeros</span></button>
-                <button class="event-type-card mantenimiento" type="button" data-type="MANTENIMIENTO"><i data-lucide="wrench"></i><span>Mantenimiento</span></button>
-                <button class="event-type-card incidente" type="button" data-type="INCIDENTE"><i data-lucide="triangle-alert"></i><span>Incidente</span></button>
-                <button class="event-type-card observacion" type="button" data-type="OBSERVACIÓN"><i data-lucide="message-circle"></i><span>Observación</span></button>
+              <div class="bitacora-event-row">
+                <div class="bitacora-event-date">
+                  <h3>1. Fecha del evento</h3>
+                  <label class="bitacora-date"><i data-lucide="calendar-days"></i><input id="bitacoraDate" type="date"></label>
+                </div>
+
+                <div class="bitacora-event-start">
+                  <h3>2. Hora de Inicio</h3>
+                  <label class="bitacora-time-field"><i data-lucide="clock-3"></i><input id="bitacoraStartTime" type="time"></label>
+                </div>
+
+                <div class="bitacora-event-end">
+                  <h3>3. Hora de Fin</h3>
+                  <label class="bitacora-time-field"><i data-lucide="clock-3"></i><input id="bitacoraEndTime" type="time"></label>
+                </div>
+
+                <div class="bitacora-event-ship">
+                  <h3>4. Nave/Barcaza</h3>
+                  <label class="bitacora-select"><i data-lucide="ship"></i><select id="bitacoraVessel"></select></label>
+                </div>
               </div>
 
-              <h3>2. Hora del evento</h3>
-              <div class="bitacora-time-grid">
-                <label>Hora de inicio <b>*</b><span><i data-lucide="clock-3"></i><input type="time" value="08:30"></span></label>
-                <label>Hora de fin <b>*</b><span><i data-lucide="clock-3"></i><input type="time" value="08:45"></span></label>
-              </div>
-
-              <h3>3. Selecciona la nave / embarcación</h3>
-              <label class="bitacora-select"><i data-lucide="ship"></i><select><option>PARIÑAS</option><option>TALARA</option><option>MR BOB</option><option>OLYMPIC EXPRESS</option><option>LOBITOS EXPRESS</option></select></label>
-
-              <h3>4. Describe el evento</h3>
+              <h3>5. Descripción de evento</h3>
               <label class="bitacora-description"><textarea id="bitacoraDescription" maxlength="200" placeholder="Escribe aquí una descripción corta del evento..."></textarea><small><span id="bitacoraCount">0</span>/200</small></label>
 
-              <button class="bitacora-submit" type="button"><i data-lucide="send"></i>Registrar evento</button>
+              <button class="bitacora-submit" id="bitacoraSubmit" type="button"><i data-lucide="send"></i>Registrar evento</button>
               <p class="bitacora-validation"><i data-lucide="shield-check"></i>El evento quedará pendiente de validación por el supervisor</p>
 
               <aside class="bitacora-tip"><i data-lucide="zap"></i><div><strong>Registro rápido</strong><span>Escribe de forma corta y clara. El supervisor completará la clasificación y detalles.</span></div></aside>
             </article>
 
             <article class="panel-card bitacora-timeline-card">
-              <header><h3>Eventos registrados hoy <span>7</span></h3><button type="button">Ver todos</button></header>
-              <div class="event-timeline">
-                <article class="timeline-event diesel"><time>10:15 AM</time><i></i><div><span>Diesel</span><strong>PARIÑAS recibió 300 galones de diesel.</strong><small>Registrado por: Javier Céspedes</small><em>Pendiente</em></div></article>
-                <article class="timeline-event maniobra"><time>09:52 AM</time><i></i><div><span>Maniobra</span><strong>MR BOB inició maniobra de atraque.</strong><small>Registrado por: Carlos Paiva</small><em>Pendiente</em></div></article>
-                <article class="timeline-event pasajeros"><time>09:15 AM</time><i></i><div><span>Pasajeros</span><strong>Embarque de 24 pasajeros hacia TALARA.</strong><small>Registrado por: Edwin Nizama</small><em>Pendiente</em></div></article>
-                <article class="timeline-event mantenimiento"><time>08:47 AM</time><i></i><div><span>Mantenimiento</span><strong>Se realizó mantenimiento preventivo a generador.</strong><small>Registrado por: Victor Saavedra</small><em>Pendiente</em></div></article>
-                <article class="timeline-event incidente"><time>08:10 AM</time><i></i><div><span>Incidente</span><strong>Fuga menor detectada en línea de combustible.</strong><small>Registrado por: Jorge Requena</small><em>Pendiente</em></div></article>
-                <article class="timeline-event diesel"><time>07:58 AM</time><i></i><div><span>Diesel</span><strong>Transferencia de 850 galones.</strong><small>Registrado por: Javier Céspedes</small><em>Pendiente</em></div></article>
-                <article class="timeline-event maniobra"><time>07:35 AM</time><i></i><div><span>Maniobra</span><strong>Zarpe programado completado.</strong><small>Registrado por: Carlos Paiva</small><em>Pendiente</em></div></article>
-              </div>
+              <header><h3>Eventos registrados hoy <span id="bitacoraTimelineCount">0</span></h3><button id="bitacoraViewAll" type="button">Ver todos</button></header>
+              <div class="event-timeline" id="bitacoraTimeline"></div>
               <footer><i data-lucide="refresh-cw"></i>Los eventos se actualizan automáticamente</footer>
             </article>
+          </section>
+        </section>
+        <section class="page-view bitacora-categorize-view" data-view="bitacora-categorizar" hidden>
+          <section class="categorize-header">
+            <div class="categorize-title">
+              <button class="bitacora-back-button" id="bitacoraBackButton" type="button"><i data-lucide="arrow-left"></i>Regresar</button>
+              <div>
+                <h1>Clasificar Eventos</h1>
+              </div>
+            </div>
+
+            <div class="categorize-metrics">
+              <article><strong id="categorizePendingMetric">0</strong><i data-lucide="clock-3"></i><span>Pendientes de clasificar</span></article>
+              <article><strong id="categorizeClassifiedMetric">0</strong><i data-lucide="shield-check"></i><span>Clasificados</span></article>
+              <article><strong id="categorizeTodayMetric">0</strong><i data-lucide="anchor"></i><span>Eventos hoy</span></article>
+            </div>
+          </section>
+
+          <section class="categorize-workspace">
+            <div class="categorize-left-stack">
+              <section class="panel-card categorize-filters">
+                <label>Fecha<span><i data-lucide="calendar-days"></i><input id="categorizeDateFilter" type="date"></span></label>
+                <label>Nave / Embarcación<select id="categorizeVesselFilter"><option value="">Todas</option></select></label>
+                <label>Tipo de evento<select id="categorizeTypeFilter"><option value="">Todos</option></select></label>
+                <button class="outline-action" id="clearCategorizeFilters" type="button"><i data-lucide="filter-x"></i>Limpiar filtros</button>
+              </section>
+
+              <article class="panel-card categorize-table-card">
+                <header>
+                  <h3>Eventos pendientes de revisión <span id="categorizeVisibleCount">7</span></h3>
+                  <div>
+                    <button class="green-action" type="button"><i data-lucide="table-2"></i>Vista de lista</button>
+                    <button class="outline-action" type="button"><i data-lucide="timeline"></i>Vista de línea de tiempo</button>
+                  </div>
+                </header>
+
+                <div class="categorize-table-wrap">
+                  <table class="categorize-table">
+                    <thead>
+                      <tr>
+                        <th>Hora</th>
+                        <th>Tipo de evento</th>
+                        <th>Descripción</th>
+                        <th>Nave</th>
+                        <th>Estado</th>
+                        <th>Revisar</th>
+                      </tr>
+                    </thead>
+                    <tbody id="categorizeEventsBody"></tbody>
+                  </table>
+                </div>
+
+                <footer>
+                  <span id="categorizeTableSummary">Mostrando 0 eventos</span>
+                  <div><button type="button"><i data-lucide="chevron-left"></i></button><strong>1</strong><button type="button">2</button><button type="button"><i data-lucide="chevron-right"></i></button></div>
+                </footer>
+              </article>
+            </div>
+
+            <aside class="panel-card categorize-panel">
+              <header>
+                <h3>Categorías de revisión</h3>
+                <span id="categorizeSelectionLabel">Selecciona una categoría</span>
+              </header>
+
+              <div class="category-button-grid" id="categoryButtonGrid">
+                <button type="button">Transporte personal</button>
+                <button type="button">Despacho diesel</button>
+                <button type="button">Despacho agua consumo</button>
+                <button type="button">Despacho lubricante</button>
+                <button type="button">Despacho agua tratada</button>
+                <button type="button">Carga diesel refinería Talara</button>
+                <button type="button">Transporte víveres</button>
+                <button type="button">Transporte materiales</button>
+                <button type="button">Recorrido</button>
+                <button type="button">Patrullaje</button>
+                <button type="button">Monitoreo ambiental</button>
+                <button type="button">Visitas</button>
+                <button type="button">Remolcaje</button>
+                <button type="button">Buceo</button>
+                <button type="button">Recolección residuos</button>
+                <button type="button">Evacuación de personal</button>
+                <button type="button">Mantenimiento nave</button>
+                <button type="button">Mantenimiento plataforma</button>
+                <button type="button">Cambio de guardia</button>
+              </div>
+
+              <div class="categorize-save-box">
+                <p><strong id="categorizedCount">0</strong> eventos seleccionados</p>
+                <button class="green-action" id="saveCategorizedDay" type="button"><i data-lucide="save"></i>Guardar categorización del día</button>
+                <small id="categorizeSaveMessage"></small>
+              </div>
+            </aside>
           </section>
         </section>
         <section class="page-view placeholder-view" data-view="mapa" hidden>
@@ -845,7 +933,7 @@
   <script src="vendor/jspdf.umd.min.js"></script>
   <script src="vendor/jspdf.plugin.autotable.min.js"></script>
   <script src="vendor/xlsx.full.min.js"></script>
-  <script src="script.js?v=passenger-titles-removed"></script>
+  <script src="script.js?v=bitacora-filters-20260525"></script>
 </body>
 </html>
 

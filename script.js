@@ -104,6 +104,38 @@ const dieselRefs = {
   consultModeToggle: document.querySelector("#toggleDieselConsultMode")
 };
 
+const bitacoraRefs = {
+  date: document.querySelector("#bitacoraDate"),
+  startTime: document.querySelector("#bitacoraStartTime"),
+  endTime: document.querySelector("#bitacoraEndTime"),
+  vessel: document.querySelector("#bitacoraVessel"),
+  description: document.querySelector("#bitacoraDescription"),
+  count: document.querySelector("#bitacoraCount"),
+  submit: document.querySelector("#bitacoraSubmit"),
+  todayLabel: document.querySelector("#bitacoraTodayLabel"),
+  shiftLabel: document.querySelector("#bitacoraShiftLabel"),
+  timeline: document.querySelector("#bitacoraTimeline"),
+  timelineCount: document.querySelector("#bitacoraTimelineCount"),
+  viewAll: document.querySelector("#bitacoraViewAll"),
+  categorizeButton: document.querySelector("#bitacoraCategorizeButton"),
+  backButton: document.querySelector("#bitacoraBackButton"),
+  categorizeDate: document.querySelector("#categorizeDateFilter"),
+  categorizeVessel: document.querySelector("#categorizeVesselFilter"),
+  categorizeType: document.querySelector("#categorizeTypeFilter"),
+  clearFilters: document.querySelector("#clearCategorizeFilters"),
+  eventsBody: document.querySelector("#categorizeEventsBody"),
+  visibleCount: document.querySelector("#categorizeVisibleCount"),
+  tableSummary: document.querySelector("#categorizeTableSummary"),
+  pendingMetric: document.querySelector("#categorizePendingMetric"),
+  classifiedMetric: document.querySelector("#categorizeClassifiedMetric"),
+  todayMetric: document.querySelector("#categorizeTodayMetric"),
+  categoryGrid: document.querySelector("#categoryButtonGrid"),
+  categorySelectionLabel: document.querySelector("#categorizeSelectionLabel"),
+  categorizedCount: document.querySelector("#categorizedCount"),
+  saveMessage: document.querySelector("#categorizeSaveMessage"),
+  saveCategorized: document.querySelector("#saveCategorizedDay")
+};
+
 const dieselCatalog = [
   { item: 1, group: "REMOLCADOR", tab: "Remolcador", icon: "anchor", ship: "LOBITOS EXPRESS (CARGA)", initialStock: 20000, type: "Desp.", dayCrew: "ANDRES YENQUE / JUAN MORE ZAPATA", nightCrew: "AN GONZALES ALVARADO / ALEXANDER MORALES CASTRO", received: 0, receivedFrom: "-", day: 0, night: 0, dispatched: 400, transferred: 0 },
   { item: 2, group: "REMOLCADOR", tab: "Remolcador", icon: "anchor", ship: "LOBITOS EXPRESS (CONSUMO)", initialStock: 2580, type: "Desp.", dayCrew: "ANDRES YENQUE / JUAN MORE ZAPATA", nightCrew: "AN GONZALES ALVARADO / ALEXANDER MORALES CASTRO", received: 200, receivedFrom: "LOBITOS EXPRESS", day: 68, night: 48, dispatched: 0, transferred: 0 },
@@ -156,6 +188,10 @@ let passengerEntries = [];
 let dieselDispatches = [];
 let showAllDieselConsultItems = false;
 let dieselConsultCache = { key: "", rows: [] };
+let bitacoraEventsCache = [];
+let bitacoraTypesCache = [];
+let bitacoraCategoriesCache = [];
+const bitacoraClassificationDraft = new Map();
 
 function setMessage(text, type = "") {
   formMessage.textContent = text;
@@ -387,6 +423,7 @@ function setPage(pageName) {
       horometros: "Horómetros",
       cargas: "Cargas",
       bitacora: "Bitácora",
+      "bitacora-categorizar": "Clasificar Eventos",
       mapa: "Mapa",
       naves: "Naves",
       rutas: "Rutas",
@@ -415,6 +452,15 @@ function formatDisplayDate(value) {
 
   const [year, month, day] = value.split("-");
   return `${day}/${month}/${year}`;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 function updatePassengerSummary() {
@@ -1953,19 +1999,600 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
-document.querySelectorAll("#bitacoraEventTypes .event-type-card").forEach((button) => {
-  button.addEventListener("click", () => {
-    document.querySelectorAll("#bitacoraEventTypes .event-type-card").forEach((item) => item.classList.remove("active"));
-    button.classList.add("active");
-  });
-});
+function getCurrentTimeValue() {
+  return new Date().toTimeString().slice(0, 5);
+}
 
-document.querySelector("#bitacoraDescription")?.addEventListener("input", (event) => {
-  const count = document.querySelector("#bitacoraCount");
-  if (count) {
-    count.textContent = String(event.target.value.length);
+function getBitacoraShiftLabel(timeValue = getCurrentTimeValue()) {
+  const hour = Number(String(timeValue).slice(0, 2));
+  return hour >= 6 && hour < 18 ? "Diurno" : "Nocturno";
+}
+
+function formatTimeLabel(value) {
+  if (!value) {
+    return "--:--";
   }
-});
+  const [hourText, minuteText] = String(value).split(":");
+  const hour = Number(hourText);
+  const suffix = hour >= 12 ? "PM" : "AM";
+  const twelveHour = hour % 12 || 12;
+  return `${String(twelveHour).padStart(2, "0")}:${minuteText || "00"} ${suffix}`;
+}
+
+function getTimeMinutes(value) {
+  if (!value) {
+    return null;
+  }
+  const [hourText, minuteText] = String(value).split(":");
+  const hour = Number(hourText);
+  const minute = Number(minuteText || 0);
+  if (!Number.isFinite(hour) || !Number.isFinite(minute)) {
+    return null;
+  }
+  return (hour * 60) + minute;
+}
+
+function getBitacoraDurationMinutes(startTime, endTime) {
+  const startMinutes = getTimeMinutes(startTime);
+  const endMinutes = getTimeMinutes(endTime);
+  if (startMinutes === null || endMinutes === null || endMinutes < startMinutes) {
+    return null;
+  }
+  return endMinutes - startMinutes;
+}
+
+function getBitacoraStateLabel(state) {
+  const labels = {
+    pendiente_clasificar: "Pendiente",
+    clasificado: "Clasificado",
+    validado: "Validado",
+    observado: "Observado"
+  };
+  return labels[state] || "Pendiente";
+}
+
+function getBitacoraStateClass(state) {
+  const classes = {
+    pendiente_clasificar: "pending",
+    clasificado: "validated",
+    validado: "validated",
+    observado: "observed"
+  };
+  return classes[state] || "pending";
+}
+
+function getBitacoraTypeClass(typeCode) {
+  const normalized = normalizeDieselName(typeCode).toLowerCase();
+  return normalized || "uncategorized";
+}
+
+function getBitacoraTypeName(typeCode) {
+  return bitacoraTypesCache.find((type) => type.codigo === typeCode)?.nombre || "Sin tipo";
+}
+
+function getBitacoraCategoryName(categoryId) {
+  return bitacoraCategoriesCache.find((category) => category.id === categoryId)?.nombre || "";
+}
+
+function normalizeBitacoraRawEvent(event) {
+  return {
+    ...event,
+    nave_nombre: event.nave_nombre || event.nave_texto,
+    tipo_evento_nombre: event.tipo_evento_nombre || getBitacoraTypeName(event.tipo_evento),
+    categoria_nombre: event.categoria_nombre || getBitacoraCategoryName(event.categoria_id),
+    registrado_por: event.registrado_por || "Usuario"
+  };
+}
+
+function getSelectedBitacoraCategory() {
+  return bitacoraRefs.categoryGrid?.querySelector("button.active") || null;
+}
+
+function getBitacoraCategoryButtonMeta(button) {
+  if (!button) {
+    return null;
+  }
+  const styles = window.getComputedStyle(button);
+  return {
+    id: button.dataset.categoryId,
+    name: button.textContent.trim(),
+    color: styles.getPropertyValue("--category-color").trim() || styles.color,
+    bg: styles.getPropertyValue("--category-bg").trim() || "#ede9fe"
+  };
+}
+
+function getBitacoraClassificationGroups() {
+  const groups = new Map();
+  bitacoraClassificationDraft.forEach((draft, eventId) => {
+    if (!draft?.id) {
+      return;
+    }
+    if (!groups.has(draft.id)) {
+      groups.set(draft.id, []);
+    }
+    groups.get(draft.id).push(eventId);
+  });
+  return groups;
+}
+
+function updateBitacoraSelectionCount() {
+  if (bitacoraRefs.categorizedCount) {
+    bitacoraRefs.categorizedCount.textContent = String(bitacoraClassificationDraft.size);
+  }
+}
+
+function populateBitacoraVessels() {
+  if (!bitacoraRefs.vessel || bitacoraRefs.vessel.options.length) {
+    return;
+  }
+
+  dieselShips.forEach((ship) => bitacoraRefs.vessel.add(new Option(ship, ship)));
+}
+
+function populateBitacoraFilterVessels(events = []) {
+  if (!bitacoraRefs.categorizeVessel) {
+    return;
+  }
+
+  const selectedValue = bitacoraRefs.categorizeVessel.value;
+  const vessels = [...new Set([...dieselShips, ...events.map((event) => event.nave_nombre || event.nave_texto).filter(Boolean)])].sort();
+  bitacoraRefs.categorizeVessel.innerHTML = '<option value="">Todas</option>';
+  vessels.forEach((ship) => bitacoraRefs.categorizeVessel.add(new Option(ship, ship)));
+  bitacoraRefs.categorizeVessel.value = vessels.includes(selectedValue) ? selectedValue : "";
+}
+
+function renderBitacoraTypeFilter() {
+  if (!bitacoraRefs.categorizeType) {
+    return;
+  }
+
+  const selectedValue = bitacoraRefs.categorizeType.value;
+  bitacoraRefs.categorizeType.innerHTML = '<option value="">Todos</option>';
+  bitacoraRefs.categorizeType.add(new Option("Sin categoría", "__sin_categoria"));
+  bitacoraCategoriesCache.forEach((category) => {
+    bitacoraRefs.categorizeType.add(new Option(category.nombre, category.id));
+  });
+  bitacoraRefs.categorizeType.value = selectedValue === "__sin_categoria" || bitacoraCategoriesCache.some((category) => category.id === selectedValue)
+    ? selectedValue
+    : "";
+}
+
+function renderBitacoraCategories() {
+  if (!bitacoraRefs.categoryGrid || bitacoraCategoriesCache.length === 0) {
+    return;
+  }
+
+  bitacoraRefs.categoryGrid.innerHTML = bitacoraCategoriesCache.map((category) => `
+    <button type="button" data-category-id="${category.id}">${escapeHtml(category.nombre)}</button>
+  `).join("");
+
+  bitacoraRefs.categoryGrid.querySelectorAll("button").forEach((button) => {
+    button.addEventListener("click", () => {
+      bitacoraRefs.categoryGrid.querySelectorAll("button").forEach((item) => item.classList.remove("active"));
+      button.classList.add("active");
+      if (bitacoraRefs.categorySelectionLabel) {
+        bitacoraRefs.categorySelectionLabel.innerHTML = `Categoría seleccionada:<br><strong>${escapeHtml(button.textContent.trim())}</strong>`;
+      }
+      if (bitacoraRefs.saveMessage) {
+        bitacoraRefs.saveMessage.textContent = "";
+      }
+    });
+  });
+}
+
+async function loadBitacoraCatalogs() {
+  const session = getSession();
+
+  if (!session?.accessToken) {
+    return;
+  }
+
+  const [types, categories] = await Promise.all([
+    supabaseRequest("/rest/v1/bitacora_tipos_evento?select=codigo,nombre,orden&activo=eq.true&order=orden.asc", {
+      headers: { Authorization: `Bearer ${session.accessToken}` }
+    }),
+    supabaseRequest("/rest/v1/bitacora_categorias?select=id,codigo,nombre,orden&activo=eq.true&order=orden.asc", {
+      headers: { Authorization: `Bearer ${session.accessToken}` }
+    })
+  ]);
+
+  bitacoraTypesCache = types || [];
+  bitacoraCategoriesCache = categories || [];
+  renderBitacoraTypeFilter();
+  renderBitacoraCategories();
+}
+
+async function loadBitacoraEvents() {
+  const session = getSession();
+  const selectedDate = bitacoraRefs.categorizeDate?.value || bitacoraRefs.date?.value || getTodayValue();
+
+  if (!session?.accessToken || !selectedDate) {
+    bitacoraEventsCache = [];
+    return;
+  }
+
+  const query = new URLSearchParams({
+    select: "*",
+    fecha: `eq.${selectedDate}`,
+    order: "hora_inicio.desc"
+  });
+
+  const loadFromBaseTable = async () => {
+    const fallbackQuery = new URLSearchParams({
+      select: "id,fecha,hora_inicio,hora_fin,nave_texto,tipo_evento,descripcion,categoria_id,estado,created_by,created_at",
+      fecha: `eq.${selectedDate}`,
+      order: "hora_inicio.desc"
+    });
+    const rawEvents = await supabaseRequest(`/rest/v1/bitacora_eventos?${fallbackQuery}`, {
+      headers: { Authorization: `Bearer ${session.accessToken}` }
+    }) || [];
+    return rawEvents.map(normalizeBitacoraRawEvent);
+  };
+
+  try {
+    bitacoraEventsCache = await supabaseRequest(`/rest/v1/v_bitacora_eventos?${query}`, {
+      headers: { Authorization: `Bearer ${session.accessToken}` }
+    }) || [];
+
+    if (bitacoraEventsCache.length === 0) {
+      bitacoraEventsCache = await loadFromBaseTable();
+    }
+  } catch (error) {
+    console.warn("No se pudo leer v_bitacora_eventos; usando tabla base.", error);
+    bitacoraEventsCache = await loadFromBaseTable();
+  }
+}
+
+function updateBitacoraHeader() {
+  const dateValue = bitacoraRefs.date?.value || getTodayValue();
+  const shift = getBitacoraShiftLabel(bitacoraRefs.startTime?.value || getCurrentTimeValue());
+
+  if (bitacoraRefs.todayLabel) {
+    bitacoraRefs.todayLabel.textContent = formatDisplayDate(dateValue);
+  }
+  if (bitacoraRefs.shiftLabel) {
+    bitacoraRefs.shiftLabel.textContent = `Turno: ${shift}`;
+  }
+}
+
+function renderBitacoraTimeline() {
+  if (!bitacoraRefs.timeline) {
+    return;
+  }
+
+  const dateValue = bitacoraRefs.date?.value || getTodayValue();
+  const todayEvents = bitacoraEventsCache
+    .filter((event) => event.fecha === dateValue)
+    .sort((a, b) => String(b.hora_inicio).localeCompare(String(a.hora_inicio)));
+
+  if (bitacoraRefs.timelineCount) {
+    bitacoraRefs.timelineCount.textContent = String(todayEvents.length);
+  }
+
+  if (todayEvents.length === 0) {
+    bitacoraRefs.timeline.innerHTML = `
+      <article class="empty-consult-card bitacora-empty-card">
+        <i data-lucide="book-open-text"></i>
+        <h3>Sin eventos registrados hoy</h3>
+        <p>Los eventos reales aparecerán aquí después de registrarlos.</p>
+      </article>
+    `;
+    renderIcons();
+    return;
+  }
+
+  bitacoraRefs.timeline.innerHTML = todayEvents.map((event) => {
+    const typeClass = getBitacoraTypeClass(event.tipo_evento);
+    const typeLabel = event.tipo_evento_nombre || "Sin tipo";
+    return `
+      <article class="timeline-event ${escapeHtml(typeClass)}">
+        <time>${escapeHtml(formatTimeLabel(event.hora_inicio))}</time>
+        <i></i>
+        <div>
+          <span>${escapeHtml(typeLabel)}</span>
+          <strong>${escapeHtml(event.descripcion)}</strong>
+          <small>${escapeHtml(event.nave_nombre || event.nave_texto)} · Registrado por: ${escapeHtml(event.registrado_por || "Usuario")}</small>
+          <em>${escapeHtml(getBitacoraStateLabel(event.estado))}</em>
+        </div>
+      </article>
+    `;
+  }).join("");
+
+  renderIcons();
+}
+
+function getFilteredBitacoraEvents() {
+  const vesselValue = bitacoraRefs.categorizeVessel?.value || "";
+  const typeValue = bitacoraRefs.categorizeType?.value || "";
+
+  return bitacoraEventsCache.filter((event) => {
+    const vessel = event.nave_nombre || event.nave_texto || "";
+    const matchesVessel = !vesselValue || normalizeDieselName(vessel) === normalizeDieselName(vesselValue);
+    const matchesType = !typeValue
+      || (typeValue === "__sin_categoria" && !event.categoria_id)
+      || event.categoria_id === typeValue;
+    return matchesVessel && matchesType;
+  });
+}
+
+function renderBitacoraMetrics(events = bitacoraEventsCache) {
+  const pending = events.filter((event) => event.estado === "pendiente_clasificar").length;
+  const classified = events.filter((event) => event.estado === "clasificado" || event.estado === "validado").length;
+
+  if (bitacoraRefs.pendingMetric) bitacoraRefs.pendingMetric.textContent = String(pending);
+  if (bitacoraRefs.classifiedMetric) bitacoraRefs.classifiedMetric.textContent = String(classified);
+  if (bitacoraRefs.todayMetric) bitacoraRefs.todayMetric.textContent = String(events.length);
+}
+
+function renderBitacoraCategorizeTable() {
+  if (!bitacoraRefs.eventsBody) {
+    return;
+  }
+
+  const events = getFilteredBitacoraEvents();
+  renderBitacoraMetrics(bitacoraEventsCache);
+
+  if (bitacoraRefs.visibleCount) {
+    bitacoraRefs.visibleCount.textContent = String(events.length);
+  }
+  if (bitacoraRefs.tableSummary) {
+    bitacoraRefs.tableSummary.textContent = `Mostrando ${events.length} de ${bitacoraEventsCache.length} eventos`;
+  }
+
+  if (events.length === 0) {
+    bitacoraRefs.eventsBody.innerHTML = `
+      <tr>
+        <td colspan="6">
+          <article class="empty-consult-card bitacora-empty-card">
+            <i data-lucide="inbox"></i>
+            <h3>Sin eventos para clasificar</h3>
+            <p>No hay registros reales con los filtros actuales.</p>
+          </article>
+        </td>
+      </tr>
+    `;
+    updateBitacoraSelectionCount();
+    renderIcons();
+    return;
+  }
+
+  bitacoraRefs.eventsBody.innerHTML = events.map((event) => {
+    const draft = bitacoraClassificationDraft.get(event.id);
+    const categoryText = draft?.name || event.categoria_nombre || "Sin categoría";
+    const categoryClass = draft || event.categoria_nombre ? "category" : "uncategorized";
+    const categoryStyle = draft ? ` style="color: ${escapeHtml(draft.color)}; background: ${escapeHtml(draft.bg)};"` : "";
+    const stateClass = draft ? "validated" : getBitacoraStateClass(event.estado);
+    const stateLabel = draft ? "Validado" : getBitacoraStateLabel(event.estado);
+    const durationMinutes = getBitacoraDurationMinutes(event.hora_inicio, event.hora_fin);
+    return `
+      <tr data-event-id="${event.id}" class="${draft ? "is-categorized" : ""}">
+        <td class="event-time-cell">
+          <strong>Inicio: ${escapeHtml(formatTimeLabel(event.hora_inicio))}</strong>
+          <small>Fin: ${escapeHtml(formatTimeLabel(event.hora_fin))}</small>
+          <em>Duración: ${durationMinutes === null ? "--" : `${durationMinutes} min`}</em>
+        </td>
+        <td><span class="event-pill ${categoryClass}"${categoryStyle}>${escapeHtml(categoryText)}</span></td>
+        <td><strong>${escapeHtml(event.descripcion)}</strong><small>${escapeHtml(event.tipo_evento_nombre || "Sin tipo")}</small></td>
+        <td>${escapeHtml(event.nave_nombre || event.nave_texto)}</td>
+        <td><em class="state-pill ${stateClass}">${escapeHtml(stateLabel)}</em></td>
+        <td><label class="review-check"><input type="checkbox" class="categorize-event-check" value="${event.id}" ${draft ? "checked" : ""}><span></span></label></td>
+      </tr>
+    `;
+  }).join("");
+
+  bitacoraRefs.eventsBody.querySelectorAll(".categorize-event-check").forEach((input) => {
+    input.addEventListener("change", () => {
+      if (input.checked) {
+        const category = getBitacoraCategoryButtonMeta(getSelectedBitacoraCategory());
+        if (!category) {
+          input.checked = false;
+          if (bitacoraRefs.saveMessage) {
+            bitacoraRefs.saveMessage.textContent = "Selecciona una categoría antes de marcar un evento.";
+          }
+          updateBitacoraSelectionCount();
+          return;
+        }
+        bitacoraClassificationDraft.set(input.value, category);
+      } else {
+        bitacoraClassificationDraft.delete(input.value);
+      }
+      updateBitacoraSelectionCount();
+      if (bitacoraRefs.saveMessage) {
+        bitacoraRefs.saveMessage.textContent = "";
+      }
+      renderBitacoraCategorizeTable();
+    });
+  });
+
+  updateBitacoraSelectionCount();
+  renderIcons();
+}
+
+async function refreshBitacora() {
+  try {
+    await loadBitacoraEvents();
+  } catch (error) {
+    console.warn("No se pudo cargar la bitacora.", error);
+    bitacoraEventsCache = [];
+  }
+
+  const currentEventIds = new Set(bitacoraEventsCache.map((event) => event.id));
+  bitacoraClassificationDraft.forEach((_, eventId) => {
+    if (!currentEventIds.has(eventId)) {
+      bitacoraClassificationDraft.delete(eventId);
+    }
+  });
+
+  populateBitacoraFilterVessels(bitacoraEventsCache);
+  renderBitacoraTimeline();
+  renderBitacoraCategorizeTable();
+}
+
+async function saveBitacoraEvent() {
+  const session = getSession();
+
+  if (!session?.accessToken) {
+    alert("Vuelve a iniciar sesion para registrar eventos.");
+    showLogin();
+    return;
+  }
+
+  const payload = {
+    fecha: bitacoraRefs.date?.value,
+    hora_inicio: bitacoraRefs.startTime?.value,
+    hora_fin: bitacoraRefs.endTime?.value || "",
+    nave: bitacoraRefs.vessel?.value,
+    tipo_evento: "sin_tipo",
+    descripcion: bitacoraRefs.description?.value.trim(),
+    detalle: {
+      origen: "web",
+      modulo: "bitacora_rapida",
+      turno: getBitacoraShiftLabel(bitacoraRefs.startTime?.value)
+    }
+  };
+
+  if (!payload.fecha || !payload.hora_inicio || !payload.nave || !payload.descripcion) {
+    alert("Completa fecha, hora de inicio, nave y descripcion.");
+    return;
+  }
+
+  const nextStartTime = payload.hora_fin || payload.hora_inicio;
+  const originalHtml = bitacoraRefs.submit.innerHTML;
+  bitacoraRefs.submit.disabled = true;
+  bitacoraRefs.submit.textContent = "Registrando...";
+
+  try {
+    await supabaseRequest("/rest/v1/rpc/registrar_bitacora_evento", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${session.accessToken}` },
+      body: JSON.stringify({ payload })
+    });
+
+    bitacoraRefs.description.value = "";
+    bitacoraRefs.count.textContent = "0";
+    bitacoraRefs.startTime.value = nextStartTime;
+    bitacoraRefs.endTime.value = "";
+    if (bitacoraRefs.categorizeDate) {
+      bitacoraRefs.categorizeDate.value = payload.fecha;
+    }
+    updateBitacoraHeader();
+    await refreshBitacora();
+    alert("Evento registrado en Supabase.");
+  } catch (error) {
+    alert(error.message || "No se pudo registrar el evento.");
+  } finally {
+    bitacoraRefs.submit.disabled = false;
+    bitacoraRefs.submit.innerHTML = originalHtml;
+    renderIcons();
+  }
+}
+
+async function saveBitacoraClassification() {
+  const session = getSession();
+  const classificationGroups = getBitacoraClassificationGroups();
+  const eventCount = [...classificationGroups.values()].reduce((total, ids) => total + ids.length, 0);
+
+  if (!session?.accessToken) {
+    alert("Vuelve a iniciar sesion para clasificar eventos.");
+    showLogin();
+    return;
+  }
+
+  if (eventCount === 0) {
+    bitacoraRefs.saveMessage.textContent = "Marca al menos un evento pendiente de revisión.";
+    return;
+  }
+
+  const originalHtml = bitacoraRefs.saveCategorized.innerHTML;
+  bitacoraRefs.saveCategorized.disabled = true;
+  bitacoraRefs.saveCategorized.textContent = "Guardando...";
+
+  try {
+    const updates = await Promise.all([...classificationGroups.entries()].map(([categoryId, eventIds]) => (
+      supabaseRequest("/rest/v1/rpc/clasificar_bitacora_eventos", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${session.accessToken}` },
+        body: JSON.stringify({
+          payload: {
+            categoria_id: categoryId,
+            eventos: eventIds
+          }
+        })
+      })
+    )));
+    const updatedCount = updates.reduce((total, updated, index) => total + (Number(updated) || [...classificationGroups.values()][index].length), 0);
+
+    bitacoraClassificationDraft.clear();
+    bitacoraRefs.saveMessage.textContent = `${updatedCount || eventCount} evento(s) clasificado(s) guardado(s).`;
+    await refreshBitacora();
+  } catch (error) {
+    bitacoraRefs.saveMessage.textContent = error.message || "No se pudo guardar la clasificacion.";
+  } finally {
+    bitacoraRefs.saveCategorized.disabled = false;
+    bitacoraRefs.saveCategorized.innerHTML = originalHtml;
+    renderIcons();
+  }
+}
+
+function bootBitacora() {
+  populateBitacoraVessels();
+
+  if (bitacoraRefs.date && !bitacoraRefs.date.value) {
+    bitacoraRefs.date.value = getTodayValue();
+  }
+  if (bitacoraRefs.categorizeDate && !bitacoraRefs.categorizeDate.value) {
+    bitacoraRefs.categorizeDate.value = bitacoraRefs.date?.value || getTodayValue();
+  }
+  if (bitacoraRefs.startTime && !bitacoraRefs.startTime.value) {
+    bitacoraRefs.startTime.value = getCurrentTimeValue();
+  }
+
+  updateBitacoraHeader();
+
+  bitacoraRefs.description?.addEventListener("input", (event) => {
+    if (bitacoraRefs.count) {
+      bitacoraRefs.count.textContent = String(event.target.value.length);
+    }
+  });
+
+  bitacoraRefs.startTime?.addEventListener("change", updateBitacoraHeader);
+  bitacoraRefs.date?.addEventListener("change", () => {
+    if (bitacoraRefs.categorizeDate) {
+      bitacoraRefs.categorizeDate.value = bitacoraRefs.date.value;
+    }
+    updateBitacoraHeader();
+    refreshBitacora();
+  });
+  bitacoraRefs.submit?.addEventListener("click", saveBitacoraEvent);
+  bitacoraRefs.viewAll?.addEventListener("click", () => {
+    setPage("bitacora-categorizar");
+    refreshBitacora();
+  });
+  bitacoraRefs.categorizeButton?.addEventListener("click", () => {
+    setPage("bitacora-categorizar");
+    refreshBitacora();
+  });
+  bitacoraRefs.backButton?.addEventListener("click", () => setPage("bitacora"));
+  bitacoraRefs.saveCategorized?.addEventListener("click", saveBitacoraClassification);
+
+  [bitacoraRefs.categorizeVessel, bitacoraRefs.categorizeType].forEach((control) => {
+    control?.addEventListener("change", renderBitacoraCategorizeTable);
+  });
+
+  bitacoraRefs.categorizeDate?.addEventListener("change", refreshBitacora);
+  bitacoraRefs.clearFilters?.addEventListener("click", () => {
+    if (bitacoraRefs.categorizeDate) {
+      bitacoraRefs.categorizeDate.value = bitacoraRefs.date?.value || getTodayValue();
+    }
+    if (bitacoraRefs.categorizeVessel) bitacoraRefs.categorizeVessel.value = "";
+    if (bitacoraRefs.categorizeType) bitacoraRefs.categorizeType.value = "";
+    refreshBitacora();
+  });
+
+  loadBitacoraCatalogs()
+    .catch((error) => console.warn("No se pudieron cargar catalogos de bitacora.", error))
+    .finally(refreshBitacora);
+}
 
 function boot() {
   const rememberedUser = localStorage.getItem(REMEMBER_KEY);
@@ -1978,6 +2605,7 @@ function boot() {
 
   if (session) {
     bootDiesel();
+    bootBitacora();
     showDashboard(session);
     setSidebarCollapsed(sessionStorage.getItem("portoErp.sidebarCollapsed") === "true");
     renderPassengerRows();
@@ -1987,6 +2615,7 @@ function boot() {
 
   usernameInput.focus();
   bootDiesel();
+  bootBitacora();
   renderPassengerRows();
   updatePassengerSummary();
   renderIcons();
