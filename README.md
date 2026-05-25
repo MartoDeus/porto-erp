@@ -266,13 +266,13 @@ https://martodeus.github.io/porto-erp/
 Desde la carpeta del proyecto:
 
 ```bash
-python -m http.server 4173 --bind 127.0.0.1
+python -m http.server 8000 --bind 127.0.0.1
 ```
 
 Abrir en Chrome:
 
 ```txt
-http://127.0.0.1:4173/
+http://127.0.0.1:8000/
 ```
 
 ## Usuarios demo
@@ -345,6 +345,33 @@ El login actual es solo para prototipo estatico. Antes de usar datos reales, la 
   - Contratistas
   - Embarcaciones
   - Rutinas
+
+### Bitacora
+
+- Pantalla `Bitacora Rapida` accesible desde el sidebar.
+- Formulario operativo con fecha, hora de inicio, hora de fin, nave/barcaza y descripcion corta.
+- `Nave/Barcaza` incluye la opcion `Todos` para consultar la linea de tiempo completa.
+- Registro conectado a Supabase mediante RPC `registrar_bitacora_evento`.
+- Manejo de sesion Supabase con renovacion automatica por `refreshToken` cuando el JWT expira.
+- La hora de inicio se sincroniza con la ultima hora de fin registrada para la nave seleccionada.
+- La linea de tiempo ahora es horizontal, con scroll lateral y eventos en orden cronologico.
+- Cada tarjeta de la linea de tiempo muestra hora de inicio, hora de fin, duracion, descripcion y nave.
+- La linea de tiempo se filtra por la nave seleccionada.
+- Se elimino la linea de tiempo vertical anterior.
+- Se eliminaron el bloque `Registro rapido` y el texto inferior de validacion pendiente.
+
+### Clasificar Eventos
+
+- Pantalla accesible desde el boton `Categorizar` de Bitacora.
+- Filtros activos por fecha, nave/embarcacion y tipo de evento.
+- El filtro de tipo de evento usa categorias de revision y agrega `Sin categoria`.
+- Las categorias de revision se seleccionan desde botones laterales con colores diferenciados.
+- Al marcar un evento, la columna `Tipo de evento` cambia a la categoria seleccionada.
+- Si se cambia de categoria, los eventos ya marcados conservan su categoria anterior.
+- Los eventos marcados quedan en verde claro y con estado visual `Validado`.
+- El guardado agrupa eventos por categoria para guardar varias categorias en una sola tanda.
+- La columna hora muestra inicio, fin y duracion.
+- Se elimino la columna `Registrado por`.
 
 ### Diesel
 
@@ -436,7 +463,7 @@ supabase/migrations/202605221_initial_schema.sql
 - Primero se prueban cambios localmente en:
 
 ```txt
-http://127.0.0.1:4173/
+http://127.0.0.1:8000/
 ```
 
 - No subir a GitHub hasta que se pida explicitamente.
@@ -447,7 +474,7 @@ http://127.0.0.1:4173/
 main / root
 ```
 
-- Desde ahora, cada cambio importante debe actualizarse en GitHub para poder continuar desde otra computadora.
+- Los cambios importantes se suben a GitHub solo cuando el usuario lo indique explicitamente.
 - Si no aparece `git` en el PATH, usar Git portable de GitHub Desktop:
 
 ```txt

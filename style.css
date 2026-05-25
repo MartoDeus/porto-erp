@@ -1742,7 +1742,7 @@ button {
 
 .bitacora-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(340px, 410px);
+  grid-template-columns: minmax(0, 1fr);
   gap: 18px;
   align-items: start;
   max-width: 100%;
@@ -2390,95 +2390,124 @@ button {
 
 .event-timeline {
   position: relative;
-  display: grid;
-  gap: 0;
+  display: flex;
+  gap: 34px;
+  min-height: 240px;
+  padding: 14px 12px 20px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x proximity;
 }
 
 .event-timeline::before {
-  content: "";
-  position: absolute;
-  left: 82px;
-  top: 10px;
-  bottom: 10px;
-  width: 2px;
-  background: #e1e7ef;
+  content: none;
 }
 
 .timeline-event {
+  --timeline-color: var(--teal-dark);
+  --timeline-bg: #dff5ed;
+  flex: 0 0 270px;
+  display: grid;
+  gap: 14px;
+  scroll-snap-align: start;
+}
+
+.timeline-event:nth-child(2n) { --timeline-color: #0b72c9; --timeline-bg: #e4f0ff; }
+.timeline-event:nth-child(3n) { --timeline-color: #7c2fe0; --timeline-bg: #f0e8ff; }
+.timeline-event:nth-child(4n) { --timeline-color: #f97316; --timeline-bg: #fff1e6; }
+.timeline-event:nth-child(5n) { --timeline-color: #dc2626; --timeline-bg: #ffe7e7; }
+.timeline-event:nth-child(6n) { --timeline-color: #64748b; --timeline-bg: #eef3f8; }
+
+.timeline-event-rail {
   position: relative;
   display: grid;
-  grid-template-columns: 72px 22px minmax(0, 1fr);
-  gap: 12px;
-  align-items: start;
-  padding: 0 0 14px;
-}
-
-.timeline-event time {
+  grid-template-columns: 1fr auto 1fr;
+  gap: 18px;
+  align-items: center;
   color: #40516a;
-  font-size: 0.88rem;
 }
 
-.timeline-event > i {
-  width: 13px;
-  height: 13px;
-  margin-top: 3px;
+.timeline-event-rail::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 32px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--timeline-color);
+}
+
+.timeline-event-rail::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 26px;
+  width: 12px;
+  height: 12px;
   border: 3px solid white;
   border-radius: 50%;
-  background: var(--teal-dark);
-  box-shadow: 0 0 0 2px var(--teal-dark);
-  z-index: 1;
+  background: var(--timeline-color);
+  box-shadow: 0 0 0 2px var(--timeline-color), 244px 0 0 -3px white, 244px 0 0 0 var(--timeline-color);
 }
 
-.timeline-event > div {
+.timeline-event-rail time {
   position: relative;
+  z-index: 1;
+  color: #40516a;
+  font-size: 0.78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.timeline-event-rail time:last-child {
+  text-align: right;
+}
+
+.timeline-event-rail span {
+  position: relative;
+  z-index: 1;
+  align-self: end;
+  margin-top: 28px;
+  color: var(--timeline-color);
+  font-size: 0.76rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.timeline-event-card {
   display: grid;
-  gap: 8px;
-  padding: 16px 96px 16px 16px;
+  gap: 12px;
+  min-height: 148px;
+  padding: 18px 16px 16px;
   border: 1px solid #e1e7ef;
   border-radius: 8px;
   background: white;
+  box-shadow: 0 10px 24px rgba(17, 28, 43, 0.04);
 }
 
-.timeline-event span {
-  width: max-content;
-  padding: 4px 9px;
-  border-radius: 6px;
-  background: #ddf5ee;
-  color: var(--teal-dark);
-  font-size: 0.74rem;
-  font-weight: 900;
+.timeline-event-card strong {
+  color: var(--navy);
+  line-height: 1.45;
+}
+
+.timeline-event-card small {
+  color: #52627a;
+  font-weight: 800;
   text-transform: uppercase;
 }
 
-.timeline-event strong {
-  color: var(--navy);
-}
-
-.timeline-event small {
-  color: #52627a;
-}
-
-.timeline-event em {
-  position: absolute;
-  right: 16px;
-  top: 28px;
-  padding: 6px 10px;
+.timeline-event-card em {
+  width: max-content;
+  margin-top: auto;
+  padding: 8px 10px;
   border-radius: 6px;
-  color: var(--teal-dark);
-  background: #dff5ed;
+  color: var(--timeline-color);
+  background: var(--timeline-bg);
   font-style: normal;
   font-size: 0.8rem;
+  font-weight: 900;
 }
-
-.timeline-event.maniobra > i { background: #0b72c9; box-shadow: 0 0 0 2px #0b72c9; }
-.timeline-event.pasajeros > i { background: #7c2fe0; box-shadow: 0 0 0 2px #7c2fe0; }
-.timeline-event.mantenimiento > i { background: #f97316; box-shadow: 0 0 0 2px #f97316; }
-.timeline-event.incidente > i { background: #dc2626; box-shadow: 0 0 0 2px #dc2626; }
-
-.timeline-event.maniobra span { color: #0757a3; background: #e4f0ff; }
-.timeline-event.pasajeros span { color: #6d28d9; background: #f0e8ff; }
-.timeline-event.mantenimiento span { color: #ea580c; background: #fff1e6; }
-.timeline-event.incidente span { color: #dc2626; background: #ffe7e7; }
 
 .bitacora-timeline-card footer {
   display: flex;

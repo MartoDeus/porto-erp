@@ -246,6 +246,10 @@ function getFriendlyAuthError(message) {
     return "Usuario o contraseña incorrectos.";
   }
 
+  if (/jwt expired|invalid jwt|expired/i.test(message)) {
+    return "Tu sesión expiró. Vuelve a iniciar sesión para continuar.";
+  }
+
   if (/email not confirmed/i.test(message)) {
     return "El usuario todavia no esta confirmado en Supabase.";
   }
@@ -255,6 +259,43 @@ function getFriendlyAuthError(message) {
   }
 
   return message;
+}
+
+function isExpiredSessionMessage(message) {
+  return /jwt expired|invalid jwt|expired/i.test(message || "");
+}
+
+async function refreshStoredSession() {
+  const session = getSession();
+
+  if (!session?.refreshToken) {
+    return null;
+  }
+
+  const response = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+    method: "POST",
+    headers: {
+      apikey: SUPABASE_PUBLISHABLE_KEY,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ refresh_token: session.refreshToken })
+  });
+  const text = await response.text();
+  const payload = text ? JSON.parse(text) : null;
+
+  if (!response.ok || !payload?.access_token) {
+    sessionStorage.removeItem(SESSION_KEY);
+    return null;
+  }
+
+  const refreshedSession = {
+    ...session,
+    accessToken: payload.access_token,
+    refreshToken: payload.refresh_token || session.refreshToken,
+    startedAt: new Date().toISOString()
+  };
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(refreshedSession));
+  return refreshedSession;
 }
 
 async function supabaseRequest(path, options = {}) {
@@ -274,7 +315,22 @@ async function supabaseRequest(path, options = {}) {
 
   if (!response.ok) {
     const message = payload?.error_description || payload?.msg || payload?.message || "No se pudo conectar con Supabase.";
-    throw new Error(getFriendlyAuthError(message));
+    if (isExpiredSessionMessage(message) && !options.skipAuthRetry) {
+      const refreshedSession = await refreshStoredSession();
+      if (refreshedSession?.accessToken) {
+        return supabaseRequest(path, {
+          ...options,
+          skipAuthRetry: true,
+          headers: {
+            ...options.headers,
+            Authorization: `Bearer ${refreshedSession.accessToken}`
+          }
+        });
+      }
+    }
+    const error = new Error(getFriendlyAuthError(message));
+    error.authExpired = isExpiredSessionMessage(message);
+    throw error;
   }
 
   return payload;
@@ -307,6 +363,7 @@ function saveSession(user, remember) {
     username: user.username,
     role: user.role,
     accessToken: user.accessToken,
+    refreshToken: user.refreshToken,
     authProvider: user.authProvider || "supabase",
     startedAt: new Date().toISOString()
   };
@@ -2041,6 +2098,33 @@ function getBitacoraDurationMinutes(startTime, endTime) {
   return endMinutes - startMinutes;
 }
 
+function getBitacoraEventsForSelectedVessel() {
+  const dateValue = bitacoraRefs.date?.value || getTodayValue();
+  const vesselValue = bitacoraRefs.vessel?.value || "";
+  return bitacoraEventsCache
+    .filter((event) => {
+      const eventVessel = event.nave_nombre || event.nave_texto || "";
+      const matchesDate = event.fecha === dateValue;
+      const matchesVessel = !vesselValue || normalizeDieselName(eventVessel) === normalizeDieselName(vesselValue);
+      return matchesDate && matchesVessel;
+    });
+}
+
+function syncBitacoraStartTimeWithLastEnd() {
+  if (!bitacoraRefs.startTime || !bitacoraRefs.vessel?.value) {
+    return;
+  }
+
+  const latestEvent = getBitacoraEventsForSelectedVessel()
+    .filter((event) => event.hora_fin || event.hora_inicio)
+    .sort((a, b) => String(b.hora_fin || b.hora_inicio).localeCompare(String(a.hora_fin || a.hora_inicio)))[0];
+
+  if (latestEvent?.hora_fin) {
+    bitacoraRefs.startTime.value = String(latestEvent.hora_fin).slice(0, 5);
+    updateBitacoraHeader();
+  }
+}
+
 function getBitacoraStateLabel(state) {
   const labels = {
     pendiente_clasificar: "Pendiente",
@@ -2126,6 +2210,7 @@ function populateBitacoraVessels() {
     return;
   }
 
+  bitacoraRefs.vessel.add(new Option("Todos", ""));
   dieselShips.forEach((ship) => bitacoraRefs.vessel.add(new Option(ship, ship)));
 }
 
@@ -2260,10 +2345,8 @@ function renderBitacoraTimeline() {
     return;
   }
 
-  const dateValue = bitacoraRefs.date?.value || getTodayValue();
-  const todayEvents = bitacoraEventsCache
-    .filter((event) => event.fecha === dateValue)
-    .sort((a, b) => String(b.hora_inicio).localeCompare(String(a.hora_inicio)));
+  const todayEvents = getBitacoraEventsForSelectedVessel()
+    .sort((a, b) => String(a.hora_inicio).localeCompare(String(b.hora_inicio)));
 
   if (bitacoraRefs.timelineCount) {
     bitacoraRefs.timelineCount.textContent = String(todayEvents.length);
@@ -2272,27 +2355,30 @@ function renderBitacoraTimeline() {
   if (todayEvents.length === 0) {
     bitacoraRefs.timeline.innerHTML = `
       <article class="empty-consult-card bitacora-empty-card">
-        <i data-lucide="book-open-text"></i>
-        <h3>Sin eventos registrados hoy</h3>
-        <p>Los eventos reales aparecerán aquí después de registrarlos.</p>
+        <i data-lucide="calendar-clock"></i>
+        <h3>Sin eventos para esta nave</h3>
+        <p>Los eventos registrados aparecerán aquí en orden cronológico.</p>
       </article>
     `;
     renderIcons();
     return;
   }
 
-  bitacoraRefs.timeline.innerHTML = todayEvents.map((event) => {
+  bitacoraRefs.timeline.innerHTML = todayEvents.map((event, index) => {
     const typeClass = getBitacoraTypeClass(event.tipo_evento);
-    const typeLabel = event.tipo_evento_nombre || "Sin tipo";
+    const durationMinutes = getBitacoraDurationMinutes(event.hora_inicio, event.hora_fin);
+    const durationLabel = durationMinutes === null ? "--" : `${durationMinutes} min`;
     return `
-      <article class="timeline-event ${escapeHtml(typeClass)}">
-        <time>${escapeHtml(formatTimeLabel(event.hora_inicio))}</time>
-        <i></i>
-        <div>
-          <span>${escapeHtml(typeLabel)}</span>
+      <article class="timeline-event ${escapeHtml(typeClass)}" style="--timeline-index: ${index};">
+        <div class="timeline-event-rail">
+          <time>${escapeHtml(formatTimeLabel(event.hora_inicio))}</time>
+          <span>${escapeHtml(durationLabel)}</span>
+          <time>${escapeHtml(formatTimeLabel(event.hora_fin))}</time>
+        </div>
+        <div class="timeline-event-card">
           <strong>${escapeHtml(event.descripcion)}</strong>
-          <small>${escapeHtml(event.nave_nombre || event.nave_texto)} · Registrado por: ${escapeHtml(event.registrado_por || "Usuario")}</small>
-          <em>${escapeHtml(getBitacoraStateLabel(event.estado))}</em>
+          <small>${escapeHtml(event.nave_nombre || event.nave_texto)}</small>
+          <em>Duración: ${escapeHtml(durationLabel)}</em>
         </div>
       </article>
     `;
@@ -2412,6 +2498,10 @@ async function refreshBitacora() {
   try {
     await loadBitacoraEvents();
   } catch (error) {
+    if (error.authExpired) {
+      showLogin();
+      return;
+    }
     console.warn("No se pudo cargar la bitacora.", error);
     bitacoraEventsCache = [];
   }
@@ -2424,6 +2514,7 @@ async function refreshBitacora() {
   });
 
   populateBitacoraFilterVessels(bitacoraEventsCache);
+  syncBitacoraStartTimeWithLastEnd();
   renderBitacoraTimeline();
   renderBitacoraCategorizeTable();
 }
@@ -2479,6 +2570,11 @@ async function saveBitacoraEvent() {
     await refreshBitacora();
     alert("Evento registrado en Supabase.");
   } catch (error) {
+    if (error.authExpired) {
+      alert(error.message);
+      showLogin();
+      return;
+    }
     alert(error.message || "No se pudo registrar el evento.");
   } finally {
     bitacoraRefs.submit.disabled = false;
@@ -2526,6 +2622,11 @@ async function saveBitacoraClassification() {
     bitacoraRefs.saveMessage.textContent = `${updatedCount || eventCount} evento(s) clasificado(s) guardado(s).`;
     await refreshBitacora();
   } catch (error) {
+    if (error.authExpired) {
+      bitacoraRefs.saveMessage.textContent = error.message;
+      showLogin();
+      return;
+    }
     bitacoraRefs.saveMessage.textContent = error.message || "No se pudo guardar la clasificacion.";
   } finally {
     bitacoraRefs.saveCategorized.disabled = false;
@@ -2562,6 +2663,10 @@ function bootBitacora() {
     }
     updateBitacoraHeader();
     refreshBitacora();
+  });
+  bitacoraRefs.vessel?.addEventListener("change", () => {
+    syncBitacoraStartTimeWithLastEnd();
+    renderBitacoraTimeline();
   });
   bitacoraRefs.submit?.addEventListener("click", saveBitacoraEvent);
   bitacoraRefs.viewAll?.addEventListener("click", () => {
