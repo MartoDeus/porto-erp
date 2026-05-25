@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=diesel-date-stepper">
+  <link rel="stylesheet" href="style.css?v=passenger-titles-removed">
 </head>
 <body>
   <main class="auth-page" id="authPage">
@@ -402,61 +402,47 @@
         </section>
 
         <section class="page-view" id="passengersView" data-view="passengers" hidden>
-          <section class="passenger-header">
-            <div>
-              <h1>Registro de Pasajeros</h1>
+          <article class="panel-card passenger-form-card passenger-top-card">
+            <div class="passenger-form-grid">
+              <label>
+                Fecha
+                <div class="field-with-icon">
+                  <input id="passengerDate" type="date" value="2026-05-20">
+                  <i data-lucide="calendar-days"></i>
+                </div>
+              </label>
+
+              <fieldset>
+                <legend>Movimiento</legend>
+                <label class="radio-row option-card"><input type="radio" name="movement" value="Saliente"><i data-lucide="log-out"></i><span>Saliente</span></label>
+                <label class="radio-row option-card"><input type="radio" name="movement" value="Entrante" checked><i data-lucide="log-in"></i><span>Entrante</span></label>
+              </fieldset>
+
+              <fieldset>
+                <legend>Turno</legend>
+                <label class="radio-row option-card"><input type="radio" name="shift" value="Diurno" checked><i data-lucide="sun"></i><span>Diurno</span></label>
+                <label class="radio-row option-card"><input type="radio" name="shift" value="Nocturno"><i data-lucide="moon"></i><span>Nocturno</span></label>
+              </fieldset>
+
+              <label>
+                Embarcación
+                <select id="vesselSelect">
+                  <option>Olympic</option>
+                  <option>Talara</option>
+                  <option>Buckley</option>
+                  <option>Cabo Blanco</option>
+                  <option>Neptune</option>
+                  <option>Pariñas</option>
+                  <option>Sheyla</option>
+                  <option>LJ Kelley</option>
+                </select>
+              </label>
             </div>
-          </section>
+          </article>
 
           <section class="passenger-layout">
             <div class="passenger-main">
-              <article class="panel-card passenger-form-card">
-                <h3>Información del registro</h3>
-                <div class="passenger-form-grid">
-                  <label>
-                    Fecha
-                    <div class="field-with-icon">
-                      <input id="passengerDate" type="date" value="2026-05-20">
-                      <i data-lucide="calendar-days"></i>
-                    </div>
-                  </label>
-
-                  <fieldset>
-                    <legend>Movimiento</legend>
-                    <label class="radio-row"><input type="radio" name="movement" value="Saliente">Saliente</label>
-                    <label class="radio-row"><input type="radio" name="movement" value="Entrante" checked>Entrante</label>
-                  </fieldset>
-
-                  <fieldset>
-                    <legend>Tipo de pasajero</legend>
-                    <label class="radio-row"><input type="radio" name="passengerType" value="Pasajero" checked>Pasajero</label>
-                    <label class="radio-row"><input type="radio" name="passengerType" value="Tripulación">Tripulación</label>
-                  </fieldset>
-
-                  <label>
-                    Embarcacion
-                    <select id="vesselSelect">
-                      <option>Olympic</option>
-                      <option>Talara</option>
-                      <option>Buckley</option>
-                      <option>Cabo Blanco</option>
-                      <option>Neptune</option>
-                      <option>Pariñas</option>
-                      <option>Sheyla</option>
-                      <option>LJ Kelley</option>
-                    </select>
-                  </label>
-
-                  <fieldset>
-                    <legend>Turno</legend>
-                    <label class="radio-row"><input type="radio" name="shift" value="Diurno" checked>Diurno</label>
-                    <label class="radio-row"><input type="radio" name="shift" value="Nocturno">Nocturno</label>
-                  </fieldset>
-                </div>
-              </article>
-
-              <article class="panel-card passenger-detail-card">
-                <h3>Detalle de contratistas y rutinas</h3>
+              <article class="panel-card passenger-quick-card">
                 <div class="entry-form">
                   <label>
                     Contratista
@@ -501,8 +487,15 @@
                     Cantidad
                     <input id="quantityInput" type="number" min="1" step="1" placeholder="Cantidad">
                   </label>
+                  <div class="passenger-add-wrap">
+                    <button class="add-button" type="button" id="addPassengerEntry"><i data-lucide="plus"></i>Agregar</button>
+                    <small>ENTER para agregar</small>
+                  </div>
                 </div>
+              </article>
 
+              <article class="panel-card passenger-detail-card">
+                <h3>Detalle de contratistas y rutinas</h3>
                 <div class="passenger-table-wrap">
                   <table class="passenger-table">
                     <thead>
@@ -516,17 +509,17 @@
                     <tbody id="passengerRows"></tbody>
                   </table>
                 </div>
+                <footer class="passenger-table-footer">
+                  <span id="passengerRowCount">0 registros</span>
+                  <strong>Total de pasajeros: <b id="passengerTableTotal">0</b></strong>
+                </footer>
               </article>
             </div>
 
             <aside class="passenger-side">
               <article class="side-card button-card">
-                <button class="save-button" type="button" id="savePassengerButton"><i data-lucide="save"></i>Guardar</button>
+                <button class="save-button" type="button" id="savePassengerButton"><i data-lucide="save"></i>Guardar registro</button>
                 <button class="clear-button" type="button" id="clearPassengerButton"><i data-lucide="eraser"></i>Limpiar</button>
-              </article>
-
-              <article class="side-card">
-                <button class="add-button" type="button" id="addPassengerEntry"><i data-lucide="circle-plus"></i>Agregar</button>
               </article>
 
               <article class="side-card summary-card-passenger">
@@ -536,21 +529,22 @@
                   <div><dt>Nave:</dt><dd id="summaryVessel">Olympic</dd></div>
                   <div><dt>Movimiento:</dt><dd id="summaryMovement">Entrante</dd></div>
                   <div><dt>Turno:</dt><dd id="summaryShift">Diurno</dd></div>
-                  <div><dt>Total de pasajeros:</dt><dd id="summaryTotal">13</dd></div>
+                  <div class="summary-total"><dt>Total de pasajeros:</dt><dd id="summaryTotal">0</dd></div>
                 </dl>
               </article>
             </aside>
           </section>
 
-          <section class="passenger-stat-grid">
-            <article class="passenger-stat"><i data-lucide="users"></i><div><p>Total pasajeros hoy</p><strong id="statTotalPassengers">156</strong><span>+12.3% vs ayer</span></div></article>
-            <article class="passenger-stat"><i data-lucide="ship"></i><div><p>Embarcados hoy</p><strong>98</strong><span>+8.7% vs ayer</span></div></article>
-            <article class="passenger-stat"><i data-lucide="user-round-check"></i><div><p>Desembarcados hoy</p><strong>58</strong><span>+5.1% vs ayer</span></div></article>
-            <article class="passenger-stat"><i data-lucide="route"></i><div><p>En tránsito</p><strong>24</strong><span>Actual</span></div></article>
-            <article class="passenger-stat"><i data-lucide="warehouse"></i><div><p>Capacidad total</p><strong>320</strong><span>Por día</span></div></article>
+          <section class="shortcut-strip">
+            <span>Atajos de teclado:</span>
+            <kbd>ENTER</kbd><small>Agregar</small>
+            <kbd>CTRL + G</kbd><small>Guardar</small>
+            <kbd>ESC</kbd><small>Limpiar</small>
+            <kbd>DELETE</kbd><small>Eliminar fila</small>
           </section>
-        </section>
 
+          <footer class="passenger-sync">Último registro: 20/05/2026 10:42 por Martin Checco <span>Sincronizado <i></i></span></footer>
+        </section>
         <section class="page-view" id="dieselView" data-view="diesel" hidden>
           <section class="passenger-header diesel-header">
             <div>
@@ -764,8 +758,63 @@
         <section class="page-view placeholder-view" data-view="cargas" hidden>
           <article class="panel-card placeholder-card"><i data-lucide="container"></i><h1>Cargas</h1><p>Pantalla preparada para gestión de cargas.</p></article>
         </section>
-        <section class="page-view placeholder-view" data-view="bitacora" hidden>
-          <article class="panel-card placeholder-card"><i data-lucide="book-open-text"></i><h1>Bitácora</h1><p>Pantalla preparada para novedades y eventos operativos.</p></article>
+        <section class="page-view bitacora-view" data-view="bitacora" hidden>
+          <section class="bitacora-hero">
+            <div>
+              <h1>Bitácora Rápida</h1>
+              <p>Registra eventos operacionales de forma rápida y sencilla</p>
+            </div>
+            <div class="bitacora-status-strip">
+              <span><i data-lucide="calendar-days"></i>22/05/2026</span>
+              <span><i data-lucide="clock-3"></i>10:25 AM</span>
+              <span><i data-lucide="sun"></i>Turno: Diurno</span>
+            </div>
+          </section>
+
+          <section class="bitacora-layout">
+            <article class="panel-card bitacora-form-card">
+              <h3>1. Selecciona el tipo de evento</h3>
+              <div class="event-type-grid" id="bitacoraEventTypes">
+                <button class="event-type-card active diesel" type="button" data-type="DIESEL"><i data-lucide="fuel"></i><span>Diesel</span></button>
+                <button class="event-type-card maniobra" type="button" data-type="MANIOBRA"><i data-lucide="anchor"></i><span>Maniobra</span></button>
+                <button class="event-type-card pasajeros" type="button" data-type="PASAJEROS"><i data-lucide="users"></i><span>Pasajeros</span></button>
+                <button class="event-type-card mantenimiento" type="button" data-type="MANTENIMIENTO"><i data-lucide="wrench"></i><span>Mantenimiento</span></button>
+                <button class="event-type-card incidente" type="button" data-type="INCIDENTE"><i data-lucide="triangle-alert"></i><span>Incidente</span></button>
+                <button class="event-type-card observacion" type="button" data-type="OBSERVACIÓN"><i data-lucide="message-circle"></i><span>Observación</span></button>
+              </div>
+
+              <h3>2. Hora del evento</h3>
+              <div class="bitacora-time-grid">
+                <label>Hora de inicio <b>*</b><span><i data-lucide="clock-3"></i><input type="time" value="08:30"></span></label>
+                <label>Hora de fin <b>*</b><span><i data-lucide="clock-3"></i><input type="time" value="08:45"></span></label>
+              </div>
+
+              <h3>3. Selecciona la nave / embarcación</h3>
+              <label class="bitacora-select"><i data-lucide="ship"></i><select><option>PARIÑAS</option><option>TALARA</option><option>MR BOB</option><option>OLYMPIC EXPRESS</option><option>LOBITOS EXPRESS</option></select></label>
+
+              <h3>4. Describe el evento</h3>
+              <label class="bitacora-description"><textarea id="bitacoraDescription" maxlength="200" placeholder="Escribe aquí una descripción corta del evento..."></textarea><small><span id="bitacoraCount">0</span>/200</small></label>
+
+              <button class="bitacora-submit" type="button"><i data-lucide="send"></i>Registrar evento</button>
+              <p class="bitacora-validation"><i data-lucide="shield-check"></i>El evento quedará pendiente de validación por el supervisor</p>
+
+              <aside class="bitacora-tip"><i data-lucide="zap"></i><div><strong>Registro rápido</strong><span>Escribe de forma corta y clara. El supervisor completará la clasificación y detalles.</span></div></aside>
+            </article>
+
+            <article class="panel-card bitacora-timeline-card">
+              <header><h3>Eventos registrados hoy <span>7</span></h3><button type="button">Ver todos</button></header>
+              <div class="event-timeline">
+                <article class="timeline-event diesel"><time>10:15 AM</time><i></i><div><span>Diesel</span><strong>PARIÑAS recibió 300 galones de diesel.</strong><small>Registrado por: Javier Céspedes</small><em>Pendiente</em></div></article>
+                <article class="timeline-event maniobra"><time>09:52 AM</time><i></i><div><span>Maniobra</span><strong>MR BOB inició maniobra de atraque.</strong><small>Registrado por: Carlos Paiva</small><em>Pendiente</em></div></article>
+                <article class="timeline-event pasajeros"><time>09:15 AM</time><i></i><div><span>Pasajeros</span><strong>Embarque de 24 pasajeros hacia TALARA.</strong><small>Registrado por: Edwin Nizama</small><em>Pendiente</em></div></article>
+                <article class="timeline-event mantenimiento"><time>08:47 AM</time><i></i><div><span>Mantenimiento</span><strong>Se realizó mantenimiento preventivo a generador.</strong><small>Registrado por: Victor Saavedra</small><em>Pendiente</em></div></article>
+                <article class="timeline-event incidente"><time>08:10 AM</time><i></i><div><span>Incidente</span><strong>Fuga menor detectada en línea de combustible.</strong><small>Registrado por: Jorge Requena</small><em>Pendiente</em></div></article>
+                <article class="timeline-event diesel"><time>07:58 AM</time><i></i><div><span>Diesel</span><strong>Transferencia de 850 galones.</strong><small>Registrado por: Javier Céspedes</small><em>Pendiente</em></div></article>
+                <article class="timeline-event maniobra"><time>07:35 AM</time><i></i><div><span>Maniobra</span><strong>Zarpe programado completado.</strong><small>Registrado por: Carlos Paiva</small><em>Pendiente</em></div></article>
+              </div>
+              <footer><i data-lucide="refresh-cw"></i>Los eventos se actualizan automáticamente</footer>
+            </article>
+          </section>
         </section>
         <section class="page-view placeholder-view" data-view="mapa" hidden>
           <article class="panel-card placeholder-card"><i data-lucide="map"></i><h1>Mapa</h1><p>Pantalla preparada para vista geográfica de operaciones.</p></article>
@@ -796,6 +845,8 @@
   <script src="vendor/jspdf.umd.min.js"></script>
   <script src="vendor/jspdf.plugin.autotable.min.js"></script>
   <script src="vendor/xlsx.full.min.js"></script>
-  <script src="script.js?v=diesel-date-stepper"></script>
+  <script src="script.js?v=passenger-titles-removed"></script>
 </body>
 </html>
+
+

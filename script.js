@@ -1,4 +1,4 @@
-const SESSION_KEY = "portoErp.session";
+﻿const SESSION_KEY = "portoErp.session";
 const REMEMBER_KEY = "portoErp.rememberedUser";
 const DIESEL_KARDEX_KEY = "portoErp.dieselKardex";
 const SUPABASE_URL = "https://hkkgyjkwkezsomjmwnen.supabase.co";
@@ -47,6 +47,8 @@ const passengerRefs = {
   summaryMovement: document.querySelector("#summaryMovement"),
   summaryShift: document.querySelector("#summaryShift"),
   summaryTotal: document.querySelector("#summaryTotal"),
+  rowCount: document.querySelector("#passengerRowCount"),
+  tableTotal: document.querySelector("#passengerTableTotal"),
   statTotalPassengers: document.querySelector("#statTotalPassengers")
 };
 
@@ -426,7 +428,15 @@ function updatePassengerSummary() {
   passengerRefs.summaryMovement.textContent = getCheckedValue("movement");
   passengerRefs.summaryShift.textContent = getCheckedValue("shift");
   passengerRefs.summaryTotal.textContent = String(total);
-  passengerRefs.statTotalPassengers.textContent = String(143 + total);
+  if (passengerRefs.tableTotal) {
+    passengerRefs.tableTotal.textContent = String(total);
+  }
+  if (passengerRefs.rowCount) {
+    passengerRefs.rowCount.textContent = `${passengerEntries.length} ${passengerEntries.length === 1 ? "registro" : "registros"}`;
+  }
+  if (passengerRefs.statTotalPassengers) {
+    passengerRefs.statTotalPassengers.textContent = String(total);
+  }
 }
 
 function renderPassengerRows() {
@@ -486,7 +496,7 @@ function buildPassengerRecords(session) {
   const fecha = passengerRefs.date?.value;
   const embarcacion = passengerRefs.vessel?.value;
   const movimiento = getCheckedValue("movement");
-  const tipoPasajero = getCheckedValue("passengerType");
+  const tipoPasajero = "Pasajero";
   const turno = getCheckedValue("shift");
 
   if (!fecha || !embarcacion || passengerEntries.length === 0) {
@@ -560,7 +570,7 @@ function clearPassengerForm() {
   passengerRefs.vessel.selectedIndex = -1;
   passengerRefs.contractor.selectedIndex = -1;
   passengerRefs.routine.selectedIndex = -1;
-  document.querySelectorAll('input[name="movement"], input[name="passengerType"], input[name="shift"]').forEach((input) => {
+  document.querySelectorAll('input[name="movement"], input[name="shift"]').forEach((input) => {
     input.checked = false;
   });
   renderPassengerRows();
@@ -1131,10 +1141,11 @@ function buildDieselConsultData() {
 
   const unitsToRender = showAllDieselConsultItems
     ? dieselCatalog.filter((unit) => !selectedShip || unit.ship === selectedShip)
-    : recordsForDate.map((record) => {
-        const ship = normalizeDieselDisplayName(record.unidad_nombre);
-        return findDieselCatalogByShip(ship) || { ship, group: "SIN AGRUPAR", icon: "ship", item: "" };
-      });
+    : recordsForDate
+        .map((record) => {
+          const ship = normalizeDieselDisplayName(record.unidad_nombre);
+          return findDieselCatalogByShip(ship) || { ship, group: "SIN AGRUPAR", icon: "ship", item: "" };
+        });
 
   const rowsByGroup = new Map();
   unitsToRender.forEach((catalog) => {
@@ -1924,6 +1935,36 @@ passengerRefs.save?.addEventListener("click", savePassengerRecords);
   ...document.querySelectorAll('input[name="movement"], input[name="shift"]')
 ].forEach((control) => {
   control?.addEventListener("change", updatePassengerSummary);
+});
+
+document.addEventListener("keydown", (event) => {
+  if (document.querySelector('[data-view="passengers"]')?.hidden === false) {
+    if (event.key === "Enter" && document.activeElement === passengerRefs.quantity) {
+      event.preventDefault();
+      addPassengerEntry();
+    }
+    if (event.key === "Escape") {
+      clearPassengerForm();
+    }
+    if (event.ctrlKey && event.key.toLowerCase() === "g") {
+      event.preventDefault();
+      savePassengerRecords();
+    }
+  }
+});
+
+document.querySelectorAll("#bitacoraEventTypes .event-type-card").forEach((button) => {
+  button.addEventListener("click", () => {
+    document.querySelectorAll("#bitacoraEventTypes .event-type-card").forEach((item) => item.classList.remove("active"));
+    button.classList.add("active");
+  });
+});
+
+document.querySelector("#bitacoraDescription")?.addEventListener("input", (event) => {
+  const count = document.querySelector("#bitacoraCount");
+  if (count) {
+    count.textContent = String(event.target.value.length);
+  }
 });
 
 function boot() {

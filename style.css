@@ -1247,13 +1247,19 @@ button {
 
 .passenger-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 330px;
+  grid-template-columns: minmax(0, 1fr) 360px;
   gap: 18px;
+  align-items: start;
 }
 
 .passenger-main {
   display: grid;
   gap: 16px;
+}
+
+.passenger-top-card {
+  margin-bottom: 18px;
+  padding: 22px 24px;
 }
 
 .passenger-form-card h3,
@@ -1263,16 +1269,27 @@ button {
 
 .passenger-form-grid {
   display: grid;
-  grid-template-columns: 1fr 1.08fr 1.18fr;
-  gap: 26px 38px;
+  grid-template-columns: minmax(190px, 0.9fr) minmax(280px, 1.05fr) minmax(280px, 1.05fr) minmax(300px, 1.15fr) 360px;
+  gap: 24px;
+  align-items: end;
+}
+
+.passenger-form-grid > *:last-child {
+  grid-column: 4;
 }
 
 .passenger-form-grid label,
 .entry-form label {
   display: grid;
-  gap: 9px;
+  gap: 10px;
   color: #263750;
   font-weight: 700;
+}
+
+.passenger-form-grid > label,
+.passenger-form-grid > fieldset {
+  min-height: 78px;
+  align-content: end;
 }
 
 .passenger-form-grid input,
@@ -1307,19 +1324,24 @@ button {
 }
 
 .passenger-form-grid fieldset {
-  display: flex;
-  align-items: center;
-  gap: 28px;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
   margin: 0;
-  padding: 0;
+  padding: 34px 0 0;
   border: 0;
 }
 
 .passenger-form-grid legend {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
-  margin-bottom: 12px;
+  margin-bottom: 0;
   color: #263750;
   font-weight: 700;
+  line-height: 19px;
 }
 
 .radio-row {
@@ -1337,6 +1359,39 @@ button {
   accent-color: var(--teal);
 }
 
+.passenger-form-grid .option-card {
+  min-height: 44px;
+  display: inline-flex !important;
+  justify-content: center;
+  gap: 12px !important;
+  padding: 0 14px;
+  color: var(--ink);
+  background: white;
+  border: 1px solid #d9e1eb;
+  border-radius: 6px;
+  font-weight: 800 !important;
+  cursor: pointer;
+}
+
+.passenger-form-grid .option-card input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.passenger-form-grid .option-card svg {
+  width: 21px;
+  height: 21px;
+  color: currentColor;
+}
+
+.passenger-form-grid .option-card:has(input:checked) {
+  color: var(--teal-dark);
+  background: #f0fbf7;
+  border-color: var(--teal-dark);
+  box-shadow: inset 0 0 0 1px rgba(0, 137, 100, 0.28);
+}
+
 .diesel-register-top .radio-row input {
   width: 33px;
   height: 33px;
@@ -1344,9 +1399,36 @@ button {
 
 .entry-form {
   display: grid;
-  grid-template-columns: 1fr 1fr 130px;
+  grid-template-columns: minmax(220px, 1fr) minmax(220px, 1fr) 150px 150px;
   gap: 28px;
-  margin-bottom: 20px;
+  align-items: end;
+}
+
+.passenger-quick-card {
+  min-height: 156px;
+  padding: 24px 28px;
+}
+
+.passenger-quick-card h3 {
+  margin-bottom: 18px;
+}
+
+.passenger-add-wrap {
+  position: relative;
+  display: grid;
+  height: 71px;
+  padding-top: 27px;
+  align-self: end;
+}
+
+.passenger-add-wrap small {
+  position: absolute;
+  top: 77px;
+  left: 0;
+  right: 0;
+  color: var(--muted);
+  font-size: 0.74rem;
+  text-align: center;
 }
 
 .passenger-table-wrap {
@@ -1354,6 +1436,19 @@ button {
   overflow: auto;
   border: 1px solid #e1e7ef;
   border-radius: 6px;
+}
+
+.passenger-table-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 18px;
+  color: var(--ink);
+}
+
+.passenger-table-footer b,
+.summary-total dd {
+  color: var(--teal-dark);
 }
 
 .passenger-table {
@@ -1412,6 +1507,8 @@ button {
 .button-card {
   display: grid;
   gap: 14px;
+  min-height: 190px;
+  align-content: center;
 }
 
 .save-button,
@@ -1432,7 +1529,7 @@ button {
 }
 
 .summary-card-passenger {
-  min-height: 320px;
+  min-height: 350px;
   padding: 0;
   overflow: hidden;
 }
@@ -1454,6 +1551,7 @@ button {
 
 .summary-card-passenger div {
   display: flex;
+  justify-content: space-between;
   gap: 6px;
 }
 
@@ -1464,6 +1562,65 @@ button {
 
 .summary-card-passenger dd {
   font-weight: 700;
+}
+
+.summary-total {
+  display: grid !important;
+  justify-content: stretch !important;
+  padding-top: 16px;
+  border-top: 1px solid #e1e7ef;
+}
+
+.summary-total dd {
+  margin-top: 8px;
+  font-size: 2rem;
+  font-weight: 900;
+}
+
+.shortcut-strip {
+  width: min(100%, 900px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin: 48px auto 0;
+  padding: 14px 18px;
+  color: #5a6a83;
+  background: white;
+  border: 1px solid #e1e7ef;
+  border-radius: 8px;
+  box-shadow: 0 16px 38px rgba(17, 28, 43, 0.04);
+}
+
+.shortcut-strip kbd {
+  padding: 7px 14px;
+  color: #263750;
+  background: #f2f5f9;
+  border: 1px solid #dfe6ee;
+  border-radius: 6px;
+  font: 800 0.78rem var(--font);
+}
+
+.passenger-sync {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 34px;
+  color: #5a6a83;
+  font-size: 0.88rem;
+}
+
+.passenger-sync span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.passenger-sync i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--teal);
 }
 
 .passenger-stat-grid {
@@ -1507,6 +1664,386 @@ button {
   color: #00865f;
   font-size: 0.88rem;
   font-weight: 700;
+}
+
+.bitacora-view {
+  display: grid;
+  gap: 18px;
+}
+
+.bitacora-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.bitacora-hero h1 {
+  margin: 0 0 8px;
+  color: var(--navy);
+  font-size: 1.7rem;
+}
+
+.bitacora-hero p {
+  margin: 0;
+  color: #40516a;
+}
+
+.bitacora-status-strip {
+  min-width: 420px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px 20px;
+  background: white;
+  border: 1px solid #e1e7ef;
+  border-radius: 8px;
+  box-shadow: 0 16px 38px rgba(17, 28, 43, 0.04);
+}
+
+.bitacora-status-strip span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+}
+
+.bitacora-status-strip svg {
+  width: 18px;
+  height: 18px;
+  color: var(--teal-dark);
+}
+
+.bitacora-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(410px, 0.95fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.bitacora-form-card,
+.bitacora-timeline-card {
+  padding: 26px;
+}
+
+.bitacora-form-card h3 {
+  margin: 0 0 16px;
+  color: var(--navy);
+  font-size: 1rem;
+}
+
+.bitacora-form-card h3:not(:first-child) {
+  margin-top: 28px;
+}
+
+.event-type-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(96px, 1fr));
+  gap: 14px;
+}
+
+.event-type-card {
+  min-height: 118px;
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  padding: 14px;
+  color: var(--navy);
+  background: white;
+  border: 1px solid #e1e7ef;
+  border-radius: 8px;
+  box-shadow: 0 10px 24px rgba(17, 28, 43, 0.05);
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.event-type-card svg {
+  width: 42px;
+  height: 42px;
+}
+
+.event-type-card.diesel svg,
+.event-type-card.diesel.active {
+  color: var(--teal-dark);
+}
+
+.event-type-card.maniobra svg { color: #0b72c9; }
+.event-type-card.pasajeros svg { color: #7c2fe0; }
+.event-type-card.mantenimiento svg { color: #f97316; }
+.event-type-card.incidente svg { color: #dc2626; }
+.event-type-card.observacion svg { color: #52627a; }
+
+.event-type-card.active {
+  background: #effaf6;
+  border-color: var(--teal-dark);
+  box-shadow: inset 0 0 0 1px var(--teal-dark), 0 14px 30px rgba(0, 137, 100, 0.12);
+}
+
+.bitacora-time-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 26px;
+}
+
+.bitacora-time-grid label,
+.bitacora-description,
+.bitacora-select {
+  display: grid;
+  gap: 10px;
+  color: #263750;
+  font-weight: 700;
+}
+
+.bitacora-time-grid b {
+  color: #dc2626;
+}
+
+.bitacora-time-grid span,
+.bitacora-select {
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  border: 1px solid #d9e1eb;
+  border-radius: 6px;
+  background: white;
+}
+
+.bitacora-time-grid input,
+.bitacora-select select {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  color: var(--ink);
+  background: transparent;
+  font: inherit;
+  font-weight: 800;
+}
+
+.bitacora-time-grid svg,
+.bitacora-select svg {
+  width: 20px;
+  height: 20px;
+  color: #52627a;
+}
+
+.bitacora-description textarea {
+  min-height: 116px;
+  padding: 14px;
+  border: 1px solid #d9e1eb;
+  border-radius: 6px;
+  resize: vertical;
+  font: inherit;
+}
+
+.bitacora-description small {
+  color: #40516a;
+  text-align: right;
+}
+
+.bitacora-submit {
+  width: 100%;
+  min-height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 18px;
+  color: white;
+  background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+  border: 0;
+  border-radius: 6px;
+  font-size: 1.05rem;
+  font-weight: 900;
+}
+
+.bitacora-validation {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 14px 0 0;
+  color: #40516a;
+  font-size: 0.88rem;
+}
+
+.bitacora-validation svg {
+  width: 17px;
+  height: 17px;
+  color: var(--teal-dark);
+}
+
+.bitacora-tip {
+  display: flex;
+  gap: 12px;
+  margin-top: 46px;
+  padding: 16px;
+  color: #40516a;
+  background: #f0fbf7;
+  border: 1px solid #d7efe6;
+  border-radius: 6px;
+}
+
+.bitacora-tip svg {
+  width: 20px;
+  height: 20px;
+  color: var(--teal-dark);
+}
+
+.bitacora-tip strong,
+.bitacora-tip span {
+  display: block;
+}
+
+.bitacora-timeline-card header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.bitacora-timeline-card h3 {
+  margin: 0;
+}
+
+.bitacora-timeline-card h3 span {
+  display: inline-grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  margin-left: 6px;
+  border-radius: 50%;
+  color: var(--teal-dark);
+  background: #dff5ed;
+  font-size: 0.78rem;
+}
+
+.bitacora-timeline-card header button {
+  color: #005bbb;
+  background: transparent;
+  border: 0;
+  font-weight: 700;
+}
+
+.event-timeline {
+  position: relative;
+  display: grid;
+  gap: 0;
+}
+
+.event-timeline::before {
+  content: "";
+  position: absolute;
+  left: 82px;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  background: #e1e7ef;
+}
+
+.timeline-event {
+  position: relative;
+  display: grid;
+  grid-template-columns: 72px 22px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 0 0 14px;
+}
+
+.timeline-event time {
+  color: #40516a;
+  font-size: 0.88rem;
+}
+
+.timeline-event > i {
+  width: 13px;
+  height: 13px;
+  margin-top: 3px;
+  border: 3px solid white;
+  border-radius: 50%;
+  background: var(--teal-dark);
+  box-shadow: 0 0 0 2px var(--teal-dark);
+  z-index: 1;
+}
+
+.timeline-event > div {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  padding: 16px 96px 16px 16px;
+  border: 1px solid #e1e7ef;
+  border-radius: 8px;
+  background: white;
+}
+
+.timeline-event span {
+  width: max-content;
+  padding: 4px 9px;
+  border-radius: 6px;
+  background: #ddf5ee;
+  color: var(--teal-dark);
+  font-size: 0.74rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.timeline-event strong {
+  color: var(--navy);
+}
+
+.timeline-event small {
+  color: #52627a;
+}
+
+.timeline-event em {
+  position: absolute;
+  right: 16px;
+  top: 28px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  color: var(--teal-dark);
+  background: #dff5ed;
+  font-style: normal;
+  font-size: 0.8rem;
+}
+
+.timeline-event.maniobra > i { background: #0b72c9; box-shadow: 0 0 0 2px #0b72c9; }
+.timeline-event.pasajeros > i { background: #7c2fe0; box-shadow: 0 0 0 2px #7c2fe0; }
+.timeline-event.mantenimiento > i { background: #f97316; box-shadow: 0 0 0 2px #f97316; }
+.timeline-event.incidente > i { background: #dc2626; box-shadow: 0 0 0 2px #dc2626; }
+
+.timeline-event.maniobra span { color: #0757a3; background: #e4f0ff; }
+.timeline-event.pasajeros span { color: #6d28d9; background: #f0e8ff; }
+.timeline-event.mantenimiento span { color: #ea580c; background: #fff1e6; }
+.timeline-event.incidente span { color: #dc2626; background: #ffe7e7; }
+
+.bitacora-timeline-card footer {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 14px;
+  color: #52627a;
+  border-top: 1px solid #e1e7ef;
+}
+
+@media (max-width: 1380px) {
+  .passenger-form-grid {
+    grid-template-columns: repeat(3, minmax(180px, 1fr));
+  }
+
+  .passenger-form-grid > *:last-child {
+    grid-column: auto;
+  }
+
+  .event-type-grid {
+    grid-template-columns: repeat(3, minmax(120px, 1fr));
+  }
+
+  .bitacora-layout {
+    grid-template-columns: 1fr;
+  }
 }
 
 .diesel-register-top {
