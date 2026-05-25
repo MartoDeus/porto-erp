@@ -1,4 +1,4 @@
-﻿const SESSION_KEY = "portoErp.session";
+const SESSION_KEY = "portoErp.session";
 const REMEMBER_KEY = "portoErp.rememberedUser";
 const DIESEL_KARDEX_KEY = "portoErp.dieselKardex";
 const SUPABASE_URL = "https://hkkgyjkwkezsomjmwnen.supabase.co";
@@ -110,7 +110,7 @@ const dieselCatalog = [
   { item: 5, group: "NAVE PASAJEROS/DESPACHADORES", tab: "Pasajeros / Despachadores", icon: "users", ship: "NEPTUNE EXPRESS", initialStock: 600, type: "Desp.", dayCrew: "CUSTODIA", nightCrew: "CUSTODIA", received: 0, receivedFrom: "-", day: 0, night: 0, dispatched: 0, transferred: 0 },
   { item: 6, group: "NAVE PASAJEROS/DESPACHADORES", tab: "Pasajeros / Despachadores", icon: "users", ship: "OLYMPIC EXPRESS", initialStock: 2048, type: "Desp.", dayCrew: "JORGE REQUENA MORALES / JOSE SOLANO", nightCrew: "OSCAR BOULANGGER / MARLON SANTILLAN", received: 150, receivedFrom: "TALARA", day: 165, night: 18, dispatched: 0, transferred: 0 },
   { item: 7, group: "NAVE RECORRIDO", tab: "Naves Recorrido", icon: "route", ship: "DONALD ROBIN", initialStock: 408, type: "Desp.", dayCrew: "ANGEL ZETA VALLADOLID / CESAR AREVALO BENITES", nightCrew: "T.DIA", received: 200, receivedFrom: "TALARA", day: 72, night: 0, dispatched: 0, transferred: 0 },
-  { item: 8, group: "NAVE RECORRIDO", tab: "Naves Recorrido", icon: "route", ship: "SHEILA R", initialStock: 260, type: "Desp.", dayCrew: "JUAN CORONADO / JULIO NUÃ‘EZ", nightCrew: "ELEUTERIO SANDOVAL / EDWIN NIZAMA", received: 200, receivedFrom: "LOBITOS EXPRESS", day: 61, night: 35, dispatched: 0, transferred: 0 },
+  { item: 8, group: "NAVE RECORRIDO", tab: "Naves Recorrido", icon: "route", ship: "SHEILA R", initialStock: 260, type: "Desp.", dayCrew: "JUAN CORONADO / JULIO NUÑEZ", nightCrew: "ELEUTERIO SANDOVAL / EDWIN NIZAMA", received: 200, receivedFrom: "LOBITOS EXPRESS", day: 61, night: 35, dispatched: 0, transferred: 0 },
   { item: 9, group: "NAVE RECORRIDO", tab: "Naves Recorrido", icon: "route", ship: "IRIS", initialStock: 425, type: "Desp.", dayCrew: "HUMBERTO CASTILLO / JULIO PAREDES", nightCrew: "JULIO RAMOS / ANDRES SERNAQUE", received: 200, receivedFrom: "TALARA", day: 55, night: 62, dispatched: 0, transferred: 0 },
   { item: 10, group: "NAVE RECORRIDO", tab: "Naves Recorrido", icon: "route", ship: "VILMA", initialStock: 0, type: "Desp.", dayCrew: "JAIME PANTA / ARMANDO ALTAMIRANO", nightCrew: "VARADERO", received: 0, receivedFrom: "-", day: 0, night: 0, dispatched: 0, transferred: 0 },
   { item: 11, group: "NAVE RECORRIDO", tab: "Naves Recorrido", icon: "route", ship: "ROSLYN", initialStock: 633, type: "Desp.", dayCrew: "PERSONAL DE CAMPO", nightCrew: "PERSONAL DE CAMPO", received: 0, receivedFrom: "-", day: 0, night: 0, dispatched: 0, transferred: 0 },
@@ -205,7 +205,7 @@ function formatRoleName(roleName) {
 
 function getFriendlyAuthError(message) {
   if (/invalid login credentials/i.test(message)) {
-    return "Usuario o contraseÃ±a incorrectos.";
+    return "Usuario o contraseña incorrectos.";
   }
 
   if (/email not confirmed/i.test(message)) {
@@ -331,7 +331,7 @@ function setSidebarCollapsed(isCollapsed) {
     }
   }
   menuButton.setAttribute("aria-expanded", String(!isCollapsed));
-  menuButton.setAttribute("aria-label", isCollapsed ? "Expandir menÃº" : "Contraer menÃº");
+  menuButton.setAttribute("aria-label", isCollapsed ? "Expandir menú" : "Contraer menú");
   sessionStorage.setItem("portoErp.sidebarCollapsed", String(isCollapsed));
 }
 
@@ -382,9 +382,9 @@ function setPage(pageName) {
       "agua-tratada": "Agua Tratada",
       "agua-consumo": "Agua de Consumo",
       buceo: "Buceo",
-      horometros: "HorÃ³metros",
+      horometros: "Horómetros",
       cargas: "Cargas",
-      bitacora: "BitÃ¡cora",
+      bitacora: "Bitácora",
       mapa: "Mapa",
       naves: "Naves",
       rutas: "Rutas",
@@ -1824,7 +1824,7 @@ loginForm.addEventListener("submit", async (event) => {
   const password = passwordInput.value;
 
   if (!username || !password) {
-    setMessage("Ingresa tu usuario y contraseÃ±a para continuar.", "error");
+    setMessage("Ingresa tu usuario y contraseña para continuar.", "error");
     return;
   }
 
@@ -1836,13 +1836,13 @@ loginForm.addEventListener("submit", async (event) => {
     const user = await authenticate(username, password);
 
     if (!user) {
-      setMessage("Usuario o contraseÃ±a incorrectos.", "error");
+      setMessage("Usuario o contraseña incorrectos.", "error");
       passwordInput.select();
       return;
     }
 
     saveSession(user, rememberInput.checked);
-    setMessage("SesiÃ³n iniciada correctamente.", "success");
+    setMessage("Sesión iniciada correctamente.", "success");
 
     window.setTimeout(() => {
       showDashboard(getSession());
@@ -1857,11 +1857,11 @@ loginForm.addEventListener("submit", async (event) => {
 togglePasswordButton.addEventListener("click", () => {
   const isHidden = passwordInput.type === "password";
   passwordInput.type = isHidden ? "text" : "password";
-  togglePasswordButton.setAttribute("aria-label", isHidden ? "Ocultar contraseÃ±a" : "Mostrar contraseÃ±a");
+  togglePasswordButton.setAttribute("aria-label", isHidden ? "Ocultar contraseña" : "Mostrar contraseña");
 });
 
 recoverButton.addEventListener("click", () => {
-    setMessage("RecuperaciÃ³n pendiente: luego la conectaremos con tu flujo real de usuarios.", "success");
+    setMessage("Recuperación pendiente: luego la conectaremos con tu flujo real de usuarios.", "success");
 });
 
 logoutButton.addEventListener("click", showLogin);
