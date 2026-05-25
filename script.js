@@ -153,6 +153,7 @@ const dieselInitialStockCache = new Map();
 let passengerEntries = [];
 let dieselDispatches = [];
 let showAllDieselConsultItems = false;
+let dieselConsultCache = { key: "", rows: [] };
 
 function setMessage(text, type = "") {
   formMessage.textContent = text;
@@ -1075,59 +1076,86 @@ async function saveDieselRecord() {
   }
 }
 
+function findDieselCatalogByShip(ship) {
+  const normalized = normalizeDieselName(ship);
+  return dieselCatalog.find((unit) => normalizeDieselName(unit.ship) === normalized);
+}
+
+function getDieselConsultKey() {
+  return [
+    dieselRefs.consultDate?.value || getTodayValue(),
+    dieselRefs.consultVessel?.value || "",
+    dieselRefs.consultShift?.value || "",
+    showAllDieselConsultItems ? "all" : "moves"
+  ].join("|");
+}
+
+async function loadDieselConsultFromSupabase() {
+  const session = getSession();
+  const selectedDate = dieselRefs.consultDate?.value || getTodayValue();
+
+  if (!session?.accessToken || !selectedDate) {
+    dieselConsultCache = { key: getDieselConsultKey(), rows: [] };
+    return;
+  }
+
+  const query = new URLSearchParams({
+    select: "*",
+    fecha: `eq.${selectedDate}`,
+    order: "unidad_orden.asc"
+  });
+
+  const rows = await supabaseRequest(`/rest/v1/v_diesel_resumen_diario?${query}`, {
+    headers: {
+      Authorization: `Bearer ${session.accessToken}`
+    }
+  });
+
+  dieselConsultCache = { key: getDieselConsultKey(), rows: rows || [] };
+}
+
 function buildDieselConsultData() {
   const selectedShip = dieselRefs.consultVessel?.value || "";
   const selectedShift = dieselRefs.consultShift?.value || "";
   const selectedDate = dieselRefs.consultDate?.value || getTodayValue();
-  const recordsForDate = getDieselKardex().filter((record) => {
-    if (!record.savedAt) return false;
-    if (selectedDate && record.date !== selectedDate) return false;
-    if (selectedShip && record.ship !== selectedShip) return false;
-    if (selectedShift === "A" && record.shift !== "Diurno") return false;
-    if (selectedShift === "B" && record.shift !== "Nocturno") return false;
-    return true;
+  const recordsForDate = (dieselConsultCache.rows || []).filter((record) => {
+    if (selectedShip && normalizeDieselName(record.unidad_nombre) !== normalizeDieselName(selectedShip)) return false;
+    return showAllDieselConsultItems || record.tiene_movimiento;
   });
 
   const recordsByShip = recordsForDate.reduce((map, record) => {
-    if (!map.has(record.ship)) {
-      map.set(record.ship, []);
-    }
-    map.get(record.ship).push(record);
+    const ship = normalizeDieselDisplayName(record.unidad_nombre);
+    map.set(normalizeDieselName(ship), record);
     return map;
   }, new Map());
 
-  const catalogByShip = new Map(dieselCatalog.map((unit) => [unit.ship, unit]));
   const unitsToRender = showAllDieselConsultItems
     ? dieselCatalog.filter((unit) => !selectedShip || unit.ship === selectedShip)
-    : [...recordsByShip.keys()]
-        .map((ship) => catalogByShip.get(ship) || { ship, group: "SIN AGRUPAR", icon: "ship", item: "" })
-        .filter((unit) => {
-          const records = recordsByShip.get(unit.ship) || [];
-          return records.some(hasDieselMovement);
-        });
+    : recordsForDate.map((record) => {
+        const ship = normalizeDieselDisplayName(record.unidad_nombre);
+        return findDieselCatalogByShip(ship) || { ship, group: "SIN AGRUPAR", icon: "ship", item: "" };
+      });
 
   const rowsByGroup = new Map();
   unitsToRender.forEach((catalog) => {
     const ship = catalog.ship;
-    const records = recordsByShip.get(ship) || [];
-    const dayRecord = records.find((record) => record.shift === "Diurno") || {};
-    const nightRecord = records.find((record) => record.shift === "Nocturno") || {};
-    const initialStock = records.length > 0 ? toNumber(records[0]?.initialStock) : 0;
-    const received = records.reduce((sum, record) => sum + toNumber(record.recharge), 0);
-    const day = selectedShift === "B" ? 0 : toNumber(dayRecord.consumption);
-    const night = selectedShift === "A" ? 0 : toNumber(nightRecord.consumption);
+    const record = recordsByShip.get(normalizeDieselName(ship)) || {};
+    const initialStock = toNumber(record.stock_inicial_dia);
+    const received = toNumber(record.cantidad_recibida) + toNumber(record.total_recarga);
+    const day = selectedShift === "B" ? 0 : toNumber(record.consumo_dia);
+    const night = selectedShift === "A" ? 0 : toNumber(record.consumo_noche);
     const consumption = day + night;
-    const dispatched = records.reduce((sum, record) => sum + toNumber(record.dispatched), 0);
-    const transferred = records.reduce((sum, record) => sum + toNumber(record.transferred), 0);
-    const sondage = records.reduce((sum, record) => sum + toNumber(record.sondage), 0);
-    const finalStock = initialStock + received - consumption - dispatched - transferred + sondage;
+    const dispatched = toNumber(record.cantidad_despachada);
+    const transferred = toNumber(record.cantidad_transferida);
+    const sondage = toNumber(record.sondaje_neto);
+    const finalStock = toNumber(record.stock_final_dia);
     const group = catalog.group || "SIN AGRUPAR";
     const row = {
       item: catalog.item || "",
       ship,
       initialStock,
       received,
-      receivedFrom: records.map((record) => record.receiveFrom || record.receivedFrom).filter(Boolean).join(" / ") || "-",
+      receivedFrom: record.recibido_de || "-",
       day,
       night,
       consumption,
@@ -1135,8 +1163,8 @@ function buildDieselConsultData() {
       transferred,
       sondage,
       finalStock,
-      dayCrew: { captain: dayRecord.captain || "-", driver: dayRecord.driver || "-" },
-      nightCrew: { captain: nightRecord.captain || "-", driver: nightRecord.driver || "-" },
+      dayCrew: { captain: record.capitan_dia || "-", driver: record.motorista_dia || "-" },
+      nightCrew: { captain: record.capitan_noche || "-", driver: record.motorista_noche || "-" },
       type: catalog.type || "-",
       icon: catalog.icon || "ship"
     };
@@ -1183,9 +1211,16 @@ function buildDieselConsultData() {
   return { selectedShip, selectedShift, selectedDate, visibleUnits: recordsForDate, visibleRows, groups: reportGroups, totals };
 }
 
-function renderDieselConsult() {
+async function renderDieselConsult() {
   if (!dieselRefs.consultGroups || !dieselRefs.consultTabs) {
     return;
+  }
+
+  try {
+    await loadDieselConsultFromSupabase();
+  } catch (error) {
+    console.warn("No se pudo cargar la consulta diesel desde Supabase.", error);
+    dieselConsultCache = { key: getDieselConsultKey(), rows: [] };
   }
 
   const report = buildDieselConsultData();
