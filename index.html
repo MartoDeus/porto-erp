@@ -3,27 +3,35 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ALM ERP | Iniciar sesion</title>
+  <title>ALM ERP | Iniciar sesión</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=bitacora-last-event">
+  <link rel="stylesheet" href="style.css?v=login-slide-3-5s-20260526">
 </head>
 <body>
   <main class="auth-page" id="authPage">
+    <div class="auth-slideshow" aria-hidden="true">
+      <span style="--slide-image: url('assets/login-slideshow/login-bg-01.png'); --slide-delay: 0s;"></span>
+      <span style="--slide-image: url('assets/login-slideshow/login-bg-02.png'); --slide-delay: 5s;"></span>
+      <span style="--slide-image: url('assets/login-slideshow/login-bg-03.png'); --slide-delay: 10s;"></span>
+      <span style="--slide-image: url('assets/login-slideshow/login-bg-04.png'); --slide-delay: 15s;"></span>
+      <span style="--slide-image: url('assets/login-slideshow/login-bg-05.png'); --slide-delay: 20s;"></span>
+      <span style="--slide-image: url('assets/login-slideshow/login-bg-06.png'); --slide-delay: 25s;"></span>
+    </div>
     <section class="auth-hero" aria-label="ALM ERP">
       <div class="brand-area">
         <img class="brand-logo" src="assets/alm_logo.png" alt="ALM">
         <div>
           <h1>ALM ERP</h1>
-          <p>Gestion integral de tu muelle</p>
+          <p>Gestión integral de tu muelle</p>
         </div>
       </div>
 
       <div class="hero-copy">
-        <p>Solucion ERP para</p>
-        <p>la administracion <strong>eficiente</strong></p>
-        <p>de tu <strong>muelle maritimo</strong></p>
+        <p>Solución ERP para</p>
+        <p>la administración <strong>eficiente</strong></p>
+        <p>de tu <strong>muelle marítimo</strong></p>
       </div>
 
       <ul class="feature-list" aria-label="Capacidades del ERP">
@@ -65,17 +73,17 @@
       </footer>
     </section>
 
-    <section class="login-panel" aria-label="Inicio de sesion">
+    <section class="login-panel" aria-label="Inicio de sesión">
       <form class="login-card" id="loginForm" novalidate>
         <div class="login-heading">
-          <h2>Iniciar sesion</h2>
+          <h2>Iniciar sesión</h2>
           <p>Accede a tu cuenta</p>
         </div>
 
         <div class="form-field">
           <label for="username">Usuario</label>
           <div class="input-wrap">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10Zm0-2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm9 11H3v-2a7 7 0 0 1 14 0v2Zm-2.2-2a5 5 0 0 0-9.6 0h9.6Z"/></svg>
+            <i class="login-input-icon" data-lucide="user-round"></i>
             <input id="username" name="username" type="text" autocomplete="username" placeholder="usuario" required>
           </div>
         </div>
@@ -112,7 +120,7 @@
   </main>
 
   <section class="dashboard-page" id="dashboardPage" hidden>
-    <aside class="app-sidebar" aria-label="Menu principal">
+    <aside class="app-sidebar" aria-label="Menú principal">
       <div class="sidebar-brand">
         <img src="assets/alm_logo.png" alt="ALM">
         <strong>ALM ERP</strong>
@@ -396,9 +404,10 @@
             <div class="passenger-form-grid">
               <label>
                 Fecha
-                <div class="field-with-icon">
+                <div class="date-stepper passenger-date-stepper">
+                  <button type="button" id="passengerPrevDay" aria-label="Día anterior"><i data-lucide="chevron-left"></i></button>
                   <input id="passengerDate" type="date" value="2026-05-20">
-                  <i data-lucide="calendar-days"></i>
+                  <button type="button" id="passengerNextDay" aria-label="Día siguiente"><i data-lucide="chevron-right"></i></button>
                 </div>
               </label>
 
@@ -539,9 +548,9 @@
           <section class="panel-card diesel-register-top">
             <label>Fecha
               <span class="date-stepper diesel-date-stepper">
-                <button type="button" id="dieselPrevDay" aria-label="Dia anterior"><i data-lucide="chevron-left"></i></button>
+                <button type="button" id="dieselPrevDay" aria-label="Día anterior"><i data-lucide="chevron-left"></i></button>
                 <input id="dieselDate" type="date">
-                <button type="button" id="dieselNextDay" aria-label="Dia siguiente"><i data-lucide="chevron-right"></i></button>
+                <button type="button" id="dieselNextDay" aria-label="Día siguiente"><i data-lucide="chevron-right"></i></button>
               </span>
             </label>
             <label>Nave Origen
@@ -552,13 +561,6 @@
               <label class="radio-row option-card diesel-shift-card"><input type="radio" name="dieselShift" value="Diurno"><i data-lucide="sun"></i><span>Diurno</span></label>
               <label class="radio-row option-card diesel-shift-card"><input type="radio" name="dieselShift" value="Nocturno"><i data-lucide="moon"></i><span>Nocturno</span></label>
             </fieldset>
-            <label>Registrado Por
-              <select id="dieselRegisteredBy">
-                <option>JIMMY PEREZ MORAN</option>
-                <option>MARTIN CHECCO</option>
-                <option>ELIAS SANCHEZ</option>
-              </select>
-            </label>
             <div class="diesel-consult-slot">
               <button class="green-action consulta-action" type="button" id="consultDieselButton"><i data-lucide="search"></i>Consulta</button>
             </div>
@@ -674,9 +676,9 @@
               <i data-lucide="calendar-days"></i>
               <label>Fecha
                 <span class="date-stepper">
-                  <button type="button" id="consultPrevDay" aria-label="Dia anterior"><i data-lucide="chevron-left"></i></button>
+                  <button type="button" id="consultPrevDay" aria-label="Día anterior"><i data-lucide="chevron-left"></i></button>
                   <input id="dieselConsultDate" type="date">
-                  <button type="button" id="consultNextDay" aria-label="Dia siguiente"><i data-lucide="chevron-right"></i></button>
+                  <button type="button" id="consultNextDay" aria-label="Día siguiente"><i data-lucide="chevron-right"></i></button>
                 </span>
               </label>
             </article>
@@ -748,7 +750,11 @@
               <div class="bitacora-event-row">
                 <div class="bitacora-event-date">
                   <h3>1. Fecha del evento</h3>
-                  <label class="bitacora-date"><i data-lucide="calendar-days"></i><input id="bitacoraDate" type="date"></label>
+                  <label class="date-stepper bitacora-date-stepper">
+                    <button type="button" id="bitacoraPrevDay" aria-label="Día anterior"><i data-lucide="chevron-left"></i></button>
+                    <input id="bitacoraDate" type="date">
+                    <button type="button" id="bitacoraNextDay" aria-label="Día siguiente"><i data-lucide="chevron-right"></i></button>
+                  </label>
                 </div>
 
                 <div class="bitacora-event-start">
@@ -798,14 +804,22 @@
               </button>
               <div>
               <h1>Reporte de Bitácora Operacional</h1>
-              <p>Resumen de eventos registrados por nave</p>
               </div>
             </div>
             <div class="report-actions">
-              <label><i data-lucide="calendar-days"></i><input id="bitacoraReportDate" type="date"></label>
-              <label><i data-lucide="sun"></i><select id="bitacoraReportShift"><option value="">Todos los turnos</option><option>Diurno</option><option>Nocturno</option></select></label>
-              <button class="outline-action" id="bitacoraReportPdf" type="button"><i data-lucide="file-down"></i>Exportar PDF</button>
-              <button class="outline-action" id="bitacoraReportPrint" type="button"><i data-lucide="printer"></i>Imprimir</button>
+              <label class="report-date-filter">Fecha
+                <span class="date-stepper report-date-stepper">
+                  <button type="button" id="bitacoraReportPrevDay" aria-label="Día anterior"><i data-lucide="chevron-left"></i></button>
+                  <input id="bitacoraReportDate" type="date">
+                  <button type="button" id="bitacoraReportNextDay" aria-label="Día siguiente"><i data-lucide="chevron-right"></i></button>
+                </span>
+              </label>
+              <label class="report-shift-filter">Turno
+                <span><i data-lucide="sun"></i><select id="bitacoraReportShift"><option value="">Todos los turnos</option><option>Diurno</option><option>Nocturno</option></select></span>
+              </label>
+              <div class="report-export-slot">
+                <button class="outline-action" id="bitacoraReportPdf" type="button"><i data-lucide="file-down"></i>Exportar PDF</button>
+              </div>
             </div>
           </section>
 
@@ -845,7 +859,11 @@
           <section class="categorize-workspace">
             <div class="categorize-left-stack">
               <section class="panel-card categorize-filters">
-                <label>Fecha<span><i data-lucide="calendar-days"></i><input id="categorizeDateFilter" type="date"></span></label>
+                <label>Fecha<span class="date-stepper categorize-date-stepper">
+                  <button type="button" id="categorizePrevDay" aria-label="Día anterior"><i data-lucide="chevron-left"></i></button>
+                  <input id="categorizeDateFilter" type="date">
+                  <button type="button" id="categorizeNextDay" aria-label="Día siguiente"><i data-lucide="chevron-right"></i></button>
+                </span></label>
                 <label>Nave / Embarcación<select id="categorizeVesselFilter"><option value="">Todas</option></select></label>
                 <label>Tipo de evento<select id="categorizeTypeFilter"><option value="">Todos</option></select></label>
                 <button class="outline-action" id="clearCategorizeFilters" type="button"><i data-lucide="filter-x"></i>Limpiar filtros</button>
@@ -948,7 +966,7 @@
   <script src="vendor/jspdf.umd.min.js"></script>
   <script src="vendor/jspdf.plugin.autotable.min.js"></script>
   <script src="vendor/xlsx.full.min.js"></script>
-  <script src="script.js?v=bitacora-last-event"></script>
+  <script src="script.js?v=time-24h-parinas-20260526"></script>
 </body>
 </html>
 

@@ -35,6 +35,8 @@ const dashboardGreeting = document.querySelector("#dashboardGreeting");
 
 const passengerRefs = {
   date: document.querySelector("#passengerDate"),
+  prevDay: document.querySelector("#passengerPrevDay"),
+  nextDay: document.querySelector("#passengerNextDay"),
   vessel: document.querySelector("#vesselSelect"),
   contractor: document.querySelector("#contractorSelect"),
   routine: document.querySelector("#routineSelect"),
@@ -60,7 +62,6 @@ const dieselRefs = {
   nextDay: document.querySelector("#dieselNextDay"),
   origin: document.querySelector("#dieselOriginSelect"),
   receive: document.querySelector("#dieselReceiveSelect"),
-  registeredBy: document.querySelector("#dieselRegisteredBy"),
   captain: document.querySelector("#dieselCaptain"),
   driver: document.querySelector("#dieselDriver"),
   document: document.querySelector("#dieselDocument"),
@@ -108,6 +109,8 @@ const dieselRefs = {
 
 const bitacoraRefs = {
   date: document.querySelector("#bitacoraDate"),
+  prevDay: document.querySelector("#bitacoraPrevDay"),
+  nextDay: document.querySelector("#bitacoraNextDay"),
   startTime: document.querySelector("#bitacoraStartTime"),
   endTime: document.querySelector("#bitacoraEndTime"),
   vessel: document.querySelector("#bitacoraVessel"),
@@ -122,14 +125,17 @@ const bitacoraRefs = {
   viewAll: document.querySelector("#bitacoraViewAll"),
   reportButton: document.querySelector("#bitacoraReportButton"),
   reportDate: document.querySelector("#bitacoraReportDate"),
+  reportPrevDay: document.querySelector("#bitacoraReportPrevDay"),
+  reportNextDay: document.querySelector("#bitacoraReportNextDay"),
   reportShift: document.querySelector("#bitacoraReportShift"),
   reportTimeline: document.querySelector("#bitacoraReportTimeline"),
   reportGroups: document.querySelector("#bitacoraReportGroups"),
-  reportPrint: document.querySelector("#bitacoraReportPrint"),
   reportBack: document.querySelector("#bitacoraReportBackButton"),
   categorizeButton: document.querySelector("#bitacoraCategorizeButton"),
   backButton: document.querySelector("#bitacoraBackButton"),
   categorizeDate: document.querySelector("#categorizeDateFilter"),
+  categorizePrevDay: document.querySelector("#categorizePrevDay"),
+  categorizeNextDay: document.querySelector("#categorizeNextDay"),
   categorizeVessel: document.querySelector("#categorizeVesselFilter"),
   categorizeType: document.querySelector("#categorizeTypeFilter"),
   clearFilters: document.querySelector("#clearCategorizeFilters"),
@@ -392,6 +398,11 @@ function saveSession(user, remember) {
 function getSession() {
   const rawSession = sessionStorage.getItem(SESSION_KEY);
   return rawSession ? JSON.parse(rawSession) : null;
+}
+
+function getCurrentUserDisplayName() {
+  const session = getSession();
+  return session?.name || session?.username || "Usuario";
 }
 
 function getUserInitials(name) {
@@ -665,7 +676,7 @@ async function savePassengerRecords() {
   const session = getSession();
 
   if (!session?.accessToken) {
-    alert("Vuelve a iniciar sesion para guardar pasajeros.");
+    alert("Vuelve a iniciar sesión para guardar pasajeros.");
     showLogin();
     return;
   }
@@ -770,6 +781,20 @@ function shiftDateValue(value, days) {
   const date = value ? new Date(`${value}T00:00:00`) : new Date();
   date.setDate(date.getDate() + days);
   return date.toISOString().slice(0, 10);
+}
+
+function bindDateStepper(input, prevButton, nextButton, onChange) {
+  const shift = (days) => {
+    if (!input) {
+      return;
+    }
+    input.value = shiftDateValue(input.value, days);
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+    onChange?.();
+  };
+
+  prevButton?.addEventListener("click", () => shift(-1));
+  nextButton?.addEventListener("click", () => shift(1));
 }
 
 function getDieselKardex() {
@@ -1109,7 +1134,7 @@ function buildDieselRecordFromForm() {
     date,
     ship,
     shift,
-    registeredBy: dieselRefs.registeredBy.value || "",
+    registeredBy: getCurrentUserDisplayName(),
     captain: dieselRefs.captain.value.trim(),
     driver: dieselRefs.driver.value.trim(),
     document: dieselRefs.document.value.trim(),
@@ -1178,7 +1203,7 @@ async function saveDieselRecord() {
   const session = getSession();
 
   if (!session?.accessToken) {
-    alert("Vuelve a iniciar sesion para guardar diesel.");
+    alert("Vuelve a iniciar sesión para guardar diesel.");
     showLogin();
     return;
   }
@@ -1695,7 +1720,7 @@ async function downloadDieselConsultPdf() {
       margin: { top: 28, left: 10, right: 10, bottom: 8 },
       head: [[
         "Item", "Nave / BCZA.", "Stock Inicial", "Cant. Recibida", "Recibido de",
-        "Consumo Dia", "Consumo Noche", "Consumo Total", "Cant. Despachada",
+        "Consumo Día", "Consumo Noche", "Consumo Total", "Cant. Despachada",
         "Cant. Transferida", "Sondaje", "Stock Final", "Guardia Diurna", "Guardia Nocturna"
       ]],
       body,
@@ -1831,7 +1856,6 @@ function clearDieselForm() {
   dieselRefs.date.value = "";
   dieselRefs.origin.selectedIndex = -1;
   dieselRefs.receive.selectedIndex = -1;
-  dieselRefs.registeredBy.selectedIndex = -1;
   dieselRefs.captain.value = "";
   dieselRefs.driver.value = "";
   dieselRefs.document.value = "";
@@ -2161,6 +2185,8 @@ passengerRefs.save?.addEventListener("click", savePassengerRecords);
   control?.addEventListener("change", updatePassengerSummary);
 });
 
+bindDateStepper(passengerRefs.date, passengerRefs.prevDay, passengerRefs.nextDay);
+
 document.addEventListener("keydown", (event) => {
   if (document.querySelector('[data-view="passengers"]')?.hidden === false) {
     if (event.key === "Enter" && document.activeElement === passengerRefs.quantity) {
@@ -2192,9 +2218,11 @@ function formatTimeLabel(value) {
   }
   const [hourText, minuteText] = String(value).split(":");
   const hour = Number(hourText);
-  const suffix = hour >= 12 ? "PM" : "AM";
-  const twelveHour = hour % 12 || 12;
-  return `${String(twelveHour).padStart(2, "0")}:${minuteText || "00"} ${suffix}`;
+  const minute = Number(minuteText || 0);
+  if (!Number.isFinite(hour) || !Number.isFinite(minute)) {
+    return "--:--";
+  }
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 }
 
 function getTimeMinutes(value) {
@@ -2219,6 +2247,14 @@ function getBitacoraDurationMinutes(startTime, endTime) {
   return endMinutes - startMinutes;
 }
 
+function getBitacoraRecentTime(event) {
+  return String(event?.hora_fin || event?.hora_inicio || event?.created_at || "");
+}
+
+function compareBitacoraNewestFirst(a, b) {
+  return getBitacoraRecentTime(b).localeCompare(getBitacoraRecentTime(a));
+}
+
 function getBitacoraEventsForSelectedVessel() {
   const dateValue = bitacoraRefs.date?.value || getTodayValue();
   const vesselValue = bitacoraRefs.vessel?.value || "";
@@ -2238,7 +2274,7 @@ function syncBitacoraStartTimeWithLastEnd() {
 
   const latestEvent = getBitacoraEventsForSelectedVessel()
     .filter((event) => event.hora_fin || event.hora_inicio)
-    .sort((a, b) => String(b.hora_fin || b.hora_inicio).localeCompare(String(a.hora_fin || a.hora_inicio)))[0];
+    .sort(compareBitacoraNewestFirst)[0];
 
   if (latestEvent?.hora_fin) {
     bitacoraRefs.startTime.value = String(latestEvent.hora_fin).slice(0, 5);
@@ -2253,7 +2289,7 @@ function renderBitacoraLastEvent() {
 
   const latestEvent = getBitacoraEventsForSelectedVessel()
     .filter((event) => event.hora_fin || event.hora_inicio || event.created_at)
-    .sort((a, b) => String(b.hora_fin || b.hora_inicio || b.created_at).localeCompare(String(a.hora_fin || a.hora_inicio || a.created_at)))[0];
+    .sort(compareBitacoraNewestFirst)[0];
 
   if (!latestEvent) {
     bitacoraRefs.lastEvent.hidden = true;
@@ -2322,9 +2358,11 @@ function getBitacoraCategoryName(categoryId) {
 }
 
 function normalizeBitacoraRawEvent(event) {
+  const vessel = normalizeDieselDisplayName(event.nave_nombre || event.nave_texto || "");
   return {
     ...event,
-    nave_nombre: event.nave_nombre || event.nave_texto,
+    nave_nombre: vessel,
+    nave_texto: vessel,
     tipo_evento_nombre: event.tipo_evento_nombre || getBitacoraTypeName(event.tipo_evento),
     categoria_nombre: event.categoria_nombre || getBitacoraCategoryName(event.categoria_id),
     registrado_por: event.registrado_por || "Usuario"
@@ -2478,9 +2516,10 @@ async function loadBitacoraEvents() {
   };
 
   try {
-    bitacoraEventsCache = await supabaseRequest(`/rest/v1/v_bitacora_eventos?${query}`, {
+    const viewEvents = await supabaseRequest(`/rest/v1/v_bitacora_eventos?${query}`, {
       headers: { Authorization: `Bearer ${session.accessToken}` }
     }) || [];
+    bitacoraEventsCache = viewEvents.map(normalizeBitacoraRawEvent);
 
     if (bitacoraEventsCache.length === 0) {
       bitacoraEventsCache = await loadFromBaseTable();
@@ -2509,7 +2548,7 @@ function renderBitacoraTimeline() {
   }
 
   const todayEvents = getBitacoraEventsForSelectedVessel()
-    .sort((a, b) => String(b.hora_inicio).localeCompare(String(a.hora_inicio)));
+    .sort(compareBitacoraNewestFirst);
 
   if (bitacoraRefs.timelineCount) {
     bitacoraRefs.timelineCount.textContent = String(todayEvents.length);
@@ -2553,7 +2592,7 @@ function getBitacoraReportEvents() {
   const shiftValue = bitacoraRefs.reportShift?.value || "";
   return [...bitacoraEventsCache]
     .filter((event) => !shiftValue || getBitacoraShiftLabel(event.hora_inicio) === shiftValue)
-    .sort((a, b) => String(a.hora_inicio).localeCompare(String(b.hora_inicio)));
+    .sort(compareBitacoraNewestFirst);
 }
 
 function renderBitacoraReport() {
@@ -2772,7 +2811,7 @@ async function saveBitacoraEvent() {
   const session = getSession();
 
   if (!session?.accessToken) {
-    alert("Vuelve a iniciar sesion para registrar eventos.");
+    alert("Vuelve a iniciar sesión para registrar eventos.");
     showLogin();
     return;
   }
@@ -2838,7 +2877,7 @@ async function saveBitacoraClassification() {
   const eventCount = [...classificationGroups.values()].reduce((total, ids) => total + ids.length, 0);
 
   if (!session?.accessToken) {
-    alert("Vuelve a iniciar sesion para clasificar eventos.");
+    alert("Vuelve a iniciar sesión para clasificar eventos.");
     showLogin();
     return;
   }
@@ -2876,7 +2915,7 @@ async function saveBitacoraClassification() {
       showLogin();
       return;
     }
-    bitacoraRefs.saveMessage.textContent = error.message || "No se pudo guardar la clasificacion.";
+    bitacoraRefs.saveMessage.textContent = error.message || "No se pudo guardar la clasificación.";
   } finally {
     bitacoraRefs.saveCategorized.disabled = false;
     bitacoraRefs.saveCategorized.innerHTML = originalHtml;
@@ -2916,6 +2955,7 @@ function bootBitacora() {
     updateBitacoraHeader();
     refreshBitacora();
   });
+  bindDateStepper(bitacoraRefs.date, bitacoraRefs.prevDay, bitacoraRefs.nextDay);
   bitacoraRefs.vessel?.addEventListener("change", () => {
     syncBitacoraStartTimeWithLastEnd();
     renderBitacoraLastEvent();
@@ -2944,8 +2984,8 @@ function bootBitacora() {
     if (bitacoraRefs.categorizeDate) bitacoraRefs.categorizeDate.value = bitacoraRefs.reportDate.value;
     refreshBitacora().then(renderBitacoraReport);
   });
+  bindDateStepper(bitacoraRefs.reportDate, bitacoraRefs.reportPrevDay, bitacoraRefs.reportNextDay);
   bitacoraRefs.reportShift?.addEventListener("change", renderBitacoraReport);
-  bitacoraRefs.reportPrint?.addEventListener("click", () => window.print());
   bitacoraRefs.reportBack?.addEventListener("click", () => setPage("bitacora"));
   bitacoraRefs.backButton?.addEventListener("click", () => setPage("bitacora"));
   bitacoraRefs.saveCategorized?.addEventListener("click", saveBitacoraClassification);
@@ -2962,6 +3002,7 @@ function bootBitacora() {
   });
 
   bitacoraRefs.categorizeDate?.addEventListener("change", refreshBitacora);
+  bindDateStepper(bitacoraRefs.categorizeDate, bitacoraRefs.categorizePrevDay, bitacoraRefs.categorizeNextDay);
   bitacoraRefs.clearFilters?.addEventListener("click", () => {
     if (bitacoraRefs.categorizeDate) {
       bitacoraRefs.categorizeDate.value = bitacoraRefs.date?.value || getTodayValue();
