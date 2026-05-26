@@ -114,9 +114,17 @@ const bitacoraRefs = {
   submit: document.querySelector("#bitacoraSubmit"),
   todayLabel: document.querySelector("#bitacoraTodayLabel"),
   shiftLabel: document.querySelector("#bitacoraShiftLabel"),
+  lastEvent: document.querySelector("#bitacoraLastEvent"),
   timeline: document.querySelector("#bitacoraTimeline"),
   timelineCount: document.querySelector("#bitacoraTimelineCount"),
   viewAll: document.querySelector("#bitacoraViewAll"),
+  reportButton: document.querySelector("#bitacoraReportButton"),
+  reportDate: document.querySelector("#bitacoraReportDate"),
+  reportShift: document.querySelector("#bitacoraReportShift"),
+  reportTimeline: document.querySelector("#bitacoraReportTimeline"),
+  reportGroups: document.querySelector("#bitacoraReportGroups"),
+  reportPrint: document.querySelector("#bitacoraReportPrint"),
+  reportBack: document.querySelector("#bitacoraReportBackButton"),
   categorizeButton: document.querySelector("#bitacoraCategorizeButton"),
   backButton: document.querySelector("#bitacoraBackButton"),
   categorizeDate: document.querySelector("#categorizeDateFilter"),
@@ -129,6 +137,7 @@ const bitacoraRefs = {
   pendingMetric: document.querySelector("#categorizePendingMetric"),
   classifiedMetric: document.querySelector("#categorizeClassifiedMetric"),
   todayMetric: document.querySelector("#categorizeTodayMetric"),
+  metricFilters: document.querySelectorAll("[data-status-filter]"),
   categoryGrid: document.querySelector("#categoryButtonGrid"),
   categorySelectionLabel: document.querySelector("#categorizeSelectionLabel"),
   categorizedCount: document.querySelector("#categorizedCount"),
@@ -191,6 +200,7 @@ let dieselConsultCache = { key: "", rows: [] };
 let bitacoraEventsCache = [];
 let bitacoraTypesCache = [];
 let bitacoraCategoriesCache = [];
+let bitacoraStatusFilter = "all";
 const bitacoraClassificationDraft = new Map();
 
 function setMessage(text, type = "") {
@@ -386,6 +396,8 @@ function showDashboard(session) {
   authPage.hidden = true;
   dashboardPage.hidden = false;
   setPage("dashboard");
+  resetPassengerInitialState();
+  resetDieselInitialState();
   const firstName = (session.name || session.username || "Usuario").trim().split(/\s+/)[0];
   welcomeText.textContent = session.role;
   profileName.textContent = session.name;
@@ -464,7 +476,8 @@ function setPage(pageName) {
   });
 
   navItems.forEach((item) => {
-    item.classList.toggle("active", item.dataset.page === pageName);
+    const isBitacoraChild = pageName.startsWith("bitacora-") && item.dataset.page === "bitacora";
+    item.classList.toggle("active", item.dataset.page === pageName || isBitacoraChild);
   });
 
   if (topbarTitle) {
@@ -480,6 +493,7 @@ function setPage(pageName) {
       horometros: "Horómetros",
       cargas: "Cargas",
       bitacora: "Bitácora",
+      "bitacora-reporte": "Reporte de Bitácora",
       "bitacora-categorizar": "Clasificar Eventos",
       mapa: "Mapa",
       naves: "Naves",
@@ -678,6 +692,14 @@ function clearPassengerForm() {
   });
   renderPassengerRows();
   updatePassengerSummary();
+}
+
+function resetPassengerInitialState() {
+  if (!passengerRefs.date) {
+    return;
+  }
+
+  clearPassengerForm();
 }
 
 function toNumber(value) {
@@ -916,7 +938,7 @@ function populateDieselShips() {
     dieselShips.forEach((ship) => {
       dieselRefs.origin.add(new Option(ship, ship));
     });
-    dieselRefs.origin.value = "TALARA";
+    dieselRefs.origin.selectedIndex = -1;
   }
 
   const selectedReceive = dieselRefs.receive.value;
@@ -927,6 +949,8 @@ function populateDieselShips() {
 
   if (selectedReceive && selectedReceive !== dieselRefs.origin.value) {
     dieselRefs.receive.value = selectedReceive;
+  } else if (!dieselRefs.origin.value) {
+    dieselRefs.receive.selectedIndex = -1;
   }
 }
 
@@ -1325,7 +1349,7 @@ function buildDieselConsultData() {
   return { selectedShip, selectedShift, selectedDate, visibleUnits: recordsForDate, visibleRows, groups: reportGroups, totals };
 }
 
-async function renderDieselConsult() {
+async function renderDieselConsult({ showError = false } = {}) {
   if (!dieselRefs.consultGroups || !dieselRefs.consultTabs) {
     return;
   }
@@ -1335,6 +1359,9 @@ async function renderDieselConsult() {
   } catch (error) {
     console.warn("No se pudo cargar la consulta diesel desde Supabase.", error);
     dieselConsultCache = { key: getDieselConsultKey(), rows: [] };
+    if (showError) {
+      window.alert(error.message || "No se pudo actualizar la consulta diesel.");
+    }
   }
 
   const report = buildDieselConsultData();
@@ -1457,6 +1484,25 @@ async function renderDieselConsult() {
   });
 
   renderIcons();
+}
+
+async function refreshDieselConsult() {
+  if (!dieselRefs.consultRefresh) {
+    return;
+  }
+
+  const originalHtml = dieselRefs.consultRefresh.innerHTML;
+  dieselRefs.consultRefresh.disabled = true;
+  dieselRefs.consultRefresh.innerHTML = '<i data-lucide="loader-circle"></i>Actualizando...';
+  renderIcons();
+
+  try {
+    await renderDieselConsult({ showError: true });
+  } finally {
+    dieselRefs.consultRefresh.disabled = false;
+    dieselRefs.consultRefresh.innerHTML = originalHtml;
+    renderIcons();
+  }
 }
 
 function getConsultReportName(extension) {
@@ -1789,6 +1835,14 @@ function clearDieselForm() {
   updateDieselSummary();
 }
 
+function resetDieselInitialState() {
+  if (!dieselRefs.date) {
+    return;
+  }
+
+  clearDieselForm();
+}
+
 function updateModuleState(module) {
   const toggle = module.querySelector('.switch input');
   const state = module.querySelector(".module-state");
@@ -1822,9 +1876,7 @@ function updateSondageInputs(changedControl = null) {
 function bootDiesel() {
   populateDieselShips();
   populateDieselConsultFilters();
-  renderDieselRows();
-  updateDieselSummary();
-  refreshDieselInitialStock();
+  resetDieselInitialState();
 
   document.querySelectorAll(".diesel-module").forEach((module) => {
     const toggle = module.querySelector('.switch input');
@@ -1871,7 +1923,7 @@ function bootDiesel() {
   });
   dieselRefs.consultVessel?.addEventListener("change", renderDieselConsult);
   dieselRefs.consultShift?.addEventListener("change", renderDieselConsult);
-  dieselRefs.consultRefresh?.addEventListener("click", renderDieselConsult);
+  dieselRefs.consultRefresh?.addEventListener("click", refreshDieselConsult);
   dieselRefs.consultBack?.addEventListener("click", () => setPage("diesel"));
   dieselRefs.consultModeToggle?.addEventListener("click", () => {
     showAllDieselConsultItems = !showAllDieselConsultItems;
@@ -2125,6 +2177,34 @@ function syncBitacoraStartTimeWithLastEnd() {
   }
 }
 
+function renderBitacoraLastEvent() {
+  if (!bitacoraRefs.lastEvent) {
+    return;
+  }
+
+  const latestEvent = getBitacoraEventsForSelectedVessel()
+    .filter((event) => event.hora_fin || event.hora_inicio || event.created_at)
+    .sort((a, b) => String(b.hora_fin || b.hora_inicio || b.created_at).localeCompare(String(a.hora_fin || a.hora_inicio || a.created_at)))[0];
+
+  if (!latestEvent) {
+    bitacoraRefs.lastEvent.hidden = true;
+    bitacoraRefs.lastEvent.innerHTML = "";
+    return;
+  }
+
+  const vessel = latestEvent.nave_nombre || latestEvent.nave_texto || "Sin nave";
+  const timeLabel = formatTimeLabel(latestEvent.hora_fin || latestEvent.hora_inicio);
+  const category = latestEvent.categoria_nombre || latestEvent.tipo_evento_nombre || latestEvent.tipo_evento || "Evento";
+
+  bitacoraRefs.lastEvent.hidden = false;
+  bitacoraRefs.lastEvent.innerHTML = `
+    <span>Último evento registrado</span>
+    <strong>${escapeHtml(timeLabel)} · ${escapeHtml(vessel)}</strong>
+    <p>${escapeHtml(latestEvent.descripcion || "-")}</p>
+    <small>${escapeHtml(category)}</small>
+  `;
+}
+
 function getBitacoraStateLabel(state) {
   const labels = {
     pendiente_clasificar: "Pendiente",
@@ -2143,6 +2223,20 @@ function getBitacoraStateClass(state) {
     observado: "observed"
   };
   return classes[state] || "pending";
+}
+
+function isBitacoraClassified(event) {
+  return Boolean(
+    bitacoraClassificationDraft.has(event.id)
+    || event.categoria_id
+    || event.categoria_nombre
+    || event.estado === "clasificado"
+    || event.estado === "validado"
+  );
+}
+
+function isBitacoraPending(event) {
+  return !isBitacoraClassified(event);
 }
 
 function getBitacoraTypeClass(typeCode) {
@@ -2346,7 +2440,7 @@ function renderBitacoraTimeline() {
   }
 
   const todayEvents = getBitacoraEventsForSelectedVessel()
-    .sort((a, b) => String(a.hora_inicio).localeCompare(String(b.hora_inicio)));
+    .sort((a, b) => String(b.hora_inicio).localeCompare(String(a.hora_inicio)));
 
   if (bitacoraRefs.timelineCount) {
     bitacoraRefs.timelineCount.textContent = String(todayEvents.length);
@@ -2357,7 +2451,7 @@ function renderBitacoraTimeline() {
       <article class="empty-consult-card bitacora-empty-card">
         <i data-lucide="calendar-clock"></i>
         <h3>Sin eventos para esta nave</h3>
-        <p>Los eventos registrados aparecerán aquí en orden cronológico.</p>
+        <p>Los eventos registrados aparecerán del más reciente al más antiguo.</p>
       </article>
     `;
     renderIcons();
@@ -2371,9 +2465,8 @@ function renderBitacoraTimeline() {
     return `
       <article class="timeline-event ${escapeHtml(typeClass)}" style="--timeline-index: ${index};">
         <div class="timeline-event-rail">
-          <time>${escapeHtml(formatTimeLabel(event.hora_inicio))}</time>
-          <span>${escapeHtml(durationLabel)}</span>
           <time>${escapeHtml(formatTimeLabel(event.hora_fin))}</time>
+          <time>${escapeHtml(formatTimeLabel(event.hora_inicio))}</time>
         </div>
         <div class="timeline-event-card">
           <strong>${escapeHtml(event.descripcion)}</strong>
@@ -2383,6 +2476,77 @@ function renderBitacoraTimeline() {
       </article>
     `;
   }).join("");
+
+  renderIcons();
+}
+
+function getBitacoraReportEvents() {
+  const shiftValue = bitacoraRefs.reportShift?.value || "";
+  return [...bitacoraEventsCache]
+    .filter((event) => !shiftValue || getBitacoraShiftLabel(event.hora_inicio) === shiftValue)
+    .sort((a, b) => String(a.hora_inicio).localeCompare(String(b.hora_inicio)));
+}
+
+function renderBitacoraReport() {
+  if (!bitacoraRefs.reportTimeline || !bitacoraRefs.reportGroups) {
+    return;
+  }
+
+  const events = getBitacoraReportEvents();
+  bitacoraRefs.reportTimeline.innerHTML = events.length ? events.map((event) => {
+    const durationMinutes = getBitacoraDurationMinutes(event.hora_inicio, event.hora_fin);
+    const durationLabel = durationMinutes === null ? "--" : `${durationMinutes} min`;
+    const category = event.categoria_nombre || event.tipo_evento_nombre || "Observación";
+    return `
+      <article class="report-event-card">
+        <div class="report-event-rail"><time>${escapeHtml(formatTimeLabel(event.hora_fin))} - ${escapeHtml(formatTimeLabel(event.hora_inicio))}</time></div>
+        <strong>${escapeHtml(event.descripcion)}</strong>
+        <small>${escapeHtml(event.nave_nombre || event.nave_texto || "-")}</small>
+        <em>${escapeHtml(durationLabel)}</em>
+        <span>${escapeHtml(category)}</span>
+      </article>
+    `;
+  }).join("") : `
+    <article class="empty-consult-card bitacora-empty-card">
+      <i data-lucide="calendar-clock"></i>
+      <h3>Sin eventos para reportar</h3>
+      <p>No hay registros reales con los filtros actuales.</p>
+    </article>
+  `;
+
+  const groups = events.reduce((map, event) => {
+    const vessel = event.nave_nombre || event.nave_texto || "Sin nave";
+    if (!map.has(vessel)) map.set(vessel, []);
+    map.get(vessel).push(event);
+    return map;
+  }, new Map());
+
+  bitacoraRefs.reportGroups.innerHTML = groups.size ? [...groups.entries()].map(([vessel, rows], index) => {
+    const totalMinutes = rows.reduce((sum, event) => sum + (getBitacoraDurationMinutes(event.hora_inicio, event.hora_fin) || 0), 0);
+    const transferCount = rows.filter((event) => /transfer|diesel|agua|lubric/i.test(`${event.categoria_nombre} ${event.tipo_evento_nombre}`)).length;
+    const incidentCount = rows.filter((event) => /incidente|falla|observ/i.test(`${event.categoria_nombre} ${event.tipo_evento_nombre} ${event.descripcion}`)).length;
+    return `
+      <details class="report-vessel-group" ${index === 0 ? "open" : ""}>
+        <summary>
+          <i data-lucide="ship"></i>
+          <strong>${escapeHtml(vessel)}</strong>
+          <span>Eventos<br><b>${rows.length}</b></span>
+          <span>Transferencias<br><b>${transferCount}</b></span>
+          <span>Incidentes<br><b>${incidentCount}</b></span>
+          <span>Duración total<br><b>${Math.floor(totalMinutes / 60)} h ${totalMinutes % 60} min</b></span>
+        </summary>
+        <table>
+          <thead><tr><th>Hora inicio</th><th>Hora fin</th><th>Descripción del evento</th><th>Tipo</th><th>Duración</th><th>Registrado por</th></tr></thead>
+          <tbody>
+            ${rows.map((event) => {
+              const durationMinutes = getBitacoraDurationMinutes(event.hora_inicio, event.hora_fin);
+              return `<tr><td>${escapeHtml(formatTimeLabel(event.hora_inicio))}</td><td>${escapeHtml(formatTimeLabel(event.hora_fin))}</td><td>${escapeHtml(event.descripcion)}</td><td><em>${escapeHtml(event.categoria_nombre || event.tipo_evento_nombre || "Sin tipo")}</em></td><td>${durationMinutes === null ? "--" : `${durationMinutes} min`}</td><td>${escapeHtml(event.created_by_nombre || event.registrado_por || "Martín Checco")}</td></tr>`;
+            }).join("")}
+          </tbody>
+        </table>
+      </details>
+    `;
+  }).join("") : "";
 
   renderIcons();
 }
@@ -2397,17 +2561,23 @@ function getFilteredBitacoraEvents() {
     const matchesType = !typeValue
       || (typeValue === "__sin_categoria" && !event.categoria_id)
       || event.categoria_id === typeValue;
-    return matchesVessel && matchesType;
+    const matchesStatus = bitacoraStatusFilter === "all"
+      || (bitacoraStatusFilter === "pending" && isBitacoraPending(event))
+      || (bitacoraStatusFilter === "classified" && isBitacoraClassified(event));
+    return matchesVessel && matchesType && matchesStatus;
   });
 }
 
 function renderBitacoraMetrics(events = bitacoraEventsCache) {
-  const pending = events.filter((event) => event.estado === "pendiente_clasificar").length;
-  const classified = events.filter((event) => event.estado === "clasificado" || event.estado === "validado").length;
+  const pending = events.filter(isBitacoraPending).length;
+  const classified = events.filter(isBitacoraClassified).length;
 
   if (bitacoraRefs.pendingMetric) bitacoraRefs.pendingMetric.textContent = String(pending);
   if (bitacoraRefs.classifiedMetric) bitacoraRefs.classifiedMetric.textContent = String(classified);
   if (bitacoraRefs.todayMetric) bitacoraRefs.todayMetric.textContent = String(events.length);
+  bitacoraRefs.metricFilters?.forEach((button) => {
+    button.classList.toggle("active", button.dataset.statusFilter === bitacoraStatusFilter);
+  });
 }
 
 function renderBitacoraCategorizeTable() {
@@ -2423,6 +2593,15 @@ function renderBitacoraCategorizeTable() {
   }
   if (bitacoraRefs.tableSummary) {
     bitacoraRefs.tableSummary.textContent = `Mostrando ${events.length} de ${bitacoraEventsCache.length} eventos`;
+  }
+  const title = document.querySelector(".categorize-table-card h3");
+  if (title) {
+    const labels = {
+      all: "Eventos pendientes de revisión",
+      pending: "Eventos pendientes de clasificar",
+      classified: "Eventos clasificados"
+    };
+    title.firstChild.textContent = `${labels[bitacoraStatusFilter] || labels.all} `;
   }
 
   if (events.length === 0) {
@@ -2515,6 +2694,7 @@ async function refreshBitacora() {
 
   populateBitacoraFilterVessels(bitacoraEventsCache);
   syncBitacoraStartTimeWithLastEnd();
+  renderBitacoraLastEvent();
   renderBitacoraTimeline();
   renderBitacoraCategorizeTable();
 }
@@ -2644,6 +2824,9 @@ function bootBitacora() {
   if (bitacoraRefs.categorizeDate && !bitacoraRefs.categorizeDate.value) {
     bitacoraRefs.categorizeDate.value = bitacoraRefs.date?.value || getTodayValue();
   }
+  if (bitacoraRefs.reportDate && !bitacoraRefs.reportDate.value) {
+    bitacoraRefs.reportDate.value = bitacoraRefs.date?.value || getTodayValue();
+  }
   if (bitacoraRefs.startTime && !bitacoraRefs.startTime.value) {
     bitacoraRefs.startTime.value = getCurrentTimeValue();
   }
@@ -2666,6 +2849,7 @@ function bootBitacora() {
   });
   bitacoraRefs.vessel?.addEventListener("change", () => {
     syncBitacoraStartTimeWithLastEnd();
+    renderBitacoraLastEvent();
     renderBitacoraTimeline();
   });
   bitacoraRefs.submit?.addEventListener("click", saveBitacoraEvent);
@@ -2677,11 +2861,35 @@ function bootBitacora() {
     setPage("bitacora-categorizar");
     refreshBitacora();
   });
+  bitacoraRefs.reportButton?.addEventListener("click", () => {
+    if (bitacoraRefs.reportDate) {
+      bitacoraRefs.reportDate.value = bitacoraRefs.date?.value || getTodayValue();
+    }
+    if (bitacoraRefs.categorizeDate) {
+      bitacoraRefs.categorizeDate.value = bitacoraRefs.reportDate?.value || bitacoraRefs.date?.value || getTodayValue();
+    }
+    setPage("bitacora-reporte");
+    refreshBitacora().then(renderBitacoraReport);
+  });
+  bitacoraRefs.reportDate?.addEventListener("change", () => {
+    if (bitacoraRefs.categorizeDate) bitacoraRefs.categorizeDate.value = bitacoraRefs.reportDate.value;
+    refreshBitacora().then(renderBitacoraReport);
+  });
+  bitacoraRefs.reportShift?.addEventListener("change", renderBitacoraReport);
+  bitacoraRefs.reportPrint?.addEventListener("click", () => window.print());
+  bitacoraRefs.reportBack?.addEventListener("click", () => setPage("bitacora"));
   bitacoraRefs.backButton?.addEventListener("click", () => setPage("bitacora"));
   bitacoraRefs.saveCategorized?.addEventListener("click", saveBitacoraClassification);
 
   [bitacoraRefs.categorizeVessel, bitacoraRefs.categorizeType].forEach((control) => {
     control?.addEventListener("change", renderBitacoraCategorizeTable);
+  });
+
+  bitacoraRefs.metricFilters?.forEach((button) => {
+    button.addEventListener("click", () => {
+      bitacoraStatusFilter = button.dataset.statusFilter || "all";
+      renderBitacoraCategorizeTable();
+    });
   });
 
   bitacoraRefs.categorizeDate?.addEventListener("change", refreshBitacora);
@@ -2713,16 +2921,13 @@ function boot() {
     bootBitacora();
     showDashboard(session);
     setSidebarCollapsed(sessionStorage.getItem("portoErp.sidebarCollapsed") === "true");
-    renderPassengerRows();
-    updatePassengerSummary();
     return;
   }
 
   usernameInput.focus();
   bootDiesel();
   bootBitacora();
-  renderPassengerRows();
-  updatePassengerSummary();
+  resetPassengerInitialState();
   renderIcons();
 }
 

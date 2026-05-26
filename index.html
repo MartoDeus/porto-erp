@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=bitacora-filters-20260525">
+  <link rel="stylesheet" href="style.css?v=bitacora-last-event">
 </head>
 <body>
   <main class="auth-page" id="authPage">
@@ -415,12 +415,12 @@
               <fieldset>
                 <legend>Movimiento</legend>
                 <label class="radio-row option-card"><input type="radio" name="movement" value="Saliente"><i data-lucide="log-out"></i><span>Saliente</span></label>
-                <label class="radio-row option-card"><input type="radio" name="movement" value="Entrante" checked><i data-lucide="log-in"></i><span>Entrante</span></label>
+                <label class="radio-row option-card"><input type="radio" name="movement" value="Entrante"><i data-lucide="log-in"></i><span>Entrante</span></label>
               </fieldset>
 
               <fieldset>
                 <legend>Turno</legend>
-                <label class="radio-row option-card"><input type="radio" name="shift" value="Diurno" checked><i data-lucide="sun"></i><span>Diurno</span></label>
+                <label class="radio-row option-card"><input type="radio" name="shift" value="Diurno"><i data-lucide="sun"></i><span>Diurno</span></label>
                 <label class="radio-row option-card"><input type="radio" name="shift" value="Nocturno"><i data-lucide="moon"></i><span>Nocturno</span></label>
               </fieldset>
 
@@ -546,20 +546,11 @@
           <footer class="passenger-sync">Último registro: 20/05/2026 10:42 por Martin Checco <span>Sincronizado <i></i></span></footer>
         </section>
         <section class="page-view" id="dieselView" data-view="diesel" hidden>
-          <section class="passenger-header diesel-header">
-            <div>
-              <h1>Registro de Diesel</h1>
-            </div>
-            <div class="passenger-actions">
-              <button class="green-action consulta-action" type="button" id="consultDieselButton"><i data-lucide="search"></i>Consulta</button>
-            </div>
-          </section>
-
           <section class="panel-card diesel-register-top">
             <label>Fecha
               <span class="date-stepper diesel-date-stepper">
                 <button type="button" id="dieselPrevDay" aria-label="Dia anterior"><i data-lucide="chevron-left"></i></button>
-                <input id="dieselDate" type="date" value="2026-05-21">
+                <input id="dieselDate" type="date">
                 <button type="button" id="dieselNextDay" aria-label="Dia siguiente"><i data-lucide="chevron-right"></i></button>
               </span>
             </label>
@@ -568,8 +559,8 @@
             </label>
             <fieldset>
               <legend>Turno</legend>
-              <label class="radio-row"><input type="radio" name="dieselShift" value="Diurno" checked>Diurno</label>
-              <label class="radio-row"><input type="radio" name="dieselShift" value="Nocturno">Nocturno</label>
+              <label class="radio-row option-card diesel-shift-card"><input type="radio" name="dieselShift" value="Diurno"><i data-lucide="sun"></i><span>Diurno</span></label>
+              <label class="radio-row option-card diesel-shift-card"><input type="radio" name="dieselShift" value="Nocturno"><i data-lucide="moon"></i><span>Nocturno</span></label>
             </fieldset>
             <label>Registrado Por
               <select id="dieselRegisteredBy">
@@ -578,40 +569,43 @@
                 <option>ELIAS SANCHEZ</option>
               </select>
             </label>
+            <div class="diesel-consult-slot">
+              <button class="green-action consulta-action" type="button" id="consultDieselButton"><i data-lucide="search"></i>Consulta</button>
+            </div>
           </section>
 
           <section class="diesel-layout">
             <div class="diesel-left-stack">
               <article class="panel-card diesel-module" data-module="tripulacion">
-                <div class="diesel-module-head"><h3>Tripulación</h3><span class="module-state">Activo</span><label class="switch"><input type="checkbox" checked><b></b></label></div>
-                <label>Capitán<input id="dieselCaptain" type="text" value="MARTIN CHECCO"></label>
-                <label>Motorista<input id="dieselDriver" type="text" value="ELIAS SANCHEZ"></label>
+                <div class="diesel-module-head"><h3>Tripulación</h3><span class="module-state">Activo</span><label class="switch"><input type="checkbox"><b></b></label></div>
+                <label>Capitán<input id="dieselCaptain" type="text"></label>
+                <label>Motorista<input id="dieselDriver" type="text"></label>
               </article>
 
               <div class="diesel-pair">
                 <article class="panel-card diesel-module" data-module="sondaje">
-                  <div class="diesel-module-head"><h3>Acta de Sondaje</h3><span class="module-state">Activo</span><label class="switch"><input type="checkbox" checked><b></b></label></div>
-                  <label>N° Documento<input id="dieselDocument" type="text" value="005"></label>
-                  <label>Reingreso (gal)<input id="dieselReturn" type="number" min="0" value="10"></label>
+                  <div class="diesel-module-head"><h3>Acta de Sondaje</h3><span class="module-state">Activo</span><label class="switch"><input type="checkbox"><b></b></label></div>
+                  <label>N° Documento<input id="dieselDocument" type="text"></label>
+                  <label>Reingreso (gal)<input id="dieselReturn" type="number" min="0"></label>
                   <label>Diferencia (gal)<input id="dieselDifference" type="number" min="0" placeholder="Diferencia"></label>
                 </article>
 
                 <article class="panel-card diesel-module" data-module="recarga">
-                  <div class="diesel-module-head"><h3>Recarga</h3><span class="module-state">Activo</span><label class="switch"><input type="checkbox" checked><b></b></label></div>
-                  <label>Volumen (gal)<input id="dieselRecharge" type="number" min="0" value="100"></label>
-                  <label>N° Vale Recarga<input id="dieselRechargeVoucher" type="text" value="005"></label>
+                  <div class="diesel-module-head"><h3>Recarga</h3><span class="module-state">Activo</span><label class="switch"><input type="checkbox"><b></b></label></div>
+                  <label>Volumen (gal)<input id="dieselRecharge" type="number" min="0"></label>
+                  <label>N° Vale Recarga<input id="dieselRechargeVoucher" type="text"></label>
                 </article>
               </div>
 
               <article class="panel-card diesel-module" data-module="consumo">
-                <div class="diesel-module-head"><h3>Consumo</h3><span class="module-state">Activo</span><label class="switch"><input type="checkbox" checked><b></b></label></div>
-                <label>Volumen (gal)<input id="dieselConsumption" type="number" min="0" value="100"></label>
+                <div class="diesel-module-head"><h3>Consumo</h3><span class="module-state">Activo</span><label class="switch"><input type="checkbox"><b></b></label></div>
+                <label>Volumen (gal)<input id="dieselConsumption" type="number" min="0"></label>
               </article>
             </div>
 
             <div class="diesel-main-stack">
               <article class="panel-card diesel-module diesel-dispatch" data-module="despacho">
-                <div class="diesel-module-head"><h3>Despacho</h3><span class="module-state">Activo</span><label class="switch"><input type="checkbox" checked><b></b></label></div>
+                <div class="diesel-module-head"><h3>Despacho</h3><span class="module-state">Activo</span><label class="switch"><input type="checkbox"><b></b></label></div>
                 <div class="diesel-entry-form">
                   <label>Nave Recibe<select id="dieselReceiveSelect"></select></label>
                   <label>Cantidad (gal)<input id="dieselDispatchQty" type="number" min="1" placeholder="Cantidad"></label>
@@ -759,18 +753,6 @@
           <article class="panel-card placeholder-card"><i data-lucide="container"></i><h1>Cargas</h1><p>Pantalla preparada para gestión de cargas.</p></article>
         </section>
         <section class="page-view bitacora-view" data-view="bitacora" hidden>
-          <section class="bitacora-hero">
-            <div>
-              <h1>Bitácora Rápida</h1>
-              <p>Registra eventos operacionales de forma rápida y sencilla</p>
-            </div>
-            <div class="bitacora-status-strip">
-              <span><i data-lucide="calendar-days"></i><b id="bitacoraTodayLabel">--/--/----</b></span>
-              <span><i data-lucide="sun"></i><b id="bitacoraShiftLabel">Turno: --</b></span>
-              <button class="bitacora-categorize-button" id="bitacoraCategorizeButton" type="button"><i data-lucide="tags"></i>Categorizar</button>
-            </div>
-          </section>
-
           <section class="bitacora-layout">
             <article class="panel-card bitacora-form-card">
               <div class="bitacora-event-row">
@@ -793,34 +775,80 @@
                   <h3>4. Nave/Barcaza</h3>
                   <label class="bitacora-select"><i data-lucide="ship"></i><select id="bitacoraVessel"></select></label>
                 </div>
+
+                <div class="bitacora-event-action">
+                  <button class="bitacora-submit" id="bitacoraSubmit" type="button"><i data-lucide="send"></i>Registrar evento</button>
+                </div>
               </div>
 
               <h3>5. Descripción de evento</h3>
               <label class="bitacora-description"><textarea id="bitacoraDescription" maxlength="200" placeholder="Escribe aquí una descripción corta del evento..."></textarea><small><span id="bitacoraCount">0</span>/200</small></label>
-
-              <button class="bitacora-submit" id="bitacoraSubmit" type="button"><i data-lucide="send"></i>Registrar evento</button>
             </article>
+
+            <aside class="panel-card bitacora-side-status">
+              <div class="bitacora-status-strip">
+                <button class="bitacora-report-button" id="bitacoraReportButton" type="button"><i data-lucide="file-text"></i>Reporte</button>
+                <button class="bitacora-categorize-button" id="bitacoraCategorizeButton" type="button"><i data-lucide="tags"></i>Clasificar</button>
+                <article class="bitacora-last-event" id="bitacoraLastEvent" hidden></article>
+              </div>
+            </aside>
 
             <article class="panel-card bitacora-timeline-card">
               <header><h3>Línea de tiempo - Eventos registrados hoy <span id="bitacoraTimelineCount">0</span></h3><button id="bitacoraViewAll" type="button">Ver todos</button></header>
               <div class="event-timeline" id="bitacoraTimeline"></div>
-              <footer><i data-lucide="clock-3"></i>Los eventos se muestran en orden cronológico de inicio</footer>
+              <footer><i data-lucide="clock-3"></i>Los eventos se muestran del más reciente al más antiguo</footer>
             </article>
           </section>
+        </section>
+        <section class="page-view bitacora-report-view" data-view="bitacora-reporte" hidden>
+          <section class="report-header">
+            <div class="report-title">
+              <button class="back-action" id="bitacoraReportBackButton" type="button" aria-label="Volver a bitácora">
+                <i data-lucide="arrow-left"></i>
+              </button>
+              <div>
+              <h1>Reporte de Bitácora Operacional</h1>
+              <p>Resumen de eventos registrados por nave</p>
+              </div>
+            </div>
+            <div class="report-actions">
+              <label><i data-lucide="calendar-days"></i><input id="bitacoraReportDate" type="date"></label>
+              <label><i data-lucide="sun"></i><select id="bitacoraReportShift"><option value="">Todos los turnos</option><option>Diurno</option><option>Nocturno</option></select></label>
+              <button class="outline-action" id="bitacoraReportPdf" type="button"><i data-lucide="file-down"></i>Exportar PDF</button>
+              <button class="outline-action" id="bitacoraReportPrint" type="button"><i data-lucide="printer"></i>Imprimir</button>
+            </div>
+          </section>
+
+          <article class="panel-card report-timeline-card">
+            <header>
+              <h3>Línea de tiempo operacional</h3>
+              <div class="report-legend">
+                <span><b></b>Transferencia</span><span><b></b>Maniobra</span><span><b></b>Pasajeros</span><span><b></b>Mantenimiento</span><span><b></b>Incidente</span><span><b></b>Observación</span>
+              </div>
+            </header>
+            <div class="report-timeline" id="bitacoraReportTimeline"></div>
+          </article>
+
+          <article class="panel-card report-groups-card">
+            <h3>Eventos agrupados por nave</h3>
+            <div class="report-groups" id="bitacoraReportGroups"></div>
+          </article>
         </section>
         <section class="page-view bitacora-categorize-view" data-view="bitacora-categorizar" hidden>
           <section class="categorize-header">
             <div class="categorize-title">
-              <button class="bitacora-back-button" id="bitacoraBackButton" type="button"><i data-lucide="arrow-left"></i>Regresar</button>
+              <button class="back-action" id="bitacoraBackButton" type="button" aria-label="Volver a bitácora">
+                <i data-lucide="arrow-left"></i>
+              </button>
               <div>
                 <h1>Clasificar Eventos</h1>
               </div>
             </div>
 
             <div class="categorize-metrics">
-              <article><strong id="categorizePendingMetric">0</strong><i data-lucide="clock-3"></i><span>Pendientes de clasificar</span></article>
-              <article><strong id="categorizeClassifiedMetric">0</strong><i data-lucide="shield-check"></i><span>Clasificados</span></article>
-              <article><strong id="categorizeTodayMetric">0</strong><i data-lucide="anchor"></i><span>Eventos hoy</span></article>
+              <button class="metric-filter-card" id="categorizePendingFilter" type="button" data-status-filter="pending"><strong id="categorizePendingMetric">0</strong><i data-lucide="clock-3"></i><span>Pendientes de clasificar</span></button>
+              <button class="metric-filter-card" id="categorizeClassifiedFilter" type="button" data-status-filter="classified"><strong id="categorizeClassifiedMetric">0</strong><i data-lucide="shield-check"></i><span>Clasificados</span></button>
+              <button class="metric-filter-card active" id="categorizeAllFilter" type="button" data-status-filter="all"><strong id="categorizeTodayMetric">0</strong><i data-lucide="anchor"></i><span>Eventos hoy</span></button>
             </div>
           </section>
 
@@ -930,7 +958,7 @@
   <script src="vendor/jspdf.umd.min.js"></script>
   <script src="vendor/jspdf.plugin.autotable.min.js"></script>
   <script src="vendor/xlsx.full.min.js"></script>
-  <script src="script.js?v=bitacora-filters-20260525"></script>
+  <script src="script.js?v=bitacora-last-event"></script>
 </body>
 </html>
 
