@@ -29,6 +29,8 @@ const consultDieselButton = document.querySelector("#consultDieselButton");
 const profileName = document.querySelector("#profileName");
 const profileMenuName = document.querySelector("#profileMenuName");
 const profileMenuRole = document.querySelector("#profileMenuRole");
+const profileInitials = document.querySelector("#profileInitials");
+const profileMenuInitials = document.querySelector("#profileMenuInitials");
 const dashboardGreeting = document.querySelector("#dashboardGreeting");
 
 const passengerRefs = {
@@ -392,6 +394,23 @@ function getSession() {
   return rawSession ? JSON.parse(rawSession) : null;
 }
 
+function getUserInitials(name) {
+  const words = String(name || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (words.length === 0) {
+    return "--";
+  }
+
+  return words
+    .slice(0, 2)
+    .map((word) => word.charAt(0))
+    .join("")
+    .toUpperCase();
+}
+
 function showDashboard(session) {
   authPage.hidden = true;
   dashboardPage.hidden = false;
@@ -399,10 +418,13 @@ function showDashboard(session) {
   resetPassengerInitialState();
   resetDieselInitialState();
   const firstName = (session.name || session.username || "Usuario").trim().split(/\s+/)[0];
+  const initials = getUserInitials(session.name || session.username);
   welcomeText.textContent = session.role;
   profileName.textContent = session.name;
   profileMenuName.textContent = session.name;
   profileMenuRole.textContent = session.role === "Administrador" ? "Administrador General" : session.role;
+  if (profileInitials) profileInitials.textContent = initials;
+  if (profileMenuInitials) profileMenuInitials.textContent = initials;
   if (dashboardGreeting) {
     dashboardGreeting.textContent = `Bienvenido, ${firstName}`;
   }
