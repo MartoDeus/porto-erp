@@ -1874,6 +1874,33 @@ function updateModuleState(module) {
   const isActive = Boolean(toggle?.checked);
   module.classList.toggle("is-blocked", !isActive);
   state.textContent = isActive ? "Activo" : "Bloqueado";
+  module.setAttribute("aria-pressed", String(isActive));
+}
+
+function toggleDieselModule(module) {
+  if (!module || module.classList.contains("is-always-active")) {
+    return;
+  }
+
+  const toggle = module.querySelector('.switch input');
+  if (!toggle) {
+    return;
+  }
+
+  toggle.checked = !toggle.checked;
+  updateModuleState(module);
+}
+
+function shouldToggleDieselModule(event, module) {
+  if (module.classList.contains("is-blocked")) {
+    return true;
+  }
+
+  if (event.target.closest(".diesel-module-head")) {
+    return true;
+  }
+
+  return false;
 }
 
 function updateSondageInputs(changedControl = null) {
@@ -1902,8 +1929,28 @@ function bootDiesel() {
 
   document.querySelectorAll(".diesel-module").forEach((module) => {
     const toggle = module.querySelector('.switch input');
+    if (!module.classList.contains("is-always-active")) {
+      module.setAttribute("role", "button");
+      module.setAttribute("tabindex", "0");
+      module.setAttribute("aria-label", `Activar o desactivar ${module.dataset.module || "modulo"}`);
+    }
     updateModuleState(module);
     toggle?.addEventListener("change", () => updateModuleState(module));
+    module.addEventListener("click", (event) => {
+      if (event.target.closest("input, select, textarea, button, table, a")) {
+        return;
+      }
+      if (shouldToggleDieselModule(event, module)) {
+        toggleDieselModule(module);
+      }
+    });
+    module.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") {
+        return;
+      }
+      event.preventDefault();
+      toggleDieselModule(module);
+    });
   });
 
   dieselRefs.origin?.addEventListener("change", () => {
