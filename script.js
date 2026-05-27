@@ -104,7 +104,37 @@ const dieselRefs = {
   consultExcel: document.querySelector("#exportDieselExcel"),
   consultPdf: document.querySelector("#downloadDieselPdf"),
   consultBack: document.querySelector("#backFromConsult"),
-  consultModeToggle: document.querySelector("#toggleDieselConsultMode")
+  consultModeToggle: document.querySelector("#toggleDieselConsultMode"),
+  editModal: document.querySelector("#dieselEditModal"),
+  editClose: document.querySelector("#dieselEditClose"),
+  editCancel: document.querySelector("#dieselEditCancel"),
+  editDelete: document.querySelector("#dieselEditDelete"),
+  editSave: document.querySelector("#dieselEditSave"),
+  editShip: document.querySelector("#dieselEditShip"),
+  editDateLabel: document.querySelector("#dieselEditDateLabel"),
+  editVesselLabel: document.querySelector("#dieselEditVesselLabel"),
+  editRecharge: document.querySelector("#dieselEditRecharge"),
+  editRechargeTotal: document.querySelector("#dieselEditRechargeTotal"),
+  editReceivedFrom: document.querySelector("#dieselEditReceivedFrom"),
+  editDay: document.querySelector("#dieselEditDay"),
+  editNight: document.querySelector("#dieselEditNight"),
+  editSondage: document.querySelector("#dieselEditSondage"),
+  editDispatched: document.querySelector("#dieselEditDispatched"),
+  editTransferred: document.querySelector("#dieselEditTransferred"),
+  editDispatchVoucher: document.querySelector("#dieselEditDispatchVoucher"),
+  editSondageVoucher: document.querySelector("#dieselEditSondageVoucher"),
+  editRechargeVoucher: document.querySelector("#dieselEditRechargeVoucher"),
+  editObservations: document.querySelector("#dieselEditObservations"),
+  editGuardLabel: document.querySelector("#dieselEditGuardLabel"),
+  editCaptainDay: document.querySelector("#dieselEditCaptainDay"),
+  editDriverDay: document.querySelector("#dieselEditDriverDay"),
+  editCaptainNight: document.querySelector("#dieselEditCaptainNight"),
+  editDriverNight: document.querySelector("#dieselEditDriverNight"),
+  editInitial: document.querySelector("#dieselEditInitial"),
+  editFinal: document.querySelector("#dieselEditFinal"),
+  editShiftInputs: document.querySelectorAll('input[name="dieselEditShift"]'),
+  editToggleButtons: document.querySelectorAll("[data-edit-toggle]"),
+  editSections: document.querySelectorAll("[data-edit-section]")
 };
 
 const bitacoraRefs = {
@@ -187,7 +217,7 @@ const dieselCatalog = [
   { item: 9, group: "NAVE RECORRIDO", tab: "Naves Recorrido", icon: "route", ship: "IRIS", initialStock: 425, type: "Desp.", dayCrew: "HUMBERTO CASTILLO / JULIO PAREDES", nightCrew: "JULIO RAMOS / ANDRES SERNAQUE", received: 200, receivedFrom: "TALARA", day: 55, night: 62, dispatched: 0, transferred: 0 },
   { item: 10, group: "NAVE RECORRIDO", tab: "Naves Recorrido", icon: "route", ship: "VILMA", initialStock: 0, type: "Desp.", dayCrew: "JAIME PANTA / ARMANDO ALTAMIRANO", nightCrew: "VARADERO", received: 0, receivedFrom: "-", day: 0, night: 0, dispatched: 0, transferred: 0 },
   { item: 11, group: "NAVE RECORRIDO", tab: "Naves Recorrido", icon: "route", ship: "ROSLYN", initialStock: 633, type: "Desp.", dayCrew: "PERSONAL DE CAMPO", nightCrew: "PERSONAL DE CAMPO", received: 0, receivedFrom: "-", day: 0, night: 0, dispatched: 0, transferred: 0 },
-  { item: 12, group: "NAVE RECORRIDO", tab: "Naves Recorrido", icon: "route", ship: "CHIPP II", initialStock: 233, type: "Desp.", dayCrew: "CARLOS LEYTON DIAZ", nightCrew: "VICTOR SAAVEDRA SOCOLA", received: 0, receivedFrom: "-", day: 51, night: 0, dispatched: 0, transferred: 0 },
+  { item: 12, group: "NAVE RECORRIDO", tab: "Naves Recorrido", icon: "route", ship: "CHIP II", initialStock: 233, type: "Desp.", dayCrew: "CARLOS LEYTON DIAZ", nightCrew: "VICTOR SAAVEDRA SOCOLA", received: 0, receivedFrom: "-", day: 51, night: 0, dispatched: 0, transferred: 0 },
   { item: 13, group: "NAVE RECORRIDO", tab: "Naves Recorrido", icon: "route", ship: "BUCKLEY EXPRESS", initialStock: 475, type: "Desp.", dayCrew: "MARIO PAIBA", nightCrew: "HERNAN CHULLI", received: 150, receivedFrom: "-", day: 67, night: 0, dispatched: 0, transferred: 0 },
   { item: 14, group: "NAVE RECORRIDO", tab: "Naves Recorrido", icon: "route", ship: "CABO BLANCO", initialStock: 720, type: "Desp.", dayCrew: "JORGE MORAN", nightCrew: "GUILLERMO LOPEZ", received: 0, receivedFrom: "-", day: 60, night: 0, dispatched: 0, transferred: 0 },
   { item: 15, group: "BARCAZA", tab: "Barcaza", icon: "ship", ship: "ELIZABETH", initialStock: 1983, type: "Barge", dayCrew: "LUIS ZAPATA BAYONA / MARTIN VASQUEZ MORALES", nightCrew: "LUIS ZAPATA BAYONA / MARTIN VASQUEZ MORALES", received: 0, receivedFrom: "-", day: 3, night: 18, dispatched: 0, transferred: 0 },
@@ -216,7 +246,9 @@ const dieselShifts = ["Diurno", "Nocturno"];
 const dieselInitialStockByShip = {
   TALARA: 7006,
   "PARIÑAS": 2800,
-  SHEYLA: 1450,
+  "SHEILA R": 1450,
+  IRIS: 425,
+  "CHIP II": 233,
   "BUCKLEY EXPRESS": 1800,
   "LOBITOS EXPRESS CARGA": 3200,
   "LOBITOS EXPRESS CONSUMO": 900,
@@ -240,6 +272,7 @@ let passengerEntries = [];
 let dieselDispatches = [];
 let showAllDieselConsultItems = false;
 let dieselConsultCache = { key: "", rows: [] };
+let dieselEditDraft = null;
 let bitacoraEventsCache = [];
 let bitacoraTypesCache = [];
 let bitacoraCategoriesCache = [];
@@ -795,12 +828,22 @@ function parseCrew(crew) {
 }
 
 function normalizeDieselName(value) {
-  return String(value || "")
+  const normalized = String(value || "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/gi, "_")
     .replace(/^_+|_+$/g, "")
     .toUpperCase();
+
+  if (normalized === "NEPTUNE_EXPRESS") {
+    return "NEPTUNE";
+  }
+
+  if (normalized === "OLYMPIC_EXPRESS") {
+    return "OLYMPIC";
+  }
+
+  return normalized;
 }
 
 function normalizeDieselDisplayName(value) {
@@ -811,9 +854,13 @@ function normalizeDieselDisplayName(value) {
   return text;
 }
 
-function isDieselTransfer(origin, receive) {
+function isDieselMotherShip(value) {
   const motherShips = new Set(["TALARA", "PARINAS", "LOBITOS_EXPRESS_CARGA"]);
-  return motherShips.has(normalizeDieselName(origin)) && motherShips.has(normalizeDieselName(receive));
+  return motherShips.has(normalizeDieselName(value));
+}
+
+function isDieselTransfer(origin, receive) {
+  return isDieselMotherShip(origin) && isDieselMotherShip(receive);
 }
 
 function shiftDateValue(value, days) {
@@ -890,6 +937,8 @@ function buildEmptyDieselRecord(date, ship, shift) {
   const initialStock = getDieselInitialStock(ship);
   return {
     id: getDieselRecordId(date, ship, shift),
+    saveMode: "agregar",
+    movementIdsToReplace: [],
     date,
     ship,
     shift,
@@ -1008,6 +1057,10 @@ function validateDieselRecord() {
   }
 
   if (modules.despacho) {
+    if (dieselDispatches.length > 0 && !isDieselMotherShip(dieselRefs.origin.value)) {
+      errors.push("Solo TALARA, PARIÑAS y LOBITOS EXPRESS CARGA pueden despachar diesel");
+    }
+
     const invalidDispatch = dieselDispatches.some((entry) => entry.quantity <= 0 || !entry.voucher);
     if (invalidDispatch) {
       errors.push("Destino, cantidad y vale de cada despacho");
@@ -1115,6 +1168,11 @@ function updateDieselSummary() {
 function addDieselDispatch() {
   const quantity = toNumber(dieselRefs.qty.value);
 
+  if (!isDieselMotherShip(dieselRefs.origin.value)) {
+    alert("Solo TALARA, PARIÑAS y LOBITOS EXPRESS CARGA pueden despachar diesel.");
+    return;
+  }
+
   if (!dieselRefs.receive.value || quantity <= 0) {
     dieselRefs.qty.focus();
     return;
@@ -1205,7 +1263,7 @@ function buildDieselRecordFromForm() {
 
 function buildDieselPayload(record) {
   return {
-    modo: "agregar",
+    modo: record.saveMode || "agregar",
     fecha: record.date,
     nave: record.ship,
     turno: record.shift,
@@ -1228,6 +1286,7 @@ function buildDieselPayload(record) {
       registrado_por_texto: record.registeredBy,
       origen_web_id: record.id
     },
+    movimiento_ids_reemplazar: Array.isArray(record.movementIdsToReplace) ? record.movementIdsToReplace : [],
     movimientos: record.dispatches.map((entry) => ({
       destino: entry.vessel,
       cantidad: entry.quantity,
@@ -1293,6 +1352,7 @@ async function saveDieselRecord() {
       notificationButton.setAttribute("aria-expanded", "true");
     }
 
+    clearDieselFormAfterSave();
     alert("Registro diesel guardado en Supabase.");
   } catch (error) {
     alert(error.message || "No se pudo guardar el registro diesel.");
@@ -1439,6 +1499,94 @@ function buildDieselConsultData() {
   return { selectedShip, selectedShift, selectedDate, visibleUnits: recordsForDate, visibleRows, groups: reportGroups, totals };
 }
 
+function getDieselEditShiftValue(selectedShift) {
+  if (selectedShift === "A" || selectedShift === "B") {
+    return selectedShift;
+  }
+  return "A";
+}
+
+function setDieselEditSectionState(sectionName, isEditing) {
+  const section = [...dieselRefs.editSections].find((item) => item.dataset.editSection === sectionName);
+  if (!section) {
+    return;
+  }
+
+  section.classList.toggle("is-editing", Boolean(isEditing));
+  section.querySelectorAll(`[data-editable="${sectionName}"]`).forEach((field) => {
+    field.disabled = !isEditing;
+    field.readOnly = !isEditing;
+  });
+}
+
+function resetDieselEditSections() {
+  dieselRefs.editSections.forEach((section) => {
+    setDieselEditSectionState(section.dataset.editSection, false);
+  });
+}
+
+function getDieselEditGuardLabel(selectedShift) {
+  if (selectedShift === "A") {
+    return "Guardia Diurna";
+  }
+  if (selectedShift === "B") {
+    return "Guardia Nocturna";
+  }
+  return "Ambas guardias";
+}
+
+function openDieselEditModal(row, context = {}) {
+  if (!dieselRefs.editModal || !row) {
+    return;
+  }
+
+  dieselEditDraft = { row, context };
+  const dateLabel = formatDisplayDate(context.selectedDate || getTodayValue());
+  const shiftValue = getDieselEditShiftValue(context.selectedShift);
+
+  dieselRefs.editShip.textContent = row.ship || "-";
+  dieselRefs.editDateLabel.textContent = dateLabel;
+  dieselRefs.editVesselLabel.textContent = row.ship || "-";
+  dieselRefs.editRecharge.value = row.received || 0;
+  dieselRefs.editRechargeTotal.value = row.received || 0;
+  dieselRefs.editReceivedFrom.value = row.receivedFrom || "-";
+  dieselRefs.editDay.value = row.day || 0;
+  dieselRefs.editNight.value = row.night || 0;
+  dieselRefs.editSondage.value = row.sondage || 0;
+  dieselRefs.editDispatched.value = row.dispatched || 0;
+  dieselRefs.editTransferred.value = row.transferred || 0;
+  dieselRefs.editDispatchVoucher.value = "";
+  dieselRefs.editSondageVoucher.value = "";
+  dieselRefs.editRechargeVoucher.value = "";
+  dieselRefs.editObservations.value = row.receivedFrom && row.receivedFrom !== "-" ? `Recibido de ${row.receivedFrom}.` : "";
+  dieselRefs.editGuardLabel.value = getDieselEditGuardLabel(shiftValue);
+  dieselRefs.editCaptainDay.value = row.dayCrew?.captain || "";
+  dieselRefs.editDriverDay.value = row.dayCrew?.driver || "";
+  dieselRefs.editCaptainNight.value = row.nightCrew?.captain || "";
+  dieselRefs.editDriverNight.value = row.nightCrew?.driver || "";
+  dieselRefs.editInitial.textContent = `${formatNumber(row.initialStock)} gal`;
+  dieselRefs.editFinal.textContent = `${formatNumber(row.finalStock)} gal`;
+
+  dieselRefs.editShiftInputs.forEach((input) => {
+    input.checked = input.value === shiftValue;
+  });
+
+  resetDieselEditSections();
+  dieselRefs.editModal.hidden = false;
+  document.body.classList.add("modal-open");
+  renderIcons();
+}
+
+function closeDieselEditModal() {
+  if (!dieselRefs.editModal) {
+    return;
+  }
+
+  dieselEditDraft = null;
+  dieselRefs.editModal.hidden = true;
+  document.body.classList.remove("modal-open");
+}
+
 async function renderDieselConsult({ showError = false } = {}) {
   if (!dieselRefs.consultGroups || !dieselRefs.consultTabs) {
     return;
@@ -1499,7 +1647,7 @@ async function renderDieselConsult({ showError = false } = {}) {
           <td>${formatNumber(row.finalStock)}</td>
           <td>${formatCrew(row.dayCrew)}</td>
           <td>${formatCrew(row.nightCrew)}</td>
-          <td><button class="table-icon edit" type="button" aria-label="Editar ${row.ship}"><i data-lucide="pencil"></i></button></td>
+          <td><button class="table-icon edit" type="button" data-ship="${row.ship}" aria-label="Editar ${row.ship}"><i data-lucide="pencil"></i></button></td>
           <td><button class="table-icon delete" type="button" aria-label="Eliminar ${row.ship}"><i data-lucide="trash-2"></i></button></td>
         </tr>
       `;
@@ -1570,6 +1718,24 @@ async function renderDieselConsult({ showError = false } = {}) {
       const isCollapsed = card.classList.toggle("is-collapsed");
       button.setAttribute("aria-expanded", String(!isCollapsed));
       button.querySelector("b").innerHTML = isCollapsed ? "+" : "&minus;";
+    });
+  });
+
+  dieselRefs.consultGroups.querySelectorAll(".table-icon.edit").forEach((button) => {
+    button.addEventListener("click", () => {
+      const ship = button.dataset.ship || "";
+      const selectedRow = report.groups
+        .flatMap((group) => group.rows)
+        .find((row) => row.ship === ship);
+
+      if (!selectedRow) {
+        return;
+      }
+
+      openDieselEditModal(selectedRow, {
+        selectedDate: report.selectedDate,
+        selectedShift: report.selectedShift
+      });
     });
   });
 
@@ -1924,6 +2090,26 @@ function clearDieselForm() {
   updateDieselSummary();
 }
 
+function clearDieselFormAfterSave() {
+  dieselRefs.receive.selectedIndex = -1;
+  dieselRefs.captain.value = "";
+  dieselRefs.driver.value = "";
+  dieselRefs.document.value = "";
+  dieselRefs.recharge.value = "";
+  dieselRefs.rechargeVoucher.value = "";
+  dieselRefs.consumption.value = "";
+  dieselRefs.returnVolume.value = "";
+  dieselRefs.difference.value = "";
+  dieselRefs.qty.value = "";
+  dieselRefs.voucher.value = "";
+  dieselRefs.observation.value = "";
+  dieselRefs.observationCount.textContent = "0";
+  dieselDispatches = [];
+  updateSondageInputs();
+  renderDieselRows();
+  updateDieselSummary();
+}
+
 function resetDieselInitialState() {
   if (!dieselRefs.date) {
     return;
@@ -2071,6 +2257,34 @@ function bootDiesel() {
   });
   dieselRefs.consultPdf?.addEventListener("click", downloadDieselConsultPdf);
   dieselRefs.consultExcel?.addEventListener("click", exportDieselConsultExcel);
+  dieselRefs.editClose?.addEventListener("click", closeDieselEditModal);
+  dieselRefs.editCancel?.addEventListener("click", closeDieselEditModal);
+  dieselRefs.editDelete?.addEventListener("click", () => {
+    window.alert("La eliminación real se implementará en una siguiente fase.");
+  });
+  dieselRefs.editSave?.addEventListener("click", () => {
+    window.alert("Edición visual lista. El guardado real se implementará en la siguiente fase.");
+  });
+  dieselRefs.editToggleButtons?.forEach((button) => {
+    button.addEventListener("click", () => {
+      const sectionName = button.dataset.editToggle;
+      const section = [...dieselRefs.editSections].find((item) => item.dataset.editSection === sectionName);
+      const isEditing = section?.classList.contains("is-editing");
+      resetDieselEditSections();
+      setDieselEditSectionState(sectionName, !isEditing);
+      if (!isEditing) {
+        section?.querySelector(`[data-editable="${sectionName}"]`)?.focus();
+      }
+    });
+  });
+  dieselRefs.editModal?.querySelectorAll('[data-close-modal="diesel-edit"]').forEach((element) => {
+    element.addEventListener("click", closeDieselEditModal);
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && dieselRefs.editModal && !dieselRefs.editModal.hidden) {
+      closeDieselEditModal();
+    }
+  });
 
   [dieselRefs.recharge, dieselRefs.consumption].forEach((control) => {
     control?.addEventListener("input", updateDieselSummary);
