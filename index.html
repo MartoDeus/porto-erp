@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=login-slide-3-5s-20260526">
+  <link rel="stylesheet" href="style.css?v=naves-ca2066-gallery-20260526">
 </head>
 <body>
   <main class="auth-page" id="authPage">
@@ -568,30 +568,28 @@
 
           <section class="diesel-layout">
             <div class="diesel-left-stack">
-              <article class="panel-card diesel-module" data-module="tripulacion">
-                <div class="diesel-module-head"><h3>Tripulación</h3><span class="module-state">Activo</span><label class="switch"><input type="checkbox"><b></b></label></div>
-                <label>Capitán<input id="dieselCaptain" type="text"></label>
-                <label>Motorista<input id="dieselDriver" type="text"></label>
+              <article class="panel-card diesel-module" data-module="recarga">
+                <div class="diesel-module-head"><h3>Recarga</h3><span class="module-state">Activo</span><label class="switch"><input type="checkbox"><b></b></label></div>
+                <label>Volumen (gal)<input id="dieselRecharge" type="number" min="0"></label>
+                <label>N° Vale Recarga<input id="dieselRechargeVoucher" type="text"></label>
               </article>
-
-              <div class="diesel-pair">
-                <article class="panel-card diesel-module" data-module="sondaje">
-                  <div class="diesel-module-head"><h3>Acta de Sondaje</h3><span class="module-state">Activo</span><label class="switch"><input type="checkbox"><b></b></label></div>
-                  <label>N° Documento<input id="dieselDocument" type="text"></label>
-                  <label>Reingreso (gal)<input id="dieselReturn" type="number" min="0"></label>
-                  <label>Diferencia (gal)<input id="dieselDifference" type="number" min="0" placeholder="Diferencia"></label>
-                </article>
-
-                <article class="panel-card diesel-module" data-module="recarga">
-                  <div class="diesel-module-head"><h3>Recarga</h3><span class="module-state">Activo</span><label class="switch"><input type="checkbox"><b></b></label></div>
-                  <label>Volumen (gal)<input id="dieselRecharge" type="number" min="0"></label>
-                  <label>N° Vale Recarga<input id="dieselRechargeVoucher" type="text"></label>
-                </article>
-              </div>
 
               <article class="panel-card diesel-module" data-module="consumo">
                 <div class="diesel-module-head"><h3>Consumo</h3><span class="module-state">Activo</span><label class="switch"><input type="checkbox"><b></b></label></div>
                 <label>Volumen (gal)<input id="dieselConsumption" type="number" min="0"></label>
+              </article>
+
+              <article class="panel-card diesel-module" data-module="sondaje">
+                <div class="diesel-module-head"><h3>Acta de Sondaje</h3><span class="module-state">Activo</span><label class="switch"><input type="checkbox"><b></b></label></div>
+                <label>N° Documento<input id="dieselDocument" type="text"></label>
+                <label>Reingreso (gal)<input id="dieselReturn" type="number" min="0"></label>
+                <label>Diferencia (gal)<input id="dieselDifference" type="number" min="0" placeholder="Diferencia"></label>
+              </article>
+
+              <article class="panel-card diesel-module" data-module="tripulacion">
+                <div class="diesel-module-head"><h3>Tripulación</h3><span class="module-state">Activo</span><label class="switch"><input type="checkbox"><b></b></label></div>
+                <label>Capitán<input id="dieselCaptain" type="text"></label>
+                <label>Motorista<input id="dieselDriver" type="text"></label>
               </article>
             </div>
 
@@ -940,8 +938,67 @@
         <section class="page-view placeholder-view" data-view="mapa" hidden>
           <article class="panel-card placeholder-card"><i data-lucide="map"></i><h1>Mapa</h1><p>Pantalla preparada para vista geográfica de operaciones.</p></article>
         </section>
-        <section class="page-view placeholder-view" data-view="naves" hidden>
-          <article class="panel-card placeholder-card"><i data-lucide="ship"></i><h1>Naves</h1><p>Pantalla preparada para catálogo y estado de naves.</p></article>
+        <section class="page-view naves-view" data-view="naves" hidden>
+          <div class="naves-stage">
+            <aside class="naves-info-panel">
+              <header>
+                <span class="status-dot"></span>
+                <div>
+                  <h1 id="navesShipName">TALARA</h1>
+                  <p id="navesShipType">Remolcador</p>
+                </div>
+                <strong id="navesShipStatus">Operativa</strong>
+              </header>
+              <dl>
+                <div><dt><i data-lucide="badge-check"></i>Matrícula</dt><dd id="navesShipCode">CO-5678-EM</dd></div>
+                <div><dt><i data-lucide="map-pin"></i>Ubicación</dt><dd id="navesShipLocation">Puerto Talara, Perú</dd></div>
+                <div><dt><i data-lucide="clock-3"></i>Última actividad</dt><dd id="navesShipActivity">17:30</dd></div>
+              </dl>
+              <div class="naves-levels">
+                <label><span><i data-lucide="fuel"></i>Diesel</span><meter id="navesDieselLevel" min="0" max="100" value="68"></meter><b id="navesDieselText">68%</b></label>
+                <label><span><i data-lucide="droplet"></i>Agua</span><meter id="navesWaterLevel" min="0" max="100" value="82"></meter><b id="navesWaterText">82%</b></label>
+                <label><span><i data-lucide="gauge"></i>Lubricante</span><meter id="navesOilLevel" min="0" max="100" value="76"></meter><b id="navesOilText">76%</b></label>
+              </div>
+            </aside>
+
+            <section class="naves-viewport" aria-label="Visor 3D de naves">
+              <div class="naves-view-mode"><i data-lucide="box"></i><span>Vista 3D</span></div>
+              <canvas id="navesCanvas"></canvas>
+              <div class="naves-drag-hint"><i data-lucide="move-horizontal"></i><span>Arrastra para rotar</span></div>
+            </section>
+
+            <aside class="naves-status-panel">
+              <article>
+                <i data-lucide="shield-check"></i>
+                <div>
+                  <h2>Estado operacional</h2>
+                  <strong id="navesOperationalText">Operativa</strong>
+                  <p id="navesIncidentText">Sin incidencias</p>
+                </div>
+              </article>
+              <article>
+                <i data-lucide="navigation"></i>
+                <div>
+                  <h2>Ubicación actual</h2>
+                  <strong id="navesLocationText">Puerto Talara, Perú</strong>
+                  <p id="navesCoordinatesText">04°34.567' S · 081°16.789' W</p>
+                </div>
+              </article>
+              <article>
+                <i data-lucide="users"></i>
+                <div>
+                  <h2>Tripulación actual</h2>
+                  <strong id="navesCrewText">6 miembros a bordo</strong>
+                  <div class="crew-badges"><span>MC</span><span>JH</span><span>RT</span><span>CP</span><b>+2</b></div>
+                </div>
+              </article>
+            </aside>
+          </div>
+
+          <section class="naves-fleet-section">
+            <h2>Flota disponible</h2>
+            <div class="naves-fleet-strip" id="navesFleetStrip"></div>
+          </section>
         </section>
         <section class="page-view placeholder-view" data-view="rutas" hidden>
           <article class="panel-card placeholder-card"><i data-lucide="route"></i><h1>Rutas</h1><p>Pantalla preparada para rutas y recorridos.</p></article>
@@ -966,7 +1023,8 @@
   <script src="vendor/jspdf.umd.min.js"></script>
   <script src="vendor/jspdf.plugin.autotable.min.js"></script>
   <script src="vendor/xlsx.full.min.js"></script>
-  <script src="script.js?v=time-24h-parinas-20260526"></script>
+  <script src="vendor/three.min.js"></script>
+  <script src="script.js?v=naves-ca2066-gallery-20260526"></script>
 </body>
 </html>
 

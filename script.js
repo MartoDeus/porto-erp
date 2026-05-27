@@ -153,6 +153,28 @@ const bitacoraRefs = {
   saveCategorized: document.querySelector("#saveCategorizedDay")
 };
 
+const navesRefs = {
+  canvas: document.querySelector("#navesCanvas"),
+  fleet: document.querySelector("#navesFleetStrip"),
+  name: document.querySelector("#navesShipName"),
+  type: document.querySelector("#navesShipType"),
+  status: document.querySelector("#navesShipStatus"),
+  code: document.querySelector("#navesShipCode"),
+  location: document.querySelector("#navesShipLocation"),
+  activity: document.querySelector("#navesShipActivity"),
+  operational: document.querySelector("#navesOperationalText"),
+  incident: document.querySelector("#navesIncidentText"),
+  locationText: document.querySelector("#navesLocationText"),
+  coordinates: document.querySelector("#navesCoordinatesText"),
+  crew: document.querySelector("#navesCrewText"),
+  dieselLevel: document.querySelector("#navesDieselLevel"),
+  dieselText: document.querySelector("#navesDieselText"),
+  waterLevel: document.querySelector("#navesWaterLevel"),
+  waterText: document.querySelector("#navesWaterText"),
+  oilLevel: document.querySelector("#navesOilLevel"),
+  oilText: document.querySelector("#navesOilText")
+};
+
 const dieselCatalog = [
   { item: 1, group: "REMOLCADOR", tab: "Remolcador", icon: "anchor", ship: "LOBITOS EXPRESS (CARGA)", initialStock: 20000, type: "Desp.", dayCrew: "ANDRES YENQUE / JUAN MORE ZAPATA", nightCrew: "AN GONZALES ALVARADO / ALEXANDER MORALES CASTRO", received: 0, receivedFrom: "-", day: 0, night: 0, dispatched: 400, transferred: 0 },
   { item: 2, group: "REMOLCADOR", tab: "Remolcador", icon: "anchor", ship: "LOBITOS EXPRESS (CONSUMO)", initialStock: 2580, type: "Desp.", dayCrew: "ANDRES YENQUE / JUAN MORE ZAPATA", nightCrew: "AN GONZALES ALVARADO / ALEXANDER MORALES CASTRO", received: 200, receivedFrom: "LOBITOS EXPRESS", day: 68, night: 48, dispatched: 0, transferred: 0 },
@@ -174,6 +196,19 @@ const dieselCatalog = [
   { item: 18, group: "BARCAZA", tab: "Barcaza", icon: "ship", ship: "MR BOB", initialStock: 2086, type: "Barge", dayCrew: "CARLOS MORE / DIEGO NIZAMA MORE", nightCrew: "JAIME ROJAS / GERMAN CHUNGA", received: 0, receivedFrom: "-", day: 15, night: 40, dispatched: 0, transferred: 0 },
   { item: 19, group: "FLOTA TALARA", tab: "Flota Talara", icon: "ship-wheel", ship: "LJ KELLEY", initialStock: 678, type: "Field", dayCrew: "RAMON JACINTO TUME / PERCY NAVARRO MARTINEZ", nightCrew: "T.DIA", received: 0, receivedFrom: "-", day: 0, night: 0, dispatched: 0, transferred: 0 }
 ];
+
+const navesFleet = [
+  { id: "talara", name: "TALARA", type: "Remolcador", status: "Operativa", code: "CO-5678-EM", location: "Puerto Talara, Perú", coordinates: "04°34.567' S · 081°16.789' W", activity: "17:30", crew: 6, diesel: 68, water: 82, oil: 76, color: "#008f5f", accent: "#064e3b", incidents: "Sin incidencias" },
+  { id: "lobitos", name: "LOBITOS EXPRESS", type: "Nave de apoyo", status: "Operativa", code: "LB-2042-PE", location: "Muelle Lobitos", coordinates: "04°27.214' S · 081°17.021' W", activity: "16:40", crew: 5, diesel: 72, water: 64, oil: 70, color: "#0b72d9", accent: "#064986", incidents: "Sin incidencias" },
+  { id: "parinas", name: "PARIÑAS", type: "Remolcador", status: "En ruta", code: "PA-1187-EM", location: "Bahía Talara", coordinates: "04°35.008' S · 081°18.110' W", activity: "15:10", crew: 6, diesel: 54, water: 78, oil: 61, color: "#f28c18", accent: "#9a4b04", incidents: "Monitoreo de ruta" },
+  { id: "mrbob", name: "MR BOB", type: "Remolcador", status: "Operativa", code: "MB-8821-PE", location: "Puerto Talara, Perú", coordinates: "04°33.452' S · 081°16.902' W", activity: "14:25", crew: 4, diesel: 83, water: 71, oil: 80, color: "#d92332", accent: "#7a0d17", incidents: "Sin incidencias" },
+  { id: "sheila", name: "SHEILA R", type: "Nave de carga", status: "Operativa", code: "SR-4307-PE", location: "Zona de carga", coordinates: "04°34.812' S · 081°17.512' W", activity: "13:50", crew: 7, diesel: 61, water: 58, oil: 69, color: "#1f74c9", accent: "#0a3e70", incidents: "Sin incidencias" },
+  { id: "elizabeth", name: "ELIZABETH", type: "Nave de apoyo", status: "Mantenimiento", code: "EL-0904-PE", location: "Astillero Talara", coordinates: "04°34.120' S · 081°15.984' W", activity: "12:05", crew: 3, diesel: 46, water: 52, oil: 44, color: "#0fa7b5", accent: "#075f66", incidents: "Mantenimiento preventivo" },
+  { id: "ca2066", name: "CA-2066", type: "Nave multipropósito", status: "Operativa", code: "CA-2066", location: "Puerto Talara, Perú", coordinates: "04°34.681' S · 081°17.203' W", activity: "16:55", crew: 5, diesel: 73, water: 66, oil: 58, color: "#0d4f8f", accent: "#061d33", incidents: "Sin incidencias", variant: "workboat", image: "assets/naves/ca-2066.png" }
+];
+
+let selectedNaveId = "talara";
+let navesSceneState = null;
 
 const dieselShips = dieselCatalog.map((unit) => unit.ship);
 
@@ -543,6 +578,10 @@ function setPage(pageName) {
   closeProfileMenu();
 
   renderIcons();
+
+  if (pageName === "naves") {
+    initNavesView();
+  }
 }
 
 function getCheckedValue(name) {
@@ -901,20 +940,22 @@ function ensureDieselDaySkeleton(date) {
 }
 
 function getDieselTotals() {
+  const modules = getActiveDieselModules();
   const origin = dieselRefs.origin.value;
   const initialStock = getDieselInitialStock(origin);
-  const recharge = toNumber(dieselRefs.recharge.value);
-  const consumption = toNumber(dieselRefs.consumption.value);
-  const returnVolume = toNumber(dieselRefs.returnVolume.value);
-  const differenceValue = toNumber(dieselRefs.difference.value);
+  const recharge = modules.recarga ? toNumber(dieselRefs.recharge.value) : 0;
+  const consumption = modules.consumo ? toNumber(dieselRefs.consumption.value) : 0;
+  const returnVolume = modules.sondaje ? toNumber(dieselRefs.returnVolume.value) : 0;
+  const differenceValue = modules.sondaje ? toNumber(dieselRefs.difference.value) : 0;
   const sondage = returnVolume > 0 ? returnVolume : -differenceValue;
-  const dispatched = dieselDispatches
+  const activeDispatches = modules.despacho ? dieselDispatches : [];
+  const dispatched = activeDispatches
     .filter((entry) => !isDieselTransfer(origin, entry.vessel))
     .reduce((sum, entry) => sum + entry.quantity, 0);
-  const transferred = dieselDispatches
+  const transferred = activeDispatches
     .filter((entry) => isDieselTransfer(origin, entry.vessel))
     .reduce((sum, entry) => sum + entry.quantity, 0);
-  const finalStock = initialStock + recharge - dispatched - transferred - consumption + sondage;
+  const finalStock = initialStock + recharge - dispatched - transferred + consumption + sondage;
 
   return {
     initialStock,
@@ -1116,6 +1157,7 @@ function hasDieselMovement(record) {
 }
 
 function buildDieselRecordFromForm() {
+  const modules = getActiveDieselModules();
   const totals = getDieselTotals();
   const date = dieselRefs.date.value;
   const ship = dieselRefs.origin.value;
@@ -1135,11 +1177,11 @@ function buildDieselRecordFromForm() {
     ship,
     shift,
     registeredBy: getCurrentUserDisplayName(),
-    captain: dieselRefs.captain.value.trim(),
-    driver: dieselRefs.driver.value.trim(),
-    document: dieselRefs.document.value.trim(),
+    captain: modules.tripulacion ? dieselRefs.captain.value.trim() : "",
+    driver: modules.tripulacion ? dieselRefs.driver.value.trim() : "",
+    document: modules.sondaje ? dieselRefs.document.value.trim() : "",
     recharge: totals.recharge,
-    rechargeVoucher: dieselRefs.rechargeVoucher.value.trim(),
+    rechargeVoucher: modules.recarga ? dieselRefs.rechargeVoucher.value.trim() : "",
     consumption: totals.consumption,
     returnVolume: totals.returnVolume,
     difference: totals.difference,
@@ -1148,14 +1190,14 @@ function buildDieselRecordFromForm() {
     transferred: totals.transferred,
     initialStock: totals.initialStock,
     finalStock: totals.finalStock,
-    dispatches: dieselDispatches.map((entry) => ({
+    dispatches: (modules.despacho ? dieselDispatches : []).map((entry) => ({
       vessel: entry.vessel,
       quantity: entry.quantity,
       voucher: entry.voucher,
       type: isDieselTransfer(ship, entry.vessel) ? "Transferencia" : "Despacho"
     })),
     observation: dieselRefs.observation.value.trim(),
-    moduleStates: getDieselModuleStates(),
+    moduleStates: modules,
     hasMovement,
     savedAt: new Date().toISOString()
   };
@@ -1899,6 +1941,7 @@ function updateModuleState(module) {
   module.classList.toggle("is-blocked", !isActive);
   state.textContent = isActive ? "Activo" : "Bloqueado";
   module.setAttribute("aria-pressed", String(isActive));
+  updateDieselSummary();
 }
 
 function toggleDieselModule(module) {
@@ -1969,6 +2012,9 @@ function bootDiesel() {
       }
     });
     module.addEventListener("keydown", (event) => {
+      if (event.target.closest("input, select, textarea, button, table, a")) {
+        return;
+      }
       if (event.key !== "Enter" && event.key !== " ") {
         return;
       }
@@ -3015,6 +3061,333 @@ function bootBitacora() {
   loadBitacoraCatalogs()
     .catch((error) => console.warn("No se pudieron cargar catalogos de bitacora.", error))
     .finally(refreshBitacora);
+}
+
+function getSelectedNave() {
+  return navesFleet.find((ship) => ship.id === selectedNaveId) || navesFleet[0];
+}
+
+function setNaveMeter(level, text, value) {
+  if (level) level.value = value;
+  if (text) text.textContent = `${value}%`;
+}
+
+function renderNavesFleet() {
+  if (!navesRefs.fleet) {
+    return;
+  }
+
+  navesRefs.fleet.innerHTML = navesFleet.map((ship) => `
+    <button class="fleet-card ${ship.image ? "has-image" : ""} ${ship.id === selectedNaveId ? "active" : ""}" type="button" data-ship-id="${escapeHtml(ship.id)}" style="--ship-color: ${escapeHtml(ship.color)};">
+      ${ship.image ? `<img src="${escapeHtml(ship.image)}" alt="${escapeHtml(ship.name)}">` : '<span class="mini-ship" aria-hidden="true"></span>'}
+      <strong>${escapeHtml(ship.name)}</strong>
+      <span>${escapeHtml(ship.type)}</span>
+    </button>
+  `).join("");
+
+  navesRefs.fleet.querySelectorAll(".fleet-card").forEach((button) => {
+    button.addEventListener("click", () => {
+      selectedNaveId = button.dataset.shipId || selectedNaveId;
+      updateNavesDetails();
+      renderNavesFleet();
+      updateNavesModel();
+    });
+  });
+}
+
+function updateNavesDetails() {
+  const ship = getSelectedNave();
+  if (!ship) {
+    return;
+  }
+
+  if (navesRefs.name) navesRefs.name.textContent = ship.name;
+  if (navesRefs.type) navesRefs.type.textContent = ship.type;
+  if (navesRefs.status) navesRefs.status.textContent = ship.status;
+  if (navesRefs.code) navesRefs.code.textContent = ship.code;
+  if (navesRefs.location) navesRefs.location.textContent = ship.location;
+  if (navesRefs.activity) navesRefs.activity.textContent = ship.activity;
+  if (navesRefs.operational) navesRefs.operational.textContent = ship.status;
+  if (navesRefs.incident) navesRefs.incident.textContent = ship.incidents;
+  if (navesRefs.locationText) navesRefs.locationText.textContent = ship.location;
+  if (navesRefs.coordinates) navesRefs.coordinates.textContent = ship.coordinates;
+  if (navesRefs.crew) navesRefs.crew.textContent = `${ship.crew} miembros a bordo`;
+  setNaveMeter(navesRefs.dieselLevel, navesRefs.dieselText, ship.diesel);
+  setNaveMeter(navesRefs.waterLevel, navesRefs.waterText, ship.water);
+  setNaveMeter(navesRefs.oilLevel, navesRefs.oilText, ship.oil);
+}
+
+function createNavesHullGeometry() {
+  const shape = new THREE.Shape();
+  shape.moveTo(-3.1, -0.55);
+  shape.lineTo(2.55, -0.55);
+  shape.quadraticCurveTo(3.15, -0.35, 3.42, 0);
+  shape.quadraticCurveTo(2.95, 0.48, 2.05, 0.64);
+  shape.lineTo(-2.65, 0.64);
+  shape.quadraticCurveTo(-3.2, 0.36, -3.1, -0.55);
+  const geometry = new THREE.ExtrudeGeometry(shape, {
+    depth: 1.35,
+    bevelEnabled: true,
+    bevelThickness: 0.12,
+    bevelSize: 0.12,
+    bevelSegments: 4
+  });
+  geometry.center();
+  geometry.rotateX(-Math.PI / 2);
+  return geometry;
+}
+
+function createNavesBoat(ship) {
+  const group = new THREE.Group();
+  group.name = "naves-boat";
+
+  const hullMaterial = new THREE.MeshStandardMaterial({ color: ship.color, roughness: 0.38, metalness: 0.12 });
+  hullMaterial.name = "hullMaterial";
+  const darkMaterial = new THREE.MeshStandardMaterial({ color: ship.accent, roughness: 0.5, metalness: 0.08 });
+  const whiteMaterial = new THREE.MeshStandardMaterial({ color: 0xf8fbff, roughness: 0.34, metalness: 0.05 });
+  const glassMaterial = new THREE.MeshStandardMaterial({ color: 0x0e3444, roughness: 0.16, metalness: 0.2 });
+  const railMaterial = new THREE.MeshStandardMaterial({ color: 0xe8eef5, roughness: 0.24, metalness: 0.28 });
+  const tireMaterial = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.68, metalness: 0.04 });
+  const redMaterial = new THREE.MeshStandardMaterial({ color: 0xce2d1d, roughness: 0.4, metalness: 0.12 });
+  const orangeMaterial = new THREE.MeshStandardMaterial({ color: 0xf97316, roughness: 0.42, metalness: 0.1 });
+  const cargoMaterial = new THREE.MeshStandardMaterial({ color: 0x16b6b9, roughness: 0.45, metalness: 0.08 });
+  const blueRailMaterial = new THREE.MeshStandardMaterial({ color: 0x083b66, roughness: 0.36, metalness: 0.24 });
+
+  const hull = new THREE.Mesh(createNavesHullGeometry(), hullMaterial);
+  hull.position.y = -0.18;
+  hull.castShadow = true;
+  hull.receiveShadow = true;
+  group.add(hull);
+
+  const deck = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.22, 1.12), whiteMaterial);
+  deck.position.set(-0.28, 0.58, 0);
+  deck.castShadow = true;
+  group.add(deck);
+
+  const isWorkboat = ship.variant === "workboat";
+  const cabin = new THREE.Mesh(new THREE.BoxGeometry(isWorkboat ? 2.2 : 1.6, 0.86, 0.86), whiteMaterial);
+  cabin.position.set(isWorkboat ? -1.02 : -0.78, 1.14, 0);
+  cabin.castShadow = true;
+  group.add(cabin);
+
+  const bridge = new THREE.Mesh(new THREE.BoxGeometry(isWorkboat ? 1.35 : 1.1, 0.56, 0.76), whiteMaterial);
+  bridge.position.set(isWorkboat ? -1.1 : -0.82, 1.84, 0);
+  bridge.castShadow = true;
+  group.add(bridge);
+
+  [-0.35, 0, 0.35].forEach((z) => {
+    const windowMesh = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.28, 0.2), glassMaterial);
+    windowMesh.position.set(-0.22, 1.88, z);
+    group.add(windowMesh);
+  });
+
+  const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.035, isWorkboat ? 2.45 : 2.1, 10), railMaterial);
+  mast.position.set(isWorkboat ? -1.35 : -1.15, isWorkboat ? 2.86 : 2.7, 0);
+  mast.castShadow = true;
+  group.add(mast);
+
+  const antenna = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 1.15, 8), railMaterial);
+  antenna.position.set(-1.15, 4.0, 0);
+  group.add(antenna);
+
+  const boom = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.035, 0.035), railMaterial);
+  boom.position.set(-1.15, 3.25, 0);
+  boom.rotation.y = Math.PI / 2;
+  group.add(boom);
+
+  const fenderPositions = isWorkboat ? [-2.65, -1.9, -1.15, -0.4, 0.35, 1.05, 1.75, 2.35, 2.9] : [-2.55, -1.8, -1.05, -0.3, 0.45, 1.2, 1.95, 2.62];
+  fenderPositions.forEach((x) => {
+    [-0.76, 0.76].forEach((z) => {
+      const tire = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.055, 10, 20), tireMaterial);
+      tire.position.set(x, 0.16, z);
+      tire.rotation.y = Math.PI / 2;
+      tire.castShadow = true;
+      group.add(tire);
+    });
+  });
+
+  const railFront = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.035, 0.035), isWorkboat ? blueRailMaterial : railMaterial);
+  railFront.position.set(-0.32, 0.93, -0.62);
+  group.add(railFront);
+  const railBack = railFront.clone();
+  railBack.position.z = 0.62;
+  group.add(railBack);
+
+  if (isWorkboat) {
+    const foreRail = new THREE.Mesh(new THREE.BoxGeometry(1.45, 0.035, 0.035), blueRailMaterial);
+    foreRail.position.set(-2.52, 1.0, 0);
+    foreRail.rotation.y = Math.PI / 2;
+    group.add(foreRail);
+
+    const engineBase = new THREE.Mesh(new THREE.BoxGeometry(0.82, 0.36, 0.72), redMaterial);
+    engineBase.position.set(0.95, 0.88, 0);
+    engineBase.castShadow = true;
+    group.add(engineBase);
+
+    [-0.26, 0.26].forEach((z) => {
+      const tank = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.85, 18), orangeMaterial);
+      tank.position.set(0.88, 1.18, z);
+      tank.rotation.z = Math.PI / 2;
+      tank.castShadow = true;
+      group.add(tank);
+    });
+
+    const hose = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.035, 12, 24), new THREE.MeshStandardMaterial({ color: 0x083b66, roughness: 0.5, metalness: 0.12 }));
+    hose.position.set(1.62, 1.02, 0.5);
+    hose.rotation.y = Math.PI / 2;
+    group.add(hose);
+
+    const cargo = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.46, 0.75), cargoMaterial);
+    cargo.position.set(2.28, 0.88, 0);
+    cargo.castShadow = true;
+    group.add(cargo);
+
+    const flagPole = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.8, 8), railMaterial);
+    flagPole.position.set(-1.05, 3.28, 0.22);
+    group.add(flagPole);
+
+    const flagGroup = new THREE.Group();
+    const redFlag = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 0.22), new THREE.MeshBasicMaterial({ color: 0xd31722, side: THREE.DoubleSide }));
+    const whiteFlag = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 0.22), new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide }));
+    const redFlagTwo = redFlag.clone();
+    redFlag.position.x = -0.16;
+    redFlagTwo.position.x = 0.16;
+    flagGroup.add(redFlag, whiteFlag, redFlagTwo);
+    flagGroup.position.set(-0.84, 3.43, 0.22);
+    flagGroup.rotation.y = Math.PI / 2;
+    group.add(flagGroup);
+  }
+
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(3.35, 3.35, 0.035, 96), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.42 }));
+  base.position.y = -0.82;
+  group.add(base);
+
+  group.userData.hullMaterial = hullMaterial;
+  group.userData.darkMaterial = darkMaterial;
+  group.userData.variant = ship.variant || "standard";
+  return group;
+}
+
+function updateNavesModel() {
+  if (!navesSceneState?.scene) {
+    return;
+  }
+  const ship = getSelectedNave();
+  const previousRotation = navesSceneState.boat?.rotation.y || -0.35;
+  if (navesSceneState.boat) {
+    navesSceneState.scene.remove(navesSceneState.boat);
+  }
+  const boat = createNavesBoat(ship);
+  boat.rotation.y = previousRotation;
+  navesSceneState.boat = boat;
+  navesSceneState.scene.add(boat);
+}
+
+function resizeNavesRenderer() {
+  if (!navesSceneState) {
+    return;
+  }
+  const { canvas, renderer, camera } = navesSceneState;
+  const width = Math.max(320, canvas.clientWidth || canvas.parentElement?.clientWidth || 640);
+  const height = Math.max(360, canvas.clientHeight || 510);
+  renderer.setSize(width, height, false);
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+}
+
+function initNavesScene() {
+  if (!navesRefs.canvas || navesSceneState || !window.THREE) {
+    return;
+  }
+
+  const canvas = navesRefs.canvas;
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.Fog(0xf4f9ff, 8, 18);
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.shadowMap.enabled = true;
+
+  const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+  camera.position.set(5.4, 3.2, 6.2);
+  camera.lookAt(0, 0.7, 0);
+
+  const ambient = new THREE.HemisphereLight(0xffffff, 0xc7d7e6, 1.8);
+  scene.add(ambient);
+  const keyLight = new THREE.DirectionalLight(0xffffff, 2.4);
+  keyLight.position.set(3.5, 6, 4);
+  keyLight.castShadow = true;
+  scene.add(keyLight);
+  const rimLight = new THREE.DirectionalLight(0x9fd5ff, 1.1);
+  rimLight.position.set(-5, 3, -2);
+  scene.add(rimLight);
+
+  const boat = createNavesBoat(getSelectedNave());
+  boat.rotation.y = -0.35;
+  scene.add(boat);
+
+  const floor = new THREE.Mesh(
+    new THREE.CircleGeometry(4.6, 96),
+    new THREE.MeshBasicMaterial({ color: 0xcfe5fb, transparent: true, opacity: 0.34 })
+  );
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.y = -0.86;
+  scene.add(floor);
+
+  navesSceneState = {
+    canvas,
+    scene,
+    renderer,
+    camera,
+    boat,
+    dragging: false,
+    lastX: 0,
+    velocity: 0.006,
+    frameId: null
+  };
+
+  canvas.addEventListener("pointerdown", (event) => {
+    navesSceneState.dragging = true;
+    navesSceneState.lastX = event.clientX;
+    canvas.setPointerCapture?.(event.pointerId);
+  });
+
+  canvas.addEventListener("pointermove", (event) => {
+    if (!navesSceneState.dragging) {
+      return;
+    }
+    const delta = event.clientX - navesSceneState.lastX;
+    navesSceneState.lastX = event.clientX;
+    boat.rotation.y += delta * 0.01;
+    navesSceneState.velocity = delta * 0.0008;
+  });
+
+  canvas.addEventListener("pointerup", () => {
+    navesSceneState.dragging = false;
+  });
+
+  window.addEventListener("resize", resizeNavesRenderer);
+  resizeNavesRenderer();
+
+  const animate = () => {
+    if (!navesSceneState.dragging) {
+      boat.rotation.y += navesSceneState.velocity;
+      navesSceneState.velocity *= 0.985;
+      if (Math.abs(navesSceneState.velocity) < 0.002) {
+        navesSceneState.velocity = 0.002;
+      }
+    }
+    renderer.render(scene, camera);
+    navesSceneState.frameId = requestAnimationFrame(animate);
+  };
+  animate();
+}
+
+function initNavesView() {
+  updateNavesDetails();
+  renderNavesFleet();
+  initNavesScene();
+  resizeNavesRenderer();
 }
 
 function boot() {
