@@ -197,11 +197,11 @@ begin
     raise exception 'Reingreso y diferencia no pueden coexistir.';
   end if;
 
-  v_total_despacho := case when v_mod_despacho then 0 else coalesce(v_existing.total_despacho, 0) end;
-  v_total_transferencia := case when v_mod_despacho then 0 else coalesce(v_existing.total_transferencia, 0) end;
+v_total_despacho := coalesce(v_existing.total_despacho, 0);
+v_total_transferencia := coalesce(v_existing.total_transferencia, 0);
 
-  if v_mod_despacho then
-    for v_movement in
+if v_mod_despacho then
+  for v_movement in
       select value from jsonb_array_elements(coalesce(payload -> 'movimientos', '[]'::jsonb))
     loop
       v_destino_id := public.resolve_unidad_id(v_movement ->> 'destino');
@@ -323,25 +323,31 @@ begin
     end if;
   end if;
 
-  if v_mod_despacho then
-    select coalesce(array_agg(distinct kardex_id), '{}')
-    into v_affected_destinos
-    from public.diesel_movimientos
-    where estado = 'vigente'
-      and lower(tipo) = 'recibido'
-      and detalle ->> 'source_kardex_id' = v_kardex_id::text;
+  if v_mod_despacho and coalesce(payload ->> 'modo', 'agregar') = 'editar' then
+  select coalesce(array_agg(distinct kardex_id), '{}')
+  into v_affected_destinos
+  from public.diesel_movimientos
+  where estado = 'vigente'
+    and lower(tipo) = 'recibido'
+    and detalle ->> 'source_kardex_id' = v_kardex_id::text;
 
-    update public.diesel_movimientos
-    set estado = 'anulado', anulado_at = now(), anulado_por = auth.uid(), updated_by = auth.uid(), updated_at = now()
-    where estado = 'vigente'
-      and (
-        (kardex_id = v_kardex_id and lower(tipo) in ('despacho', 'transferencia'))
-        or (lower(tipo) = 'recibido' and detalle ->> 'source_kardex_id' = v_kardex_id::text)
-      );
+  update public.diesel_movimientos
+  set estado = 'anulado',
+      anulado_at = now(),
+      anulado_por = auth.uid(),
+      updated_by = auth.uid(),
+      updated_at = now()
+  where estado = 'vigente'
+    and (
+      (kardex_id = v_kardex_id and lower(tipo) in ('despacho', 'transferencia'))
+      or (lower(tipo) = 'recibido' and detalle ->> 'source_kardex_id' = v_kardex_id::text)
+    );
+end if;
 
-    for v_movement in
-      select value from jsonb_array_elements(coalesce(payload -> 'movimientos', '[]'::jsonb))
-    loop
+if v_mod_despacho then
+  for v_movement in
+    select value from jsonb_array_elements(coalesce(payload -> 'movimientos', '[]'::jsonb))
+  loop
       v_destino_id := public.resolve_unidad_id(v_movement ->> 'destino');
       v_cantidad := coalesce((v_movement ->> 'cantidad')::numeric, 0);
 

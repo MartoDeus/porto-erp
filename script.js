@@ -1205,6 +1205,7 @@ function buildDieselRecordFromForm() {
 
 function buildDieselPayload(record) {
   return {
+    modo: "agregar",
     fecha: record.date,
     nave: record.ship,
     turno: record.shift,
