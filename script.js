@@ -110,14 +110,13 @@ const dieselRefs = {
   editCancel: document.querySelector("#dieselEditCancel"),
   editDelete: document.querySelector("#dieselEditDelete"),
   editSave: document.querySelector("#dieselEditSave"),
-  editShip: document.querySelector("#dieselEditShip"),
+  editSubtitle: document.querySelector("#dieselEditSubtitle"),
   editDateLabel: document.querySelector("#dieselEditDateLabel"),
   editVesselLabel: document.querySelector("#dieselEditVesselLabel"),
-  editRecharge: document.querySelector("#dieselEditRecharge"),
-  editRechargeTotal: document.querySelector("#dieselEditRechargeTotal"),
+  editReceived: document.querySelector("#dieselEditReceived"),
   editReceivedFrom: document.querySelector("#dieselEditReceivedFrom"),
-  editDay: document.querySelector("#dieselEditDay"),
-  editNight: document.querySelector("#dieselEditNight"),
+  editRecharge: document.querySelector("#dieselEditRecharge"),
+  editConsumption: document.querySelector("#dieselEditConsumption"),
   editSondage: document.querySelector("#dieselEditSondage"),
   editDispatched: document.querySelector("#dieselEditDispatched"),
   editTransferred: document.querySelector("#dieselEditTransferred"),
@@ -125,16 +124,11 @@ const dieselRefs = {
   editSondageVoucher: document.querySelector("#dieselEditSondageVoucher"),
   editRechargeVoucher: document.querySelector("#dieselEditRechargeVoucher"),
   editObservations: document.querySelector("#dieselEditObservations"),
-  editGuardLabel: document.querySelector("#dieselEditGuardLabel"),
-  editCaptainDay: document.querySelector("#dieselEditCaptainDay"),
-  editDriverDay: document.querySelector("#dieselEditDriverDay"),
-  editCaptainNight: document.querySelector("#dieselEditCaptainNight"),
-  editDriverNight: document.querySelector("#dieselEditDriverNight"),
+  editCaptain: document.querySelector("#dieselEditCaptain"),
+  editDriver: document.querySelector("#dieselEditDriver"),
   editInitial: document.querySelector("#dieselEditInitial"),
   editFinal: document.querySelector("#dieselEditFinal"),
-  editShiftInputs: document.querySelectorAll('input[name="dieselEditShift"]'),
-  editToggleButtons: document.querySelectorAll("[data-edit-toggle]"),
-  editSections: document.querySelectorAll("[data-edit-section]")
+  editShiftInputs: document.querySelectorAll('input[name="dieselEditShift"]')
 };
 
 const bitacoraRefs = {
@@ -1506,23 +1500,20 @@ function getDieselEditShiftValue(selectedShift) {
   return "A";
 }
 
-function setDieselEditSectionState(sectionName, isEditing) {
-  const section = [...dieselRefs.editSections].find((item) => item.dataset.editSection === sectionName);
-  if (!section) {
-    return;
+function getDieselEditTypeLabel(row) {
+  if (row?.transferred > 0 && row?.dispatched > 0) {
+    return "Transferencia / despacho";
   }
-
-  section.classList.toggle("is-editing", Boolean(isEditing));
-  section.querySelectorAll(`[data-editable="${sectionName}"]`).forEach((field) => {
-    field.disabled = !isEditing;
-    field.readOnly = !isEditing;
-  });
-}
-
-function resetDieselEditSections() {
-  dieselRefs.editSections.forEach((section) => {
-    setDieselEditSectionState(section.dataset.editSection, false);
-  });
+  if (row?.transferred > 0) {
+    return "Transferencia";
+  }
+  if (row?.dispatched > 0) {
+    return "Despacho";
+  }
+  if (row?.received > 0) {
+    return "Recepción";
+  }
+  return "Registro operativo";
 }
 
 function getDieselEditGuardLabel(selectedShift) {
@@ -1541,37 +1532,33 @@ function openDieselEditModal(row, context = {}) {
   }
 
   dieselEditDraft = { row, context };
-  const dateLabel = formatDisplayDate(context.selectedDate || getTodayValue());
   const shiftValue = getDieselEditShiftValue(context.selectedShift);
+  const dateLabel = formatDisplayDate(context.selectedDate || getTodayValue());
 
-  dieselRefs.editShip.textContent = row.ship || "-";
-  dieselRefs.editDateLabel.textContent = dateLabel;
+  dieselRefs.editSubtitle.textContent = `${row.ship || "-"} · ${getDieselEditTypeLabel(row)}`;
   dieselRefs.editVesselLabel.textContent = row.ship || "-";
+  dieselRefs.editDateLabel.textContent = dateLabel;
+  dieselRefs.editReceived.value = row.received || 0;
+  dieselRefs.editReceivedFrom.value = row.receivedFrom && row.receivedFrom !== "-" ? row.receivedFrom : "";
   dieselRefs.editRecharge.value = row.received || 0;
-  dieselRefs.editRechargeTotal.value = row.received || 0;
-  dieselRefs.editReceivedFrom.value = row.receivedFrom || "-";
-  dieselRefs.editDay.value = row.day || 0;
-  dieselRefs.editNight.value = row.night || 0;
-  dieselRefs.editSondage.value = row.sondage || 0;
+  dieselRefs.editConsumption.value = row.consumption || 0;
   dieselRefs.editDispatched.value = row.dispatched || 0;
   dieselRefs.editTransferred.value = row.transferred || 0;
+  dieselRefs.editSondage.value = row.sondage || 0;
+  dieselRefs.editInitial.textContent = `${formatNumber(row.initialStock)} gal`;
+  dieselRefs.editFinal.textContent = `${formatNumber(row.finalStock)} gal`;
   dieselRefs.editDispatchVoucher.value = "";
   dieselRefs.editSondageVoucher.value = "";
   dieselRefs.editRechargeVoucher.value = "";
   dieselRefs.editObservations.value = row.receivedFrom && row.receivedFrom !== "-" ? `Recibido de ${row.receivedFrom}.` : "";
-  dieselRefs.editGuardLabel.value = getDieselEditGuardLabel(shiftValue);
-  dieselRefs.editCaptainDay.value = row.dayCrew?.captain || "";
-  dieselRefs.editDriverDay.value = row.dayCrew?.driver || "";
-  dieselRefs.editCaptainNight.value = row.nightCrew?.captain || "";
-  dieselRefs.editDriverNight.value = row.nightCrew?.driver || "";
-  dieselRefs.editInitial.textContent = `${formatNumber(row.initialStock)} gal`;
-  dieselRefs.editFinal.textContent = `${formatNumber(row.finalStock)} gal`;
+  const activeCrew = shiftValue === "B" ? row.nightCrew : row.dayCrew;
+  dieselRefs.editCaptain.value = activeCrew?.captain && activeCrew.captain !== "-" ? activeCrew.captain : "";
+  dieselRefs.editDriver.value = activeCrew?.driver && activeCrew.driver !== "-" ? activeCrew.driver : "";
 
   dieselRefs.editShiftInputs.forEach((input) => {
     input.checked = input.value === shiftValue;
   });
 
-  resetDieselEditSections();
   dieselRefs.editModal.hidden = false;
   document.body.classList.add("modal-open");
   renderIcons();
@@ -2263,19 +2250,7 @@ function bootDiesel() {
     window.alert("La eliminación real se implementará en una siguiente fase.");
   });
   dieselRefs.editSave?.addEventListener("click", () => {
-    window.alert("Edición visual lista. El guardado real se implementará en la siguiente fase.");
-  });
-  dieselRefs.editToggleButtons?.forEach((button) => {
-    button.addEventListener("click", () => {
-      const sectionName = button.dataset.editToggle;
-      const section = [...dieselRefs.editSections].find((item) => item.dataset.editSection === sectionName);
-      const isEditing = section?.classList.contains("is-editing");
-      resetDieselEditSections();
-      setDieselEditSectionState(sectionName, !isEditing);
-      if (!isEditing) {
-        section?.querySelector(`[data-editable="${sectionName}"]`)?.focus();
-      }
-    });
+    window.alert("La edición visual está lista. El guardado real se implementará en una siguiente fase.");
   });
   dieselRefs.editModal?.querySelectorAll('[data-close-modal="diesel-edit"]').forEach((element) => {
     element.addEventListener("click", closeDieselEditModal);

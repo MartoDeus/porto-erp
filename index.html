@@ -1027,7 +1027,7 @@
           <span class="diesel-edit-badge"><i data-lucide="fuel"></i></span>
           <div>
             <h2 id="dieselEditTitle">Editar registro diésel</h2>
-            <strong id="dieselEditShip">-</strong>
+            <strong id="dieselEditSubtitle">-</strong>
           </div>
         </div>
         <button class="icon-close" type="button" id="dieselEditClose" aria-label="Cerrar edición">
@@ -1038,95 +1038,87 @@
       <div class="diesel-edit-body">
         <section class="diesel-edit-section">
           <h3>Información del registro</h3>
-          <div class="diesel-edit-grid diesel-edit-grid-top diesel-edit-grid-hero">
-            <article class="diesel-edit-info-tile">
+          <div class="diesel-edit-top">
+            <article class="diesel-edit-tile">
               <i data-lucide="anchor"></i>
               <div>
                 <span>Nave</span>
                 <strong id="dieselEditVesselLabel">-</strong>
               </div>
             </article>
-            <article class="diesel-edit-info-tile">
+            <article class="diesel-edit-tile">
               <i data-lucide="calendar-days"></i>
               <div>
                 <span>Fecha</span>
                 <strong id="dieselEditDateLabel">-</strong>
               </div>
             </article>
-            <fieldset class="diesel-edit-turno">
-              <legend>Turno</legend>
-              <label><input id="dieselEditShiftDay" type="radio" name="dieselEditShift" value="A" disabled><span><i data-lucide="sun-medium"></i>Diurno</span></label>
-              <label><input id="dieselEditShiftNight" type="radio" name="dieselEditShift" value="B" disabled><span><i data-lucide="moon-star"></i>Nocturno</span></label>
-            </fieldset>
+            <article class="diesel-edit-tile diesel-edit-shift-tile">
+              <span class="diesel-edit-tile-label">Turno</span>
+              <div class="diesel-edit-shift" id="dieselEditShiftGroup">
+                <label class="diesel-edit-shift-option">
+                  <input id="dieselEditShiftDay" type="radio" name="dieselEditShift" value="A">
+                  <span><i data-lucide="sun-medium"></i>Diurno</span>
+                </label>
+                <label class="diesel-edit-shift-option">
+                  <input id="dieselEditShiftNight" type="radio" name="dieselEditShift" value="B">
+                  <span><i data-lucide="moon-star"></i>Nocturno</span>
+                </label>
+              </div>
+            </article>
           </div>
         </section>
 
-        <div class="diesel-edit-grid diesel-edit-main">
-          <section class="diesel-edit-stack diesel-edit-left-column">
-            <article class="diesel-edit-card" data-edit-section="recibida">
-              <div class="diesel-edit-card-head">
-                <h4>Cantidad recibida (gal)</h4>
-                <button class="diesel-edit-toggle" type="button" data-edit-toggle="recibida" aria-label="Editar cantidad recibida"><i data-lucide="square-pen"></i></button>
-              </div>
-              <label><span>Valor actual</span><input id="dieselEditRecharge" data-editable="recibida" type="number" min="0" step="0.001" disabled></label>
-              <small class="diesel-edit-note">Campo bloqueado por defecto</small>
+        <section class="diesel-edit-layout">
+          <div class="diesel-edit-column">
+            <article class="diesel-edit-card">
+              <div class="diesel-edit-card-head"><h4>Cantidad recibida (gal)</h4></div>
+              <input id="dieselEditReceived" type="number" min="0" step="0.001">
             </article>
 
-            <article class="diesel-edit-card" data-edit-section="recibido-de">
-              <div class="diesel-edit-card-head">
-                <h4>Recibido de</h4>
-                <button class="diesel-edit-toggle" type="button" data-edit-toggle="recibido-de" aria-label="Editar recibido de"><i data-lucide="square-pen"></i></button>
-              </div>
-              <label><span>Origen</span><input id="dieselEditReceivedFrom" data-editable="recibido-de" type="text" disabled></label>
+            <article class="diesel-edit-card">
+              <div class="diesel-edit-card-head"><h4>Recibido de</h4></div>
+              <input id="dieselEditReceivedFrom" type="text">
             </article>
 
-            <article class="diesel-edit-card" data-edit-section="recarga">
-              <div class="diesel-edit-card-head">
-                <h4>Recarga (gal)</h4>
-                <button class="diesel-edit-toggle" type="button" data-edit-toggle="recarga" aria-label="Editar recarga"><i data-lucide="square-pen"></i></button>
-              </div>
-              <label><span>Valor</span><input id="dieselEditRechargeTotal" data-editable="recarga" type="number" min="0" step="0.001" disabled></label>
+            <article class="diesel-edit-card">
+              <div class="diesel-edit-card-head"><h4>Recarga (gal)</h4></div>
+              <input id="dieselEditRecharge" type="number" min="0" step="0.001">
             </article>
 
-            <article class="diesel-edit-card" data-edit-section="consumo">
-              <div class="diesel-edit-card-head">
-                <h4>Consumo turno (gal)</h4>
-                <button class="diesel-edit-toggle" type="button" data-edit-toggle="consumo" aria-label="Editar consumo"><i data-lucide="square-pen"></i></button>
-              </div>
-              <div class="diesel-edit-inline">
-                <label><span>Consumo día</span><input id="dieselEditDay" data-editable="consumo" type="number" min="0" step="0.001" disabled></label>
-                <label><span>Consumo noche</span><input id="dieselEditNight" data-editable="consumo" type="number" min="0" step="0.001" disabled></label>
-              </div>
-            </article>
-          </section>
-
-          <section class="diesel-edit-stack diesel-edit-center-column">
-            <article class="diesel-edit-card" data-edit-section="despacho">
-              <div class="diesel-edit-card-head">
-                <h4>Cantidad despachada (gal)</h4>
-                <button class="diesel-edit-toggle" type="button" data-edit-toggle="despacho" aria-label="Editar cantidad despachada"><i data-lucide="square-pen"></i></button>
-              </div>
-              <label><span>Valor</span><input id="dieselEditDispatched" data-editable="despacho" type="number" min="0" step="0.001" disabled></label>
+            <article class="diesel-edit-card">
+              <div class="diesel-edit-card-head"><h4>Consumo turno (gal)</h4></div>
+              <input id="dieselEditConsumption" type="number" min="0" step="0.001">
             </article>
 
-            <article class="diesel-edit-card" data-edit-section="transferencia">
-              <div class="diesel-edit-card-head">
-                <h4>Cantidad transferida (gal)</h4>
-                <button class="diesel-edit-toggle" type="button" data-edit-toggle="transferencia" aria-label="Editar cantidad transferida"><i data-lucide="square-pen"></i></button>
-              </div>
-              <label><span>Valor</span><input id="dieselEditTransferred" data-editable="transferencia" type="number" min="0" step="0.001" disabled></label>
+            <article class="diesel-edit-card">
+              <div class="diesel-edit-card-head"><h4>Diferencia de sondaje (gal)</h4></div>
+              <input id="dieselEditSondage" type="number" step="0.001">
+            </article>
+          </div>
+
+          <div class="diesel-edit-column">
+            <article class="diesel-edit-card">
+              <div class="diesel-edit-card-head"><h4>Cantidad despachada (gal)</h4></div>
+              <input id="dieselEditDispatched" type="number" min="0" step="0.001">
             </article>
 
-            <article class="diesel-edit-card" data-edit-section="sondaje">
-              <div class="diesel-edit-card-head">
-                <h4>Diferencia de sondaje (gal)</h4>
-                <button class="diesel-edit-toggle" type="button" data-edit-toggle="sondaje" aria-label="Editar sondaje"><i data-lucide="square-pen"></i></button>
-              </div>
-              <label><span>Valor</span><input id="dieselEditSondage" data-editable="sondaje" type="number" step="0.001" disabled></label>
+            <article class="diesel-edit-card">
+              <div class="diesel-edit-card-head"><h4>Cantidad transferida (gal)</h4></div>
+              <input id="dieselEditTransferred" type="number" min="0" step="0.001">
             </article>
-          </section>
 
-          <aside class="diesel-edit-stack diesel-edit-right-column">
+            <article class="diesel-edit-card">
+              <div class="diesel-edit-card-head"><h4>Documentos y vales</h4></div>
+              <div class="diesel-edit-docs">
+                <label><span>N° Vale Despacho / Transferencia</span><input id="dieselEditDispatchVoucher" type="text"></label>
+                <label><span>N° Vale Acta de Sondaje</span><input id="dieselEditSondageVoucher" type="text"></label>
+                <label><span>N° Vale Recarga</span><input id="dieselEditRechargeVoucher" type="text"></label>
+              </div>
+            </article>
+          </div>
+
+          <aside class="diesel-edit-column">
             <article class="diesel-edit-card diesel-edit-stock-card">
               <h4>Resumen de stock</h4>
               <div class="diesel-edit-stock-values">
@@ -1134,48 +1126,20 @@
                 <div><span>Stock final</span><strong id="dieselEditFinal">0 gal</strong></div>
               </div>
             </article>
+
+            <article class="diesel-edit-card">
+              <div class="diesel-edit-card-head"><h4>Observaciones</h4></div>
+              <textarea id="dieselEditObservations" rows="4"></textarea>
+            </article>
+
+            <article class="diesel-edit-card">
+              <div class="diesel-edit-card-head"><h4>Información de guardia</h4></div>
+              <label><span>Capitán</span><input id="dieselEditCaptain" type="text"></label>
+              <label><span>Motorista</span><input id="dieselEditDriver" type="text"></label>
+            </article>
           </aside>
-        </div>
+        </section>
 
-        <div class="diesel-edit-grid diesel-edit-bottom">
-          <section class="diesel-edit-card" data-edit-section="documentos">
-            <div class="diesel-edit-card-head">
-              <h4>Documentos y vales</h4>
-              <button class="diesel-edit-toggle" type="button" data-edit-toggle="documentos" aria-label="Editar documentos y vales"><i data-lucide="square-pen"></i></button>
-            </div>
-            <div class="diesel-edit-docs">
-              <label><span>N° Vale Despacho / Transferencia</span><input id="dieselEditDispatchVoucher" data-editable="documentos" type="text" disabled></label>
-              <label><span>N° Vale Acta de Sondaje</span><input id="dieselEditSondageVoucher" data-editable="documentos" type="text" disabled></label>
-              <label><span>N° Vale Recarga</span><input id="dieselEditRechargeVoucher" data-editable="documentos" type="text" disabled></label>
-            </div>
-          </section>
-
-          <section class="diesel-edit-stack">
-            <article class="diesel-edit-card" data-edit-section="observaciones">
-              <div class="diesel-edit-card-head">
-                <h4>Observaciones</h4>
-                <button class="diesel-edit-toggle" type="button" data-edit-toggle="observaciones" aria-label="Editar observaciones"><i data-lucide="square-pen"></i></button>
-              </div>
-              <label><span>Detalle</span><textarea id="dieselEditObservations" data-editable="observaciones" rows="4" disabled></textarea></label>
-            </article>
-
-            <article class="diesel-edit-card" data-edit-section="guardia">
-              <div class="diesel-edit-card-head">
-                <h4>Información de guardia (referencial)</h4>
-                <button class="diesel-edit-toggle" type="button" data-edit-toggle="guardia" aria-label="Editar guardia"><i data-lucide="square-pen"></i></button>
-              </div>
-              <label><span>Guardia</span><input id="dieselEditGuardLabel" data-editable="guardia" type="text" disabled></label>
-              <div class="diesel-edit-inline">
-                <label><span>Capitán día</span><input id="dieselEditCaptainDay" data-editable="guardia" type="text" disabled></label>
-                <label><span>Motorista día</span><input id="dieselEditDriverDay" data-editable="guardia" type="text" disabled></label>
-              </div>
-              <div class="diesel-edit-inline">
-                <label><span>Capitán noche</span><input id="dieselEditCaptainNight" data-editable="guardia" type="text" disabled></label>
-                <label><span>Motorista noche</span><input id="dieselEditDriverNight" data-editable="guardia" type="text" disabled></label>
-              </div>
-            </article>
-          </section>
-        </div>
       </div>
 
       <footer class="diesel-edit-footer">
@@ -1191,7 +1155,7 @@
   <script src="vendor/jspdf.plugin.autotable.min.js"></script>
   <script src="vendor/xlsx.full.min.js"></script>
   <script src="vendor/three.min.js"></script>
-  <script src="script.js?v=diesel-edit-modal-phase1-fit-screen-20260527"></script>
+  <script src="script.js?v=diesel-edit-modal-phase1-20260528-2"></script>
 </body>
 </html>
 
