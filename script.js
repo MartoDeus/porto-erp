@@ -1526,6 +1526,284 @@ function getDieselEditGuardLabel(selectedShift) {
   return "Ambas guardias";
 }
 
+function formatDieselEditTimestamp(value) {
+  const date = value ? new Date(value) : new Date();
+
+  if (Number.isNaN(date.getTime())) {
+    return "Última actualización: --/--/---- --:--";
+  }
+
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  const hour = String(date.getHours()).padStart(2, "0");
+  const minute = String(date.getMinutes()).padStart(2, "0");
+
+  return `Última actualización: ${day}/${month}/${year} ${hour}:${minute}`;
+}
+
+function formatDieselEditableValue(control) {
+  const value = control?.value;
+
+  if (value === null || value === undefined || value === "") {
+    return "-";
+  }
+
+  return value;
+}
+
+function getDieselGroupSummary(card) {
+  const labels = [...card.querySelectorAll(".diesel-edit-group-active label")];
+
+  if (!labels.length) {
+    return "-";
+  }
+
+  const values = labels
+    .map((label) => {
+      const labelText = label.querySelector("span")?.textContent?.trim();
+      const control = label.querySelector("input, textarea");
+      const value = formatDieselEditableValue(control);
+      return labelText ? `${labelText}: ${value}` : value;
+    })
+    .filter(Boolean);
+
+  return values.join(" · ");
+}
+
+function setDieselEditableCardState(card, isEditing) {
+  if (!card) {
+    return;
+  }
+
+  const control = card.querySelector(".diesel-edit-native-control");
+  const readoutValue = card.querySelector(".diesel-edit-readout-value");
+
+  if (!control || !readoutValue) {
+    return;
+  }
+
+  if (isEditing) {
+    card.dataset.previousValue = control.value;
+    card.classList.add("is-editing");
+    card.classList.remove("is-readonly");
+    window.setTimeout(() => {
+      control.focus();
+      if (typeof control.select === "function") {
+        control.select();
+      }
+    }, 0);
+    return;
+  }
+
+  readoutValue.textContent = formatDieselEditableValue(control);
+  card.classList.remove("is-editing");
+  card.classList.add("is-readonly");
+}
+
+function setDieselEditableGroupState(card, isEditing) {
+  if (!card) {
+    return;
+  }
+
+  const readoutValue = card.querySelector(".diesel-edit-readout-value");
+
+  if (!readoutValue) {
+    return;
+  }
+
+  if (isEditing) {
+    card.querySelectorAll(".diesel-edit-group-active input, .diesel-edit-group-active textarea").forEach((control) => {
+      control.dataset.previousValue = control.value;
+    });
+    card.classList.add("is-editing");
+    card.classList.remove("is-readonly");
+    window.setTimeout(() => {
+      card.querySelector(".diesel-edit-group-active input, .diesel-edit-group-active textarea")?.focus();
+    }, 0);
+    return;
+  }
+
+  readoutValue.textContent = getDieselGroupSummary(card);
+  card.classList.remove("is-editing");
+  card.classList.add("is-readonly");
+}
+
+function syncDieselEditableCards() {
+  dieselRefs.editModal?.querySelectorAll(".diesel-edit-field-card").forEach((card) => {
+    const control = card.querySelector(".diesel-edit-native-control");
+    const readoutValue = card.querySelector(".diesel-edit-readout-value");
+    const updatedLabel = card.querySelector(".diesel-edit-updated");
+
+    if (control && readoutValue) {
+      readoutValue.textContent = formatDieselEditableValue(control);
+    } else if (readoutValue) {
+      readoutValue.textContent = getDieselGroupSummary(card);
+    }
+
+    if (updatedLabel) {
+      updatedLabel.textContent = formatDieselEditTimestamp(dieselEditDraft?.row?.savedAt);
+    }
+
+    if (control) {
+      setDieselEditableCardState(card, false);
+    } else {
+      setDieselEditableGroupState(card, false);
+    }
+  });
+}
+
+function setupDieselEditableCards() {
+  dieselRefs.editModal?.querySelectorAll(".diesel-edit-card").forEach((card) => {
+    const control = card.querySelector(":scope > input, :scope > textarea");
+
+    if (!control || card.dataset.editableReady === "true") {
+      if (card.dataset.editableReady === "true") {
+        return;
+      }
+
+      const groupedControls = [...card.querySelectorAll(":scope label input, :scope label textarea, :scope .diesel-edit-docs input, :scope .diesel-edit-docs textarea")];
+
+      if (!groupedControls.length) {
+        return;
+      }
+
+      const head = card.querySelector(".diesel-edit-card-head");
+      const editingLabel = document.createElement("span");
+      const readout = document.createElement("div");
+      const readoutValue = document.createElement("strong");
+      const editButton = document.createElement("button");
+      const activeGroup = document.createElement("div");
+      const actions = document.createElement("div");
+      const confirmButton = document.createElement("button");
+      const cancelButton = document.createElement("button");
+      const updatedLabel = document.createElement("span");
+      const originalValues = new Map();
+      const contentNodes = [...card.children].filter((child) => child !== head);
+
+      card.dataset.editableReady = "true";
+      card.classList.add("diesel-edit-field-card", "is-readonly");
+
+      editingLabel.className = "diesel-edit-editing-label";
+      editingLabel.textContent = "Campo en edición";
+      head?.appendChild(editingLabel);
+
+      readout.className = "diesel-edit-readout";
+      readoutValue.className = "diesel-edit-readout-value diesel-edit-group-summary";
+      editButton.className = "diesel-edit-readout-button";
+      editButton.type = "button";
+      editButton.setAttribute("aria-label", "Editar campo");
+      editButton.innerHTML = '<i data-lucide="square-pen"></i>';
+      readout.append(readoutValue, editButton);
+
+      activeGroup.className = "diesel-edit-group-active";
+      contentNodes.forEach((node) => activeGroup.appendChild(node));
+
+      actions.className = "diesel-edit-group-actions";
+      confirmButton.className = "diesel-edit-confirm-button";
+      confirmButton.type = "button";
+      confirmButton.setAttribute("aria-label", "Confirmar edición");
+      confirmButton.innerHTML = '<i data-lucide="check"></i>';
+      cancelButton.className = "diesel-edit-cancel-button";
+      cancelButton.type = "button";
+      cancelButton.setAttribute("aria-label", "Cancelar edición");
+      cancelButton.innerHTML = '<i data-lucide="x"></i>';
+      actions.append(confirmButton, cancelButton);
+      activeGroup.appendChild(actions);
+
+      card.append(readout, activeGroup);
+
+      updatedLabel.className = "diesel-edit-updated";
+      card.appendChild(updatedLabel);
+
+      editButton.addEventListener("click", () => {
+        groupedControls.forEach((groupControl) => originalValues.set(groupControl, groupControl.value));
+        setDieselEditableGroupState(card, true);
+      });
+      confirmButton.addEventListener("click", () => setDieselEditableGroupState(card, false));
+      cancelButton.addEventListener("click", () => {
+        groupedControls.forEach((groupControl) => {
+          groupControl.value = originalValues.get(groupControl) || "";
+        });
+        setDieselEditableGroupState(card, false);
+      });
+      groupedControls.forEach((groupControl) => {
+        groupControl.addEventListener("keydown", (event) => {
+          if (event.key === "Escape") {
+            event.preventDefault();
+            groupedControls.forEach((currentControl) => {
+              currentControl.value = originalValues.get(currentControl) || "";
+            });
+            setDieselEditableGroupState(card, false);
+          }
+        });
+      });
+      return;
+    }
+
+    const head = card.querySelector(".diesel-edit-card-head");
+    const editingLabel = document.createElement("span");
+    const readout = document.createElement("div");
+    const readoutValue = document.createElement("strong");
+    const editButton = document.createElement("button");
+    const activeField = document.createElement("div");
+    const confirmButton = document.createElement("button");
+    const cancelButton = document.createElement("button");
+    const updatedLabel = document.createElement("span");
+
+    card.dataset.editableReady = "true";
+    card.classList.add("diesel-edit-field-card", "is-readonly");
+    control.classList.add("diesel-edit-native-control");
+
+    editingLabel.className = "diesel-edit-editing-label";
+    editingLabel.textContent = "Campo en edición";
+    head?.appendChild(editingLabel);
+
+    readout.className = "diesel-edit-readout";
+    readoutValue.className = "diesel-edit-readout-value";
+    editButton.className = "diesel-edit-readout-button";
+    editButton.type = "button";
+    editButton.setAttribute("aria-label", "Editar campo");
+    editButton.innerHTML = '<i data-lucide="square-pen"></i>';
+    readout.append(readoutValue, editButton);
+
+    activeField.className = "diesel-edit-active-field";
+    confirmButton.className = "diesel-edit-confirm-button";
+    confirmButton.type = "button";
+    confirmButton.setAttribute("aria-label", "Confirmar edición");
+    confirmButton.innerHTML = '<i data-lucide="check"></i>';
+    cancelButton.className = "diesel-edit-cancel-button";
+    cancelButton.type = "button";
+    cancelButton.setAttribute("aria-label", "Cancelar edición");
+    cancelButton.innerHTML = '<i data-lucide="x"></i>';
+
+    control.after(readout);
+    activeField.append(control, confirmButton, cancelButton);
+    readout.after(activeField);
+
+    updatedLabel.className = "diesel-edit-updated";
+    card.appendChild(updatedLabel);
+
+    editButton.addEventListener("click", () => setDieselEditableCardState(card, true));
+    confirmButton.addEventListener("click", () => setDieselEditableCardState(card, false));
+    cancelButton.addEventListener("click", () => {
+      control.value = card.dataset.previousValue || "";
+      setDieselEditableCardState(card, false);
+    });
+    control.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && control.tagName !== "TEXTAREA") {
+        event.preventDefault();
+        setDieselEditableCardState(card, false);
+      }
+      if (event.key === "Escape") {
+        event.preventDefault();
+        control.value = card.dataset.previousValue || "";
+        setDieselEditableCardState(card, false);
+      }
+    });
+  });
+}
+
 function openDieselEditModal(row, context = {}) {
   if (!dieselRefs.editModal || !row) {
     return;
@@ -1540,7 +1818,7 @@ function openDieselEditModal(row, context = {}) {
   dieselRefs.editDateLabel.textContent = dateLabel;
   dieselRefs.editReceived.value = row.received || 0;
   dieselRefs.editReceivedFrom.value = row.receivedFrom && row.receivedFrom !== "-" ? row.receivedFrom : "";
-  dieselRefs.editRecharge.value = row.received || 0;
+  dieselRefs.editRecharge.value = row.recharge || 0;
   dieselRefs.editConsumption.value = row.consumption || 0;
   dieselRefs.editDispatched.value = row.dispatched || 0;
   dieselRefs.editTransferred.value = row.transferred || 0;
@@ -1559,6 +1837,8 @@ function openDieselEditModal(row, context = {}) {
     input.checked = input.value === shiftValue;
   });
 
+  setupDieselEditableCards();
+  syncDieselEditableCards();
   dieselRefs.editModal.hidden = false;
   document.body.classList.add("modal-open");
   renderIcons();
@@ -2831,6 +3111,82 @@ function getBitacoraReportEvents() {
     .sort(compareBitacoraNewestFirst);
 }
 
+function formatBitacoraDurationSummary(minutes) {
+  const safeMinutes = Math.max(0, Number(minutes) || 0);
+  return `${Math.floor(safeMinutes / 60)} h ${safeMinutes % 60} min`;
+}
+
+function getBitacoraReportTypeLabel(event) {
+  const rawLabel = event.categoria_nombre || event.tipo_evento_nombre || event.tipo_evento || "";
+  const label = rawLabel.trim();
+
+  if (!label || /sin[_\s-]*tipo/i.test(label)) {
+    return "Otros / Sin tipo";
+  }
+
+  return label;
+}
+
+function getBitacoraReportTypeTone(label) {
+  const normalized = normalize(label).replace(/_/g, " ");
+
+  if (/transfer|carga diesel|recarga/.test(normalized)) return "transfer";
+  if (/diesel|combustible/.test(normalized)) return "diesel";
+  if (/maniobra|remolc|recorrido|patrull|zarpe/.test(normalized)) return "maneuver";
+  if (/personal|pasaj|transporte/.test(normalized)) return "people";
+  if (/incidente|falla|mantenimiento|observ/.test(normalized)) return "incident";
+  return "other";
+}
+
+function getBitacoraReportTypeOrder(label) {
+  const tone = getBitacoraReportTypeTone(label);
+  const order = {
+    transfer: 1,
+    diesel: 2,
+    maneuver: 3,
+    people: 4,
+    incident: 5,
+    other: 6
+  };
+
+  return order[tone] || 99;
+}
+
+function buildBitacoraTypeSummary(rows) {
+  const summary = rows.reduce((map, event) => {
+    const label = getBitacoraReportTypeLabel(event);
+    const duration = getBitacoraDurationMinutes(event.hora_inicio, event.hora_fin) || 0;
+
+    if (!map.has(label)) {
+      map.set(label, {
+        label,
+        tone: getBitacoraReportTypeTone(label),
+        count: 0,
+        minutes: 0
+      });
+    }
+
+    const item = map.get(label);
+    item.count += 1;
+    item.minutes += duration;
+    return map;
+  }, new Map());
+
+  if (!summary.has("Otros / Sin tipo")) {
+    summary.set("Otros / Sin tipo", {
+      label: "Otros / Sin tipo",
+      tone: "other",
+      count: 0,
+      minutes: 0
+    });
+  }
+
+  return [...summary.values()].sort((a, b) => {
+    const orderDiff = getBitacoraReportTypeOrder(a.label) - getBitacoraReportTypeOrder(b.label);
+    return orderDiff || a.label.localeCompare(b.label, "es");
+  });
+}
+
 function renderBitacoraReport() {
   if (!bitacoraRefs.reportTimeline || !bitacoraRefs.reportGroups) {
     return;
@@ -2869,6 +3225,7 @@ function renderBitacoraReport() {
     const totalMinutes = rows.reduce((sum, event) => sum + (getBitacoraDurationMinutes(event.hora_inicio, event.hora_fin) || 0), 0);
     const transferCount = rows.filter((event) => /transfer|diesel|agua|lubric/i.test(`${event.categoria_nombre} ${event.tipo_evento_nombre}`)).length;
     const incidentCount = rows.filter((event) => /incidente|falla|observ/i.test(`${event.categoria_nombre} ${event.tipo_evento_nombre} ${event.descripcion}`)).length;
+    const typeSummary = buildBitacoraTypeSummary(rows);
     return `
       <details class="report-vessel-group" ${index === 0 ? "open" : ""}>
         <summary>
@@ -2877,17 +3234,35 @@ function renderBitacoraReport() {
           <span>Eventos<br><b>${rows.length}</b></span>
           <span>Transferencias<br><b>${transferCount}</b></span>
           <span>Incidentes<br><b>${incidentCount}</b></span>
-          <span>Duración total<br><b>${Math.floor(totalMinutes / 60)} h ${totalMinutes % 60} min</b></span>
+          <span>Duración total<br><b>${formatBitacoraDurationSummary(totalMinutes)}</b></span>
         </summary>
-        <table>
-          <thead><tr><th>Hora inicio</th><th>Hora fin</th><th>Descripción del evento</th><th>Tipo</th><th>Duración</th><th>Registrado por</th></tr></thead>
-          <tbody>
-            ${rows.map((event) => {
-              const durationMinutes = getBitacoraDurationMinutes(event.hora_inicio, event.hora_fin);
-              return `<tr><td>${escapeHtml(formatTimeLabel(event.hora_inicio))}</td><td>${escapeHtml(formatTimeLabel(event.hora_fin))}</td><td>${escapeHtml(event.descripcion)}</td><td><em>${escapeHtml(event.categoria_nombre || event.tipo_evento_nombre || "Sin tipo")}</em></td><td>${durationMinutes === null ? "--" : `${durationMinutes} min`}</td><td>${escapeHtml(event.created_by_nombre || event.registrado_por || "Martín Checco")}</td></tr>`;
-            }).join("")}
-          </tbody>
-        </table>
+        <div class="report-vessel-body">
+          <aside class="report-type-summary" aria-label="Resumen por tipo de ${escapeHtml(vessel)}">
+            <h4>Resumen por tipo</h4>
+            <ul>
+              ${typeSummary.map((item) => `
+                <li class="report-type-row is-${escapeHtml(item.tone)}">
+                  <span><b></b>${escapeHtml(item.label)}${item.count ? ` <small>${item.count}</small>` : ""}</span>
+                  <strong>${formatBitacoraDurationSummary(item.minutes)}</strong>
+                </li>
+              `).join("")}
+            </ul>
+            <div class="report-type-total"><span>Total</span><strong>${formatBitacoraDurationSummary(totalMinutes)}</strong></div>
+          </aside>
+          <div class="report-vessel-table-wrap">
+            <table>
+              <thead><tr><th>Hora inicio</th><th>Hora fin</th><th>Descripción del evento</th><th>Tipo</th><th>Duración</th><th>Registrado por</th></tr></thead>
+              <tbody>
+                ${rows.map((event) => {
+                  const durationMinutes = getBitacoraDurationMinutes(event.hora_inicio, event.hora_fin);
+                  const typeLabel = getBitacoraReportTypeLabel(event);
+                  const typeTone = getBitacoraReportTypeTone(typeLabel);
+                  return `<tr><td>${escapeHtml(formatTimeLabel(event.hora_inicio))}</td><td>${escapeHtml(formatTimeLabel(event.hora_fin))}</td><td>${escapeHtml(event.descripcion)}</td><td><em class="is-${escapeHtml(typeTone)}">${escapeHtml(typeLabel)}</em></td><td>${durationMinutes === null ? "--" : `${durationMinutes} min`}</td><td>${escapeHtml(event.created_by_nombre || event.registrado_por || "Martín Checco")}</td></tr>`;
+                }).join("")}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </details>
     `;
   }).join("") : "";
