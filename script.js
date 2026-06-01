@@ -33,6 +33,42 @@ const profileInitials = document.querySelector("#profileInitials");
 const profileMenuInitials = document.querySelector("#profileMenuInitials");
 const dashboardGreeting = document.querySelector("#dashboardGreeting");
 
+const birthdayPeople = [
+  { name: "Mario Enrique Alcedo", role: "Rigger", month: 4, day: 5 },
+  { name: "Carlos Enrique Fernandez", role: "Operador Grúa Montacargas", month: 6, day: 8 },
+  { name: "Javier Eduardo Fernandez", role: "Rigger", month: 3, day: 9 },
+  { name: "Wilmer Angel Purizaca", role: "Operador Grúa Montacargas", month: 6, day: 4 },
+  { name: "Renato Fabricio Timana", role: "Supervisor de Operaciones", month: 9, day: 5 },
+  { name: "Marlon Eddy Chapilliquen", role: "Maniobrista", month: 4, day: 2 },
+  { name: "Betty Isabel Panta", role: "Analista de Operaciones", month: 10, day: 2 },
+  { name: "Luis Alberto Alcas", role: "Maniobrista", month: 4, day: 4 }
+];
+
+const birthdayState = {
+  viewDate: null,
+  showAll: false,
+  selectedDay: null,
+  initialized: false
+};
+
+const birthdayRefs = {
+  monthCount: document.querySelector("#birthdayMonthCount"),
+  weekCount: document.querySelector("#birthdayWeekCount"),
+  threeDayCount: document.querySelector("#birthdayThreeDayCount"),
+  yearCount: document.querySelector("#birthdayYearCount"),
+  listMonthLabel: document.querySelector("#birthdayListMonthLabel"),
+  list: document.querySelector("#birthdayList"),
+  showAll: document.querySelector("#birthdayShowAll"),
+  prevMonth: document.querySelector("#birthdayPrevMonth"),
+  nextMonth: document.querySelector("#birthdayNextMonth"),
+  calendarTitle: document.querySelector("#birthdayCalendarTitle"),
+  calendarGrid: document.querySelector("#birthdayCalendarGrid"),
+  miniList: document.querySelector("#birthdayMiniList"),
+  miniShowAll: document.querySelector("#birthdayMiniShowAll"),
+  goCurrentMonth: document.querySelector("#birthdayGoCurrentMonth"),
+  configCard: document.querySelector(".birthday-config-card")
+};
+
 const passengerRefs = {
   date: document.querySelector("#passengerDate"),
   prevDay: document.querySelector("#passengerPrevDay"),
@@ -154,7 +190,6 @@ const bitacoraRefs = {
   reportPrevDay: document.querySelector("#bitacoraReportPrevDay"),
   reportNextDay: document.querySelector("#bitacoraReportNextDay"),
   reportShift: document.querySelector("#bitacoraReportShift"),
-  reportTimeline: document.querySelector("#bitacoraReportTimeline"),
   reportGroups: document.querySelector("#bitacoraReportGroups"),
   reportBack: document.querySelector("#bitacoraReportBackButton"),
   categorizeButton: document.querySelector("#bitacoraCategorizeButton"),
@@ -595,6 +630,7 @@ function setPage(pageName) {
       mapa: "Mapa",
       naves: "Naves",
       rutas: "Rutas",
+      cumpleanos: "Cumpleaños",
       reportes: "Reportes",
       historial: "Historial",
       usuarios: "Usuarios",
@@ -611,6 +647,10 @@ function setPage(pageName) {
   if (pageName === "naves") {
     initNavesView();
   }
+
+  if (pageName === "cumpleanos") {
+    initBirthdaysView();
+  }
 }
 
 function getCheckedValue(name) {
@@ -624,6 +664,281 @@ function formatDisplayDate(value) {
 
   const [year, month, day] = value.split("-");
   return `${day}/${month}/${year}`;
+}
+
+function getLocalDate(value = getTodayValue()) {
+  return new Date(`${value}T00:00:00`);
+}
+
+function getMonthName(monthIndex) {
+  return new Date(2026, monthIndex, 1).toLocaleDateString("es-PE", { month: "long" });
+}
+
+function getBirthdayDate(person, year) {
+  return new Date(year, person.month - 1, person.day);
+}
+
+function getBirthdayInitials(name) {
+  return String(name || "")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || "")
+    .join("");
+}
+
+function getDaysUntilBirthday(person, fromDate = getLocalDate()) {
+  const today = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
+  let birthday = getBirthdayDate(person, today.getFullYear());
+
+  if (birthday < today) {
+    birthday = getBirthdayDate(person, today.getFullYear() + 1);
+  }
+
+  return Math.round((birthday - today) / 86400000);
+}
+
+function formatBirthdayDate(person) {
+  return `${String(person.day).padStart(2, "0")} de ${getMonthName(person.month - 1)}`;
+}
+
+function formatBirthdayStatus(days) {
+  if (days === 0) {
+    return "Hoy";
+  }
+  if (days === 1) {
+    return "Mañana";
+  }
+  return `En ${days} días`;
+}
+
+function getBirthdaysForMonth(monthIndex) {
+  return birthdayPeople
+    .filter((person) => person.month === monthIndex + 1)
+    .sort((a, b) => a.day - b.day || a.name.localeCompare(b.name));
+}
+
+function getUpcomingBirthdays(limit = birthdayPeople.length) {
+  return [...birthdayPeople]
+    .map((person) => ({ ...person, daysUntil: getDaysUntilBirthday(person) }))
+    .sort((a, b) => a.daysUntil - b.daysUntil || a.name.localeCompare(b.name))
+    .slice(0, limit);
+}
+
+function renderBirthdayStats() {
+  const viewDate = birthdayState.viewDate || getLocalDate();
+  const viewMonth = viewDate.getMonth();
+  const today = getLocalDate();
+
+  const monthCount = getBirthdaysForMonth(viewMonth).length;
+  const weekCount = birthdayPeople.filter((person) => {
+    const days = getDaysUntilBirthday(person, today);
+    return days >= 0 && days <= 6;
+  }).length;
+  const threeDayCount = birthdayPeople.filter((person) => getDaysUntilBirthday(person, today) <= 3).length;
+
+  if (birthdayRefs.monthCount) birthdayRefs.monthCount.textContent = monthCount;
+  if (birthdayRefs.weekCount) birthdayRefs.weekCount.textContent = weekCount;
+  if (birthdayRefs.threeDayCount) birthdayRefs.threeDayCount.textContent = threeDayCount;
+  if (birthdayRefs.yearCount) birthdayRefs.yearCount.textContent = birthdayPeople.length;
+}
+
+function renderBirthdayList() {
+  if (!birthdayRefs.list) {
+    return;
+  }
+
+  const viewDate = birthdayState.viewDate || getLocalDate();
+  const monthPeople = getBirthdaysForMonth(viewDate.getMonth());
+  const people = birthdayState.selectedDay
+    ? monthPeople.filter((person) => person.day === birthdayState.selectedDay)
+    : monthPeople;
+  const visiblePeople = birthdayState.showAll ? people : people.slice(0, 5);
+
+  if (birthdayRefs.listMonthLabel) {
+    birthdayRefs.listMonthLabel.textContent = birthdayState.selectedDay
+      ? `${String(birthdayState.selectedDay).padStart(2, "0")} de ${getMonthName(viewDate.getMonth())}`
+      : `${getMonthName(viewDate.getMonth())} ${viewDate.getFullYear()}`;
+  }
+
+  if (!people.length) {
+    birthdayRefs.list.innerHTML = `
+      <article class="birthday-empty">
+        <i data-lucide="calendar-x"></i>
+        <strong>Sin cumpleaños en este mes</strong>
+        <span>Usa el calendario para revisar otro mes.</span>
+      </article>
+    `;
+    if (birthdayRefs.showAll) birthdayRefs.showAll.hidden = true;
+    return;
+  }
+
+  const nextName = getUpcomingBirthdays(1)[0]?.name;
+  birthdayRefs.list.innerHTML = visiblePeople.map((person) => {
+    const daysUntil = getDaysUntilBirthday(person);
+    const isNext = person.name === nextName;
+    return `
+      <article class="birthday-person ${isNext ? "is-next" : ""}">
+        <span class="person-avatar">${getBirthdayInitials(person.name)}</span>
+        <div><strong>${escapeHtml(person.name)}</strong><small>${escapeHtml(person.role)}</small></div>
+        <div class="birthday-date"><i data-lucide="cake"></i><strong>${formatBirthdayDate(person)}</strong><small>${formatBirthdayStatus(daysUntil)}</small></div>
+        <button class="birthday-greet" type="button" data-birthday-greet="${escapeHtml(person.name)}">Saludar</button>
+      </article>
+    `;
+  }).join("");
+
+  if (birthdayRefs.showAll) {
+    birthdayRefs.showAll.hidden = monthPeople.length <= 5 && !birthdayState.selectedDay;
+    birthdayRefs.showAll.innerHTML = `${birthdayState.selectedDay ? "Ver cumpleaños del mes" : birthdayState.showAll ? "Ver menos" : "Ver todos los cumpleaños"}<i data-lucide="chevron-right"></i>`;
+  }
+}
+
+function getBirthdayMarkerClass(person) {
+  const days = getDaysUntilBirthday(person);
+  if (days <= 1) {
+    return "tomorrow";
+  }
+  if (days <= 7) {
+    return "soon";
+  }
+  return "month";
+}
+
+function renderBirthdayCalendar() {
+  if (!birthdayRefs.calendarGrid || !birthdayRefs.calendarTitle) {
+    return;
+  }
+
+  const viewDate = birthdayState.viewDate || getLocalDate();
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const startOffset = (firstDay.getDay() + 6) % 7;
+  const gridStart = new Date(year, month, 1 - startOffset);
+  const birthdaysByDay = new Map(getBirthdaysForMonth(month).map((person) => [person.day, person]));
+
+  birthdayRefs.calendarTitle.textContent = `${getMonthName(month)} ${year}`;
+
+  const weekdays = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+  const cells = weekdays.map((day) => `<b>${day}</b>`);
+
+  for (let index = 0; index < 42; index += 1) {
+    const cellDate = new Date(gridStart);
+    cellDate.setDate(gridStart.getDate() + index);
+    const isCurrentMonth = cellDate.getMonth() === month;
+    const birthday = isCurrentMonth ? birthdaysByDay.get(cellDate.getDate()) : null;
+    const classes = [
+      "birthday-calendar-day",
+      isCurrentMonth ? "" : "muted",
+      birthdayState.selectedDay === cellDate.getDate() && isCurrentMonth ? "selected" : "",
+      birthday ? `birthday-dot ${getBirthdayMarkerClass(birthday)}` : ""
+    ].filter(Boolean).join(" ");
+    const title = birthday ? ` title="${escapeHtml(birthday.name)}"` : "";
+    cells.push(`<button class="${classes}" type="button"${title} data-birthday-day="${cellDate.getDate()}">${cellDate.getDate()}</button>`);
+  }
+
+  birthdayRefs.calendarGrid.innerHTML = cells.join("");
+}
+
+function renderBirthdayMiniList() {
+  if (!birthdayRefs.miniList) {
+    return;
+  }
+
+  birthdayRefs.miniList.innerHTML = getUpcomingBirthdays(3).map((person) => `
+    <p>
+      <span><i data-lucide="cake"></i></span>
+      <b>${formatBirthdayStatus(person.daysUntil)} cumple ${escapeHtml(person.name)}</b>
+      <small>${formatBirthdayDate(person)}</small>
+    </p>
+  `).join("");
+}
+
+function renderBirthdays() {
+  renderBirthdayStats();
+  renderBirthdayList();
+  renderBirthdayCalendar();
+  renderBirthdayMiniList();
+  renderIcons();
+}
+
+function initBirthdaysView() {
+  if (!birthdayRefs.list || birthdayState.initialized) {
+    renderBirthdays();
+    return;
+  }
+
+  const today = getLocalDate();
+  birthdayState.viewDate = new Date(today.getFullYear(), today.getMonth(), 1);
+  birthdayState.initialized = true;
+
+  birthdayRefs.prevMonth?.addEventListener("click", () => {
+    birthdayState.viewDate.setMonth(birthdayState.viewDate.getMonth() - 1);
+    birthdayState.showAll = false;
+    birthdayState.selectedDay = null;
+    renderBirthdays();
+  });
+
+  birthdayRefs.nextMonth?.addEventListener("click", () => {
+    birthdayState.viewDate.setMonth(birthdayState.viewDate.getMonth() + 1);
+    birthdayState.showAll = false;
+    birthdayState.selectedDay = null;
+    renderBirthdays();
+  });
+
+  birthdayRefs.showAll?.addEventListener("click", () => {
+    if (birthdayState.selectedDay) {
+      birthdayState.selectedDay = null;
+      birthdayState.showAll = true;
+      renderBirthdays();
+      return;
+    }
+    birthdayState.showAll = !birthdayState.showAll;
+    renderBirthdays();
+  });
+
+  birthdayRefs.miniShowAll?.addEventListener("click", () => {
+    birthdayState.showAll = true;
+    renderBirthdays();
+    birthdayRefs.list?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  });
+
+  birthdayRefs.goCurrentMonth?.addEventListener("click", (event) => {
+    event.preventDefault();
+    const current = getLocalDate();
+    birthdayState.viewDate = new Date(current.getFullYear(), current.getMonth(), 1);
+    birthdayState.showAll = false;
+    birthdayState.selectedDay = null;
+    renderBirthdays();
+  });
+
+  birthdayRefs.calendarGrid?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-birthday-day]");
+    if (!button || button.classList.contains("muted")) {
+      return;
+    }
+
+    const day = Number(button.dataset.birthdayDay);
+    const hasBirthday = getBirthdaysForMonth(birthdayState.viewDate.getMonth()).some((person) => person.day === day);
+    birthdayState.selectedDay = hasBirthday ? day : null;
+    birthdayState.showAll = false;
+    renderBirthdays();
+  });
+
+  birthdayRefs.list.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-birthday-greet]");
+    if (!button) {
+      return;
+    }
+    window.alert(`Saludo preparado para ${button.dataset.birthdayGreet}.`);
+  });
+
+  birthdayRefs.configCard?.querySelector(".green-action")?.addEventListener("click", () => {
+    localStorage.setItem("portoErp.birthdayNotifications", "configured");
+    window.alert("Configuración de cumpleaños guardada.");
+  });
+
+  renderBirthdays();
 }
 
 function escapeHtml(value) {
@@ -1040,12 +1355,24 @@ function validateDieselRecord() {
     errors.push("Capitan y motorista");
   }
 
-  if (modules.recarga && totals.recharge > 0 && !dieselRefs.rechargeVoucher.value.trim()) {
+  if (modules.recarga && totals.recharge <= 0) {
+    errors.push("Volumen de recarga");
+  }
+
+  if (modules.recarga && !dieselRefs.rechargeVoucher.value.trim()) {
     errors.push("Vale de recarga");
   }
 
-  if (modules.sondaje && (totals.returnVolume > 0 || totals.difference > 0) && !dieselRefs.document.value.trim()) {
+  if (modules.consumo && totals.consumption <= 0) {
+    errors.push("Volumen de consumo");
+  }
+
+  if (modules.sondaje && !dieselRefs.document.value.trim()) {
     errors.push("Acta de sondaje");
+  }
+
+  if (modules.sondaje && totals.returnVolume <= 0 && totals.difference <= 0) {
+    errors.push("Reingreso o diferencia de sondaje");
   }
 
   if (modules.sondaje && totals.returnVolume > 0 && totals.difference > 0) {
@@ -1053,8 +1380,21 @@ function validateDieselRecord() {
   }
 
   if (modules.despacho) {
-    if (dieselDispatches.length > 0 && !isDieselMotherShip(dieselRefs.origin.value)) {
+    if (!isDieselMotherShip(dieselRefs.origin.value)) {
       errors.push("Solo TALARA, PARIÑAS y LOBITOS EXPRESS CARGA pueden despachar diesel");
+    }
+
+    const hasPendingDispatchInput = Boolean(dieselRefs.receive.value || dieselRefs.qty.value.trim() || dieselRefs.voucher.value.trim());
+    const pendingDispatchComplete = Boolean(dieselRefs.receive.value && toNumber(dieselRefs.qty.value) > 0 && dieselRefs.voucher.value.trim());
+
+    if (hasPendingDispatchInput) {
+      errors.push(pendingDispatchComplete
+        ? "Agrega el despacho pendiente"
+        : "Completa nave, cantidad y vale del despacho pendiente");
+    }
+
+    if (dieselDispatches.length === 0) {
+      errors.push("Al menos un despacho agregado");
     }
 
     const invalidDispatch = dieselDispatches.some((entry) => entry.quantity <= 0 || !entry.voucher);
@@ -1064,6 +1404,14 @@ function validateDieselRecord() {
   }
 
   return errors;
+}
+
+function updateDieselSaveState() {
+  if (!dieselRefs.save) {
+    return;
+  }
+
+  dieselRefs.save.disabled = validateDieselRecord().length > 0;
 }
 
 function populateDieselShips() {
@@ -1159,6 +1507,7 @@ function updateDieselSummary() {
   dieselRefs.statDispatched.textContent = formatNumber(totals.dispatched);
   dieselRefs.statTransferred.textContent = formatNumber(totals.transferred);
   dieselRefs.statConsumption.textContent = formatNumber(totals.consumption);
+  updateDieselSaveState();
 }
 
 function addDieselDispatch() {
@@ -1169,8 +1518,18 @@ function addDieselDispatch() {
     return;
   }
 
-  if (!dieselRefs.receive.value || quantity <= 0) {
+  if (!dieselRefs.receive.value) {
+    dieselRefs.receive.focus();
+    return;
+  }
+
+  if (quantity <= 0) {
     dieselRefs.qty.focus();
+    return;
+  }
+
+  if (!dieselRefs.voucher.value.trim()) {
+    dieselRefs.voucher.focus();
     return;
   }
 
@@ -1185,6 +1544,15 @@ function addDieselDispatch() {
   dieselRefs.voucher.value = "";
   renderDieselRows();
   updateDieselSummary();
+}
+
+function addDieselDispatchOnEnter(event) {
+  if (event.key !== "Enter") {
+    return;
+  }
+
+  event.preventDefault();
+  addDieselDispatch();
 }
 
 function getDieselModuleStates() {
@@ -1353,7 +1721,7 @@ async function saveDieselRecord() {
   } catch (error) {
     alert(error.message || "No se pudo guardar el registro diesel.");
   } finally {
-    dieselRefs.save.disabled = false;
+    updateDieselSaveState();
     dieselRefs.save.innerHTML = originalHtml;
     renderIcons();
   }
@@ -1450,7 +1818,8 @@ function buildDieselConsultData() {
       dayCrew: { captain: record.capitan_dia || "-", driver: record.motorista_dia || "-" },
       nightCrew: { captain: record.capitan_noche || "-", driver: record.motorista_noche || "-" },
       type: catalog.type || "-",
-      icon: catalog.icon || "ship"
+      icon: catalog.icon || "ship",
+      sourceRecord: record
     };
 
     if (!rowsByGroup.has(group)) {
@@ -1582,10 +1951,15 @@ function setupDieselEditableCards() {
     });
 
     button.addEventListener("click", () => {
-      field.classList.add("is-editing");
+      const isEditing = !field.classList.contains("is-editing");
+      field.classList.toggle("is-editing", isEditing);
       controls.forEach((control) => {
-        control.disabled = false;
+        control.disabled = !isEditing;
       });
+      if (!isEditing) {
+        controls.forEach((control) => control.blur());
+        return;
+      }
       window.setTimeout(() => {
         controls[0]?.focus();
         if (typeof controls[0]?.select === "function") {
@@ -1607,15 +1981,58 @@ function setDieselInputValue(input, value) {
   input.value = value === null || value === undefined ? "" : value;
 }
 
-function renderDieselEditDispatchRows(row) {
+function getDieselSourceValue(row, shiftValue, baseKeys, fallback = 0) {
+  const source = row?.sourceRecord || {};
+  const suffixes = shiftValue === "B"
+    ? ["_noche", "_nocturno", "_b"]
+    : ["_dia", "_diurno", "_a"];
+  const keys = baseKeys.flatMap((key) => [
+    ...suffixes.map((suffix) => `${key}${suffix}`),
+    key
+  ]);
+
+  for (const key of keys) {
+    if (source[key] !== null && source[key] !== undefined && source[key] !== "") {
+      return toNumber(source[key]);
+    }
+  }
+
+  return toNumber(fallback);
+}
+
+function getDieselEditShiftSnapshot(row, shiftValue) {
+  const isNight = shiftValue === "B";
+  const consumption = isNight ? toNumber(row?.night) : toNumber(row?.day);
+  const crew = isNight ? row?.nightCrew : row?.dayCrew;
+  const recharge = getDieselSourceValue(row, shiftValue, ["total_recarga", "recarga"], row?.recharge || row?.received || 0);
+  const received = getDieselSourceValue(row, shiftValue, ["cantidad_recibida", "recibido"], row?.received || 0);
+  const dispatched = getDieselSourceValue(row, shiftValue, ["cantidad_despachada", "despachado"], row?.dispatched || 0);
+  const transferred = getDieselSourceValue(row, shiftValue, ["cantidad_transferida", "transferido"], row?.transferred || 0);
+  const sondage = getDieselSourceValue(row, shiftValue, ["sondaje_neto", "sondaje"], row?.sondage || 0);
+  const finalStock = getDieselSourceValue(row, shiftValue, ["stock_final"], row?.finalStock || 0);
+
+  return {
+    consumption,
+    crew,
+    recharge,
+    received,
+    dispatched,
+    transferred,
+    sondage,
+    finalStock
+  };
+}
+
+function renderDieselEditDispatchRows(row, shiftValue = "A") {
   if (!dieselRefs.editDispatchRows) {
     return;
   }
 
   const rows = [];
-  const dispatched = Number(row?.dispatched || 0);
-  const transferred = Number(row?.transferred || 0);
-  const received = Number(row?.received || 0);
+  const snapshot = getDieselEditShiftSnapshot(row, shiftValue);
+  const dispatched = Number(snapshot.dispatched || 0);
+  const transferred = Number(snapshot.transferred || 0);
+  const received = Number(snapshot.received || 0);
 
   if (dispatched > 0) {
     rows.push({ vessel: row.ship || "Registro consolidado", amount: dispatched, voucher: "", type: "Despacho" });
@@ -1641,18 +2058,46 @@ function renderDieselEditDispatchRows(row) {
   setupDieselEditableCards();
 }
 
+function applyDieselEditShift(shiftValue) {
+  if (!dieselEditDraft?.row) {
+    return;
+  }
+
+  const row = dieselEditDraft.row;
+  dieselEditDraft.currentShift = getDieselEditShiftValue(shiftValue);
+  const snapshot = getDieselEditShiftSnapshot(row, dieselEditDraft.currentShift);
+  const sondageValue = Number(snapshot.sondage || 0);
+  const sondageReturn = sondageValue > 0 ? sondageValue : 0;
+  const sondageDifference = sondageValue < 0 ? Math.abs(sondageValue) : 0;
+
+  setDieselInputValue(dieselRefs.editRecharge, snapshot.recharge || snapshot.received || 0);
+  setDieselInputValue(dieselRefs.editConsumption, snapshot.consumption || 0);
+  setDieselInputValue(dieselRefs.editSondageReturn, sondageReturn);
+  setDieselInputValue(dieselRefs.editSondage, sondageDifference);
+  setDieselInputValue(dieselRefs.editCaptain, snapshot.crew?.captain && snapshot.crew.captain !== "-" ? snapshot.crew.captain : "");
+  setDieselInputValue(dieselRefs.editDriver, snapshot.crew?.driver && snapshot.crew.driver !== "-" ? snapshot.crew.driver : "");
+
+  if (dieselRefs.editFinal) {
+    dieselRefs.editFinal.textContent = formatNumber(snapshot.finalStock);
+  }
+
+  dieselRefs.editShiftInputs.forEach((input) => {
+    input.checked = input.value === dieselEditDraft.currentShift;
+  });
+
+  renderDieselEditDispatchRows(row, dieselEditDraft.currentShift);
+  syncDieselEditableCards();
+  renderIcons();
+}
+
 function openDieselEditModal(row, context = {}) {
   if (!dieselRefs.editModal || !row) {
     return;
   }
 
-  dieselEditDraft = { row, context };
   const shiftValue = getDieselEditShiftValue(context.selectedShift);
+  dieselEditDraft = { row, context, currentShift: shiftValue };
   const dateLabel = formatDisplayDate(context.selectedDate || getTodayValue());
-  const activeCrew = shiftValue === "B" ? row.nightCrew : row.dayCrew;
-  const sondageValue = Number(row.sondage || 0);
-  const sondageReturn = sondageValue > 0 ? sondageValue : 0;
-  const sondageDifference = sondageValue < 0 ? Math.abs(sondageValue) : 0;
 
   if (dieselRefs.editSubtitle) {
     dieselRefs.editSubtitle.textContent = `${row.ship || "-"} · ${getDieselEditTypeLabel(row)}`;
@@ -1663,30 +2108,16 @@ function openDieselEditModal(row, context = {}) {
   if (dieselRefs.editDateLabel) {
     dieselRefs.editDateLabel.textContent = dateLabel;
   }
-  setDieselInputValue(dieselRefs.editRecharge, row.recharge || row.received || 0);
-  setDieselInputValue(dieselRefs.editConsumption, row.consumption || 0);
-  setDieselInputValue(dieselRefs.editSondageReturn, sondageReturn);
-  setDieselInputValue(dieselRefs.editSondage, sondageDifference);
   setDieselInputValue(dieselRefs.editSondageVoucher, "");
   setDieselInputValue(dieselRefs.editRechargeVoucher, "");
   setDieselInputValue(dieselRefs.editObservations, row.receivedFrom && row.receivedFrom !== "-" ? `Recibido de ${row.receivedFrom}.` : "");
-  setDieselInputValue(dieselRefs.editCaptain, activeCrew?.captain && activeCrew.captain !== "-" ? activeCrew.captain : "");
-  setDieselInputValue(dieselRefs.editDriver, activeCrew?.driver && activeCrew.driver !== "-" ? activeCrew.driver : "");
 
   if (dieselRefs.editInitial) {
     dieselRefs.editInitial.textContent = formatNumber(row.initialStock);
   }
-  if (dieselRefs.editFinal) {
-    dieselRefs.editFinal.textContent = formatNumber(row.finalStock);
-  }
 
-  dieselRefs.editShiftInputs.forEach((input) => {
-    input.checked = input.value === shiftValue;
-  });
-
-  renderDieselEditDispatchRows(row);
   setupDieselEditableCards();
-  syncDieselEditableCards();
+  applyDieselEditShift(shiftValue);
   dieselRefs.editModal.hidden = false;
   document.body.classList.add("modal-open");
   renderIcons();
@@ -2394,8 +2825,35 @@ function bootDiesel() {
     refreshDieselInitialStock();
   });
   dieselRefs.add?.addEventListener("click", addDieselDispatch);
+  [dieselRefs.receive, dieselRefs.qty, dieselRefs.voucher].forEach((control) => {
+    control?.addEventListener("keydown", addDieselDispatchOnEnter);
+  });
   dieselRefs.clear?.addEventListener("click", clearDieselForm);
   dieselRefs.save?.addEventListener("click", saveDieselRecord);
+
+  [
+    dieselRefs.date,
+    dieselRefs.origin,
+    dieselRefs.receive,
+    dieselRefs.captain,
+    dieselRefs.driver,
+    dieselRefs.document,
+    dieselRefs.recharge,
+    dieselRefs.rechargeVoucher,
+    dieselRefs.consumption,
+    dieselRefs.returnVolume,
+    dieselRefs.difference,
+    dieselRefs.qty,
+    dieselRefs.voucher,
+    dieselRefs.observation
+  ].forEach((control) => {
+    control?.addEventListener("input", updateDieselSaveState);
+    control?.addEventListener("change", updateDieselSaveState);
+  });
+
+  document.querySelectorAll('input[name="dieselShift"]').forEach((input) => {
+    input.addEventListener("change", updateDieselSaveState);
+  });
 
   dieselRefs.date?.addEventListener("change", () => {
     if (dieselRefs.consultDate) {
@@ -2450,6 +2908,13 @@ function bootDiesel() {
   });
   dieselRefs.editSave?.addEventListener("click", () => {
     window.alert("La edición visual está lista. El guardado real se implementará en una siguiente fase.");
+  });
+  dieselRefs.editShiftInputs.forEach((input) => {
+    input.addEventListener("change", () => {
+      if (input.checked) {
+        applyDieselEditShift(input.value);
+      }
+    });
   });
   dieselRefs.editModal?.querySelectorAll('[data-close-modal="diesel-edit"]').forEach((element) => {
     element.addEventListener("click", closeDieselEditModal);
@@ -3107,32 +3572,11 @@ function buildBitacoraTypeSummary(rows) {
 }
 
 function renderBitacoraReport() {
-  if (!bitacoraRefs.reportTimeline || !bitacoraRefs.reportGroups) {
+  if (!bitacoraRefs.reportGroups) {
     return;
   }
 
   const events = getBitacoraReportEvents();
-  bitacoraRefs.reportTimeline.innerHTML = events.length ? events.map((event) => {
-    const durationMinutes = getBitacoraDurationMinutes(event.hora_inicio, event.hora_fin);
-    const durationLabel = durationMinutes === null ? "--" : `${durationMinutes} min`;
-    const category = event.categoria_nombre || event.tipo_evento_nombre || "Observación";
-    return `
-      <article class="report-event-card">
-        <div class="report-event-rail"><time>${escapeHtml(formatTimeLabel(event.hora_fin))} - ${escapeHtml(formatTimeLabel(event.hora_inicio))}</time></div>
-        <strong>${escapeHtml(event.descripcion)}</strong>
-        <small>${escapeHtml(event.nave_nombre || event.nave_texto || "-")}</small>
-        <em>${escapeHtml(durationLabel)}</em>
-        <span>${escapeHtml(category)}</span>
-      </article>
-    `;
-  }).join("") : `
-    <article class="empty-consult-card bitacora-empty-card">
-      <i data-lucide="calendar-clock"></i>
-      <h3>Sin eventos para reportar</h3>
-      <p>No hay registros reales con los filtros actuales.</p>
-    </article>
-  `;
-
   const groups = events.reduce((map, event) => {
     const vessel = event.nave_nombre || event.nave_texto || "Sin nave";
     if (!map.has(vessel)) map.set(vessel, []);

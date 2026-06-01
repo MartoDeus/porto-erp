@@ -1650,6 +1650,16 @@ button {
   border-color: transparent;
 }
 
+.green-action:disabled,
+.add-button:disabled,
+.save-button:disabled,
+.clear-button:disabled,
+.outline-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+  box-shadow: none;
+}
+
 .green-action {
   padding: 0 20px;
 }
@@ -3126,107 +3136,15 @@ button {
   min-height: 44px;
 }
 
-.report-timeline-card,
 .report-groups-card {
   padding: 22px;
 }
 
-.report-timeline-card header {
-  display: flex;
-  justify-content: space-between;
-  gap: 18px;
-  margin-bottom: 20px;
-}
-
-.report-timeline-card h3,
 .report-groups-card h3 {
   margin: 0;
   color: var(--navy);
   font-size: 1rem;
   text-transform: uppercase;
-}
-
-.report-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-  color: #263750;
-  font-size: 0.82rem;
-}
-
-.report-legend span {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.report-legend b {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--teal-dark);
-}
-
-.report-legend span:nth-child(2) b { background: #0b72c9; }
-.report-legend span:nth-child(3) b { background: #7c2fe0; }
-.report-legend span:nth-child(4) b { background: #f97316; }
-.report-legend span:nth-child(5) b { background: #dc2626; }
-.report-legend span:nth-child(6) b { background: #64748b; }
-
-.report-timeline {
-  display: flex;
-  gap: 28px;
-  min-height: 210px;
-  padding: 8px 0 16px;
-  overflow-x: auto;
-}
-
-.report-event-card {
-  --report-color: var(--teal-dark);
-  flex: 0 0 160px;
-  display: grid;
-  align-content: start;
-  gap: 10px;
-  padding: 0 10px 14px;
-  border-top: 4px solid var(--report-color);
-  border-radius: 6px;
-  background: white;
-  box-shadow: 0 10px 24px rgba(17, 28, 43, 0.04);
-}
-
-.report-event-card:nth-child(2n) { --report-color: #0b72c9; }
-.report-event-card:nth-child(3n) { --report-color: #7c2fe0; }
-.report-event-card:nth-child(4n) { --report-color: #f97316; }
-.report-event-card:nth-child(5n) { --report-color: #dc2626; }
-.report-event-card:nth-child(6n) { --report-color: #64748b; }
-
-.report-event-rail {
-  padding-top: 12px;
-  color: #263750;
-  font-size: 0.78rem;
-  font-weight: 900;
-}
-
-.report-event-card strong {
-  color: var(--navy);
-  line-height: 1.35;
-}
-
-.report-event-card small {
-  color: #40516a;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.report-event-card em {
-  color: var(--report-color);
-  font-style: normal;
-  font-weight: 900;
-}
-
-.report-event-card span {
-  color: #40516a;
-  font-size: 0.76rem;
 }
 
 .report-groups {
@@ -5300,7 +5218,7 @@ button {
 }
 
 .diesel-edit-body {
-  padding: 16px;
+  padding: 12px;
   overflow: auto;
 }
 
@@ -5308,19 +5226,19 @@ button {
   display: grid;
   grid-template-columns: 1fr 1fr 1.2fr;
   gap: 0;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   border: 1px solid #dfe8f2;
   border-radius: 13px;
   background: #ffffff;
 }
 
 .diesel-edit-info-tile {
-  min-height: 94px;
-  padding: 18px 26px;
+  min-height: 74px;
+  padding: 12px 20px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 12px;
+  gap: 8px;
   border-right: 1px solid #dfe8f2;
 }
 
@@ -5368,7 +5286,7 @@ button {
 
 .diesel-edit-shift-option span {
   min-width: 122px;
-  min-height: 42px;
+  min-height: 34px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -5389,12 +5307,12 @@ button {
 .diesel-edit-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
+  gap: 12px;
 }
 
 .diesel-edit-card {
-  min-height: 150px;
-  padding: 16px;
+  min-height: 120px;
+  padding: 12px;
   background: #ffffff;
   border: 1px solid #dfe8f2;
   border-radius: 13px;
@@ -5402,8 +5320,8 @@ button {
 }
 
 .diesel-edit-card h3 {
-  margin: -7px -7px 16px;
-  padding: 11px 14px;
+  margin: -5px -5px 12px;
+  padding: 8px 12px;
   color: #42536f;
   font-size: 1rem;
   line-height: 1.1;
@@ -5413,7 +5331,7 @@ button {
 
 .diesel-modal-field {
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
 .diesel-modal-control {
@@ -5430,7 +5348,7 @@ button {
   padding: 4px 0;
   color: #050b18;
   font: inherit;
-  font-size: 1.32rem;
+  font-size: 1.22rem;
   font-weight: 900;
   letter-spacing: 0;
   background: transparent;
@@ -5462,8 +5380,8 @@ button {
 }
 
 .diesel-modal-edit-button {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   display: grid;
   place-items: center;
   color: #526984;
@@ -5483,7 +5401,7 @@ button {
 
 .diesel-modal-separator {
   height: 1px;
-  margin: 16px 0;
+  margin: 12px 0;
   background: #dfe8f2;
 }
 
@@ -5494,16 +5412,16 @@ button {
 
 .diesel-edit-stock-values {
   display: grid;
-  gap: 22px;
+  gap: 16px;
 }
 
 .diesel-edit-stock-values div {
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
 .diesel-edit-stock-values div + div {
-  padding-top: 18px;
+  padding-top: 14px;
   border-top: 1px solid #c7d9d8;
 }
 
@@ -5514,7 +5432,7 @@ button {
 
 .diesel-edit-stock-values strong {
   color: #050b18;
-  font-size: 2rem;
+  font-size: 1.72rem;
   line-height: 1;
 }
 
@@ -5528,12 +5446,12 @@ button {
 
 .diesel-edit-observation-card {
   grid-column: 1 / -1;
-  min-height: 112px;
+  min-height: 86px;
 }
 
 .diesel-edit-dispatch-table {
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
 .diesel-edit-dispatch-head,
@@ -5541,16 +5459,16 @@ button {
   display: grid;
   grid-template-columns: 1.3fr 0.8fr 0.8fr 34px;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .diesel-edit-dispatch-head {
-  padding: 0 2px 8px;
+  padding: 0 2px 6px;
   border-bottom: 1px solid #dfe8f2;
 }
 
 .diesel-edit-dispatch-row {
-  min-height: 40px;
+  min-height: 32px;
   border-bottom: 1px solid #edf2f7;
 }
 
@@ -5558,7 +5476,7 @@ button {
   width: 100%;
   min-width: 0;
   color: #050b18;
-  font-size: 1.08rem;
+  font-size: 1rem;
   font-weight: 900;
   background: transparent;
   border: 0;
@@ -5578,15 +5496,15 @@ button {
 .diesel-edit-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
-  padding: 16px 18px 18px;
+  gap: 10px;
+  padding: 12px 16px;
   border-top: 1px solid #e3ebf4;
   background: #ffffff;
 }
 
 .diesel-edit-footer-button {
   min-width: 158px;
-  min-height: 46px;
+  min-height: 38px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -5664,5 +5582,707 @@ button {
 
   .diesel-edit-footer-button {
     width: 100%;
+  }
+}
+
+/* Diesel consulta modal - compact pass */
+.diesel-edit-dialog {
+  font-size: 90%;
+}
+
+.diesel-edit-body {
+  padding: 11px;
+}
+
+.diesel-edit-topbar {
+  margin-bottom: 11px;
+}
+
+.diesel-edit-info-tile {
+  min-height: 67px;
+  padding: 11px 18px;
+  gap: 7px;
+}
+
+.diesel-edit-info-tile > span,
+.diesel-edit-field-title > span,
+.diesel-modal-field label,
+.diesel-edit-dispatch-head span {
+  font-size: 0.83rem;
+}
+
+.diesel-edit-info-tile strong {
+  font-size: 1.06rem;
+  gap: 12px;
+}
+
+.diesel-edit-shift {
+  gap: 9px;
+}
+
+.diesel-edit-shift-option span {
+  min-height: 31px;
+  min-width: 110px;
+  gap: 8px;
+}
+
+.diesel-edit-grid {
+  gap: 11px;
+}
+
+.diesel-edit-card {
+  min-height: 108px;
+  padding: 11px;
+}
+
+.diesel-edit-card h3 {
+  margin: -4px -4px 11px;
+  padding: 7px 11px;
+  font-size: 0.9rem;
+}
+
+.diesel-modal-field {
+  gap: 5px;
+}
+
+.diesel-modal-control {
+  grid-template-columns: minmax(0, 1fr) 30px;
+  gap: 9px;
+}
+
+.diesel-modal-control input,
+.diesel-modal-control textarea {
+  font-size: 1.1rem;
+}
+
+.diesel-modal-control textarea {
+  min-height: 38px;
+  font-size: 0.86rem;
+}
+
+.diesel-modal-field.is-editing .diesel-modal-control input,
+.diesel-modal-field.is-editing .diesel-modal-control textarea,
+.diesel-edit-dispatch-row.is-editing input {
+  padding: 7px 9px;
+}
+
+.diesel-modal-edit-button {
+  width: 25px;
+  height: 25px;
+}
+
+.diesel-modal-edit-button svg,
+.diesel-edit-footer-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.diesel-modal-separator {
+  margin: 11px 0;
+}
+
+.diesel-edit-stock-values {
+  gap: 14px;
+}
+
+.diesel-edit-stock-values div {
+  gap: 5px;
+}
+
+.diesel-edit-stock-values div + div {
+  padding-top: 13px;
+}
+
+.diesel-edit-stock-values strong {
+  font-size: 1.55rem;
+}
+
+.diesel-edit-observation-card {
+  min-height: 77px;
+}
+
+.diesel-edit-dispatch-table {
+  gap: 5px;
+}
+
+.diesel-edit-dispatch-head,
+.diesel-edit-dispatch-row {
+  grid-template-columns: 1.3fr 0.8fr 0.8fr 30px;
+  gap: 9px;
+}
+
+.diesel-edit-dispatch-head {
+  padding-bottom: 5px;
+}
+
+.diesel-edit-dispatch-row {
+  min-height: 29px;
+}
+
+.diesel-edit-dispatch-row input {
+  font-size: 0.9rem;
+}
+
+.diesel-edit-footer {
+  gap: 9px;
+  padding: 11px 14px;
+}
+
+.diesel-edit-footer-button {
+  min-width: 142px;
+  min-height: 34px;
+  gap: 9px;
+  font-size: 0.9rem;
+}
+
+/* Cumpleanos */
+.birthdays-view {
+  position: relative;
+  display: grid;
+  gap: 20px;
+  color: #071d3a;
+}
+
+.birthdays-view::before {
+  content: "";
+  position: absolute;
+  top: -28px;
+  right: -16px;
+  width: 340px;
+  height: 180px;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 70% 24%, rgba(0, 137, 116, 0.28) 0 28px, transparent 30px),
+    radial-gradient(circle at 52% 36%, rgba(124, 58, 237, 0.14) 0 32px, transparent 34px),
+    radial-gradient(circle at 84% 48%, rgba(59, 130, 246, 0.14) 0 38px, transparent 40px);
+  opacity: 0.9;
+}
+
+.birthdays-hero {
+  position: relative;
+  z-index: 1;
+  min-height: 86px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.birthdays-hero h1 {
+  margin: 0;
+  font-size: clamp(2rem, 3vw, 2.8rem);
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+.birthdays-hero p {
+  margin: 12px 0 0;
+  color: #53627b;
+  font-weight: 600;
+}
+
+.birthday-balloons {
+  min-width: 180px;
+  height: 92px;
+  position: relative;
+}
+
+.birthday-balloons span {
+  position: absolute;
+  bottom: 10px;
+  width: 54px;
+  height: 68px;
+  border-radius: 50% 50% 46% 46%;
+  background: linear-gradient(145deg, rgba(255,255,255,0.8), #83d9b4 45%, #008874);
+  box-shadow: 0 14px 32px rgba(0, 137, 116, 0.18);
+}
+
+.birthday-balloons span:nth-child(1) { right: 96px; transform: rotate(-10deg); }
+.birthday-balloons span:nth-child(2) { right: 44px; bottom: 24px; background: linear-gradient(145deg, #fff, #dbeafe 55%, #93c5fd); }
+.birthday-balloons span:nth-child(3) { right: 8px; bottom: 2px; background: linear-gradient(145deg, #fff, #f3e8ff 55%, #d8b4fe); }
+
+.birthday-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.birthday-stat-card {
+  min-height: 120px;
+  display: grid;
+  grid-template-columns: 64px auto;
+  align-items: center;
+  column-gap: 18px;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid #dfe8f2;
+  border-radius: 12px;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.08);
+}
+
+.birthday-stat-card span {
+  width: 58px;
+  height: 58px;
+  grid-row: span 2;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+}
+
+.birthday-stat-card svg {
+  width: 30px;
+  height: 30px;
+}
+
+.birthday-stat-card strong {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.birthday-stat-card p {
+  margin: 6px 0 0;
+  color: #071d3a;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.birthday-stat-card.green span { color: #008874; background: #e4f8ef; }
+.birthday-stat-card.amber span { color: #f59e0b; background: #fff3d7; }
+.birthday-stat-card.blue span { color: #1d74db; background: #e4f0ff; }
+.birthday-stat-card.purple span { color: #7c3aed; background: #f1e7ff; }
+
+.birthdays-layout {
+  display: grid;
+  grid-template-columns: minmax(420px, 0.92fr) minmax(520px, 1.08fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.birthdays-list-card,
+.birthday-calendar-card,
+.birthday-mini-list,
+.birthday-config-card {
+  border-radius: 12px;
+}
+
+.birthdays-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.birthdays-card-head h2 {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.2rem;
+}
+
+.birthdays-card-head h2 svg {
+  width: 20px;
+  height: 20px;
+  color: #f59e0b;
+}
+
+.birthdays-card-head > strong {
+  padding: 8px 12px;
+  color: #008874;
+  font-size: 0.9rem;
+  background: #e4f8ef;
+  border-radius: 999px;
+}
+
+.birthdays-card-head select,
+.birthday-config-card select {
+  min-height: 38px;
+  padding: 0 14px;
+  color: #071d3a;
+  font-weight: 800;
+  background: #fff;
+  border: 1px solid #dbe5f0;
+  border-radius: 8px;
+}
+
+.birthday-list {
+  display: grid;
+}
+
+.birthday-person {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) 160px 112px;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+  border-bottom: 1px solid #e8eef5;
+}
+
+.birthday-person.is-next {
+  border-left: 4px solid #fbbf24;
+  border-radius: 10px;
+  background: linear-gradient(100deg, #fff7df, #fffaf0 72%, #fff);
+}
+
+.person-avatar {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-weight: 900;
+  background: linear-gradient(135deg, #0f766e, #38bdf8);
+  border-radius: 50%;
+}
+
+.person-avatar.female {
+  background: linear-gradient(135deg, #be185d, #fb7185);
+}
+
+.birthday-person strong {
+  display: block;
+  color: #071d3a;
+  font-weight: 900;
+}
+
+.birthday-person small {
+  display: block;
+  margin-top: 4px;
+  color: #53627b;
+  font-weight: 600;
+}
+
+.birthday-date {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  column-gap: 8px;
+}
+
+.birthday-date svg {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  color: #64748b;
+}
+
+.birthday-greet {
+  justify-self: end;
+  min-height: 38px;
+  padding: 0 18px;
+  color: #007b62;
+  font-weight: 900;
+  background: #ffffff;
+  border: 1px solid #008874;
+  border-radius: 999px;
+}
+
+.birthday-person.is-next .birthday-greet {
+  color: #c26b00;
+  border-color: #f59e0b;
+  background: #fff8e6;
+}
+
+.birthday-empty {
+  min-height: 240px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  color: #53627b;
+  text-align: center;
+}
+
+.birthday-empty svg {
+  width: 46px;
+  height: 46px;
+  color: #008874;
+}
+
+.birthday-empty strong {
+  color: #071d3a;
+  font-size: 1.05rem;
+}
+
+.birthday-more {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+  color: #071d3a;
+  font-weight: 900;
+  background: #fff;
+  border: 1px solid #dfe8f2;
+  border-radius: 8px;
+}
+
+.birthdays-side {
+  display: grid;
+  gap: 16px;
+}
+
+.birthday-calendar-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 6px 0 18px;
+}
+
+.birthday-calendar-title strong {
+  font-size: 1.22rem;
+}
+
+.birthday-calendar-title button {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  border: 0;
+}
+
+.birthday-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+  text-align: center;
+}
+
+.birthday-calendar-grid b,
+.birthday-calendar-grid button {
+  min-height: 36px;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+}
+
+.birthday-calendar-grid b {
+  color: #334155;
+  font-size: 0.82rem;
+}
+
+.birthday-calendar-grid button {
+  color: #071d3a;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+}
+
+.birthday-calendar-grid button:hover,
+.birthday-calendar-grid button.selected {
+  outline: 2px solid #008874;
+  outline-offset: 2px;
+}
+
+.birthday-calendar-grid .muted {
+  color: #94a3b8;
+}
+
+.birthday-dot {
+  position: relative;
+  width: 42px;
+  justify-self: center;
+  border-radius: 50%;
+}
+
+.birthday-dot::after {
+  content: "";
+  position: absolute;
+  bottom: 5px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.birthday-dot.tomorrow { color: #92400e; background: #ffd45c; }
+.birthday-dot.soon { color: #047857; background: #b7efd4; }
+.birthday-dot.month { color: #ffffff; background: #009879; }
+
+.birthday-legend {
+  display: flex;
+  gap: 28px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid #e6edf5;
+}
+
+.birthday-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: #53627b;
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+
+.birthday-legend i {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+}
+
+.birthday-legend .tomorrow { background: #ffd45c; }
+.birthday-legend .soon { background: #b7efd4; }
+.birthday-legend .month { background: #009879; }
+
+.birthday-bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.birthdays-card-head.compact {
+  margin-bottom: 14px;
+}
+
+.birthdays-card-head.compact h2 {
+  font-size: 1rem;
+}
+
+.birthdays-card-head.compact button,
+.birthday-mini-list a {
+  color: #008874;
+  font-weight: 900;
+  background: transparent;
+  border: 0;
+}
+
+.birthday-mini-list p {
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 10px 0;
+}
+
+.birthday-mini-list p span {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  color: #f59e0b;
+  background: #fff3d7;
+  border-radius: 50%;
+}
+
+.birthday-mini-list p b {
+  font-size: 0.88rem;
+}
+
+.birthday-mini-list p small {
+  color: #53627b;
+  font-weight: 700;
+}
+
+.birthday-mini-list a {
+  min-height: 40px;
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.birthday-config-card {
+  display: grid;
+  gap: 12px;
+}
+
+.birthday-config-card label {
+  display: grid;
+  gap: 7px;
+  color: #53627b;
+  font-weight: 800;
+}
+
+.birthday-toggle-row {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+
+.birthday-toggle-row small {
+  display: block;
+  margin-top: 3px;
+  font-weight: 600;
+}
+
+.birthday-toggle-row input {
+  width: 42px;
+  height: 22px;
+  accent-color: #008874;
+}
+
+.birthday-config-card .green-action {
+  width: 100%;
+}
+
+.birthday-banner {
+  min-height: 82px;
+  display: grid;
+  grid-template-columns: 72px 1fr 72px;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 28px;
+  color: #007b62;
+  background: linear-gradient(100deg, #dff9ef, #f4fbff 58%, #e8fff3);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.birthday-banner > span,
+.birthday-banner > i {
+  display: grid;
+  place-items: center;
+  color: #008874;
+}
+
+.birthday-banner svg {
+  width: 42px;
+  height: 42px;
+}
+
+.birthday-banner strong {
+  display: block;
+  font-size: 1.25rem;
+}
+
+.birthday-banner p {
+  margin: 6px 0 0;
+  color: #53627b;
+  font-weight: 700;
+}
+
+@media (max-width: 1280px) {
+  .birthdays-layout,
+  .birthday-bottom-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .birthday-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .birthday-person {
+    grid-template-columns: 48px 1fr;
+  }
+
+  .birthday-greet,
+  .birthday-date {
+    justify-self: start;
+  }
+
+  .birthday-banner {
+    grid-template-columns: 48px 1fr;
+  }
+
+  .birthday-banner > i {
+    display: none;
   }
 }

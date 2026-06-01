@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=naves-ca2066-gallery-20260526">
+  <link rel="stylesheet" href="style.css?v=bitacora-report-no-timeline-20260601">
 </head>
 <body>
   <main class="auth-page" id="authPage">
@@ -156,6 +156,9 @@
         <a class="nav-item" href="#" data-page="mapa"><i class="nav-icon" data-lucide="map"></i>Mapa</a>
         <a class="nav-item" href="#" data-page="naves"><i class="nav-icon" data-lucide="ship"></i>Naves</a>
         <a class="nav-item" href="#" data-page="rutas"><i class="nav-icon" data-lucide="route"></i>Rutas</a>
+
+        <p class="nav-section">Equipo</p>
+        <a class="nav-item" href="#" data-page="cumpleanos"><i class="nav-icon" data-lucide="gift"></i>Cumpleaños</a>
 
         <p class="nav-section">Reportes</p>
         <a class="nav-item" href="#" data-page="reportes"><i class="nav-icon" data-lucide="file-chart-column"></i>Reportes</a>
@@ -821,16 +824,6 @@
             </div>
           </section>
 
-          <article class="panel-card report-timeline-card">
-            <header>
-              <h3>Línea de tiempo operacional</h3>
-              <div class="report-legend">
-                <span><b></b>Transferencia</span><span><b></b>Maniobra</span><span><b></b>Pasajeros</span><span><b></b>Mantenimiento</span><span><b></b>Incidente</span><span><b></b>Observación</span>
-              </div>
-            </header>
-            <div class="report-timeline" id="bitacoraReportTimeline"></div>
-          </article>
-
           <article class="panel-card report-groups-card">
             <h3>Eventos agrupados por nave</h3>
             <div class="report-groups" id="bitacoraReportGroups"></div>
@@ -938,6 +931,105 @@
         <section class="page-view placeholder-view" data-view="mapa" hidden>
           <article class="panel-card placeholder-card"><i data-lucide="map"></i><h1>Mapa</h1><p>Pantalla preparada para vista geográfica de operaciones.</p></article>
         </section>
+        <section class="page-view birthdays-view" data-view="cumpleanos" hidden>
+          <header class="birthdays-hero">
+            <div>
+              <h1>Cumpleaños</h1>
+              <p>No olvides celebrar a tu equipo. Un gran día para ellos.</p>
+            </div>
+            <div class="birthday-balloons" aria-hidden="true">
+              <span></span><span></span><span></span>
+            </div>
+          </header>
+
+          <section class="birthday-stats" aria-label="Resumen de cumpleaños">
+            <article class="birthday-stat-card green">
+              <span><i data-lucide="cake"></i></span>
+              <strong id="birthdayMonthCount">0</strong>
+              <p>Cumpleaños<br>este mes</p>
+            </article>
+            <article class="birthday-stat-card amber">
+              <span><i data-lucide="calendar-check"></i></span>
+              <strong id="birthdayWeekCount">0</strong>
+              <p>Cumpleaños<br>esta semana</p>
+            </article>
+            <article class="birthday-stat-card blue">
+              <span><i data-lucide="bell"></i></span>
+              <strong id="birthdayThreeDayCount">0</strong>
+              <p>Cumpleaños<br>en 3 días</p>
+            </article>
+            <article class="birthday-stat-card purple">
+              <span><i data-lucide="gift"></i></span>
+              <strong id="birthdayYearCount">0</strong>
+              <p>Cumpleaños<br>este año</p>
+            </article>
+          </section>
+
+          <section class="birthdays-layout">
+            <article class="panel-card birthdays-list-card">
+              <header class="birthdays-card-head">
+                <h2><i data-lucide="cake"></i>Próximos cumpleaños</h2>
+                <strong id="birthdayListMonthLabel">Próximos</strong>
+              </header>
+
+              <div class="birthday-list" id="birthdayList"></div>
+
+              <button class="birthday-more" id="birthdayShowAll" type="button">Ver todos los cumpleaños<i data-lucide="chevron-right"></i></button>
+            </article>
+
+            <div class="birthdays-side">
+              <article class="panel-card birthday-calendar-card">
+                <header class="birthdays-card-head">
+                  <h2><i data-lucide="calendar-days"></i>Calendario</h2>
+                </header>
+                <div class="birthday-calendar-title">
+                  <button type="button" id="birthdayPrevMonth" aria-label="Mes anterior"><i data-lucide="chevron-left"></i></button>
+                  <strong id="birthdayCalendarTitle">Mes</strong>
+                  <button type="button" id="birthdayNextMonth" aria-label="Mes siguiente"><i data-lucide="chevron-right"></i></button>
+                </div>
+                <div class="birthday-calendar-grid" id="birthdayCalendarGrid"></div>
+                <div class="birthday-legend">
+                  <span><i class="tomorrow"></i>Próximo</span>
+                  <span><i class="soon"></i>Próximos 7 días</span>
+                  <span><i class="month"></i>Resto del mes</span>
+                </div>
+              </article>
+
+              <section class="birthday-bottom-grid">
+                <article class="panel-card birthday-mini-list">
+                  <header class="birthdays-card-head compact">
+                    <h2><i data-lucide="party-popper"></i>Próximos cumpleaños</h2>
+                    <button type="button" id="birthdayMiniShowAll">Ver todos</button>
+                  </header>
+                  <div id="birthdayMiniList"></div>
+                  <a href="#" id="birthdayGoCurrentMonth">Ir al mes actual<i data-lucide="arrow-right"></i></a>
+                </article>
+
+                <article class="panel-card birthday-config-card">
+                  <header class="birthdays-card-head compact">
+                    <h2><i data-lucide="bell"></i>Configuración de notificaciones</h2>
+                  </header>
+                  <label class="birthday-toggle-row">
+                    <span><strong>Notificar cumpleaños</strong><small>Recibir notificaciones de próximos cumpleaños</small></span>
+                    <input type="checkbox" checked>
+                  </label>
+                  <label>Avisar con<select><option>1 día de anticipación</option><option>3 días de anticipación</option></select></label>
+                  <label>Hora de notificación<select><option>08:00 AM</option><option>09:00 AM</option></select></label>
+                  <button class="green-action" type="button"><i data-lucide="check"></i>Guardar configuración</button>
+                </article>
+              </section>
+            </div>
+          </section>
+
+          <footer class="birthday-banner">
+            <span><i data-lucide="cake"></i></span>
+            <div>
+              <strong>Un equipo que celebra junto, crece junto.</strong>
+              <p>No es solo un cumpleaños, es celebrar a nuestra tripulación.</p>
+            </div>
+            <i data-lucide="gift"></i>
+          </footer>
+        </section>
         <section class="page-view naves-view" data-view="naves" hidden>
           <div class="naves-stage">
             <aside class="naves-info-panel">
@@ -1021,19 +1113,7 @@
 
   <div class="diesel-edit-modal" id="dieselEditModal" hidden>
     <div class="diesel-edit-backdrop" data-close-modal="diesel-edit"></div>
-    <section class="diesel-edit-dialog" role="dialog" aria-modal="true" aria-labelledby="dieselEditTitle">
-      <header class="diesel-edit-header">
-        <div class="diesel-edit-title">
-          <span class="diesel-edit-badge"><i data-lucide="ship"></i></span>
-          <div>
-            <h2 id="dieselEditTitle">Transferencia / despacho</h2>
-            <strong id="dieselEditSubtitle">Registro seleccionado</strong>
-          </div>
-        </div>
-        <button class="diesel-edit-close" type="button" id="dieselEditClose" aria-label="Cerrar modal">
-          <i data-lucide="x"></i>
-        </button>
-      </header>
+    <section class="diesel-edit-dialog" role="dialog" aria-modal="true" aria-label="Transferencia / despacho">
 
       <div class="diesel-edit-body">
         <section class="diesel-edit-topbar">
@@ -1045,18 +1125,17 @@
             <span>Fecha</span>
             <strong><i data-lucide="calendar-days"></i><b id="dieselEditDateLabel">-</b></strong>
           </article>
-          <article class="diesel-edit-info-tile diesel-edit-shift-tile" data-diesel-edit-field>
+          <article class="diesel-edit-info-tile diesel-edit-shift-tile">
             <div class="diesel-edit-field-title">
               <span>Turno</span>
-              <button class="diesel-modal-edit-button" type="button" aria-label="Editar turno"><i data-lucide="square-pen"></i></button>
             </div>
             <div class="diesel-edit-shift" id="dieselEditShiftGroup">
               <label class="diesel-edit-shift-option">
-                <input id="dieselEditShiftDay" type="radio" name="dieselEditShift" value="A" disabled>
+                <input id="dieselEditShiftDay" type="radio" name="dieselEditShift" value="A">
                 <span><i data-lucide="sun-medium"></i>Diurno</span>
               </label>
               <label class="diesel-edit-shift-option">
-                <input id="dieselEditShiftNight" type="radio" name="dieselEditShift" value="B" disabled>
+                <input id="dieselEditShiftNight" type="radio" name="dieselEditShift" value="B">
                 <span><i data-lucide="moon-star"></i>Nocturno</span>
               </label>
             </div>
@@ -1184,7 +1263,7 @@
   <script src="vendor/jspdf.plugin.autotable.min.js"></script>
   <script src="vendor/xlsx.full.min.js"></script>
   <script src="vendor/three.min.js"></script>
-  <script src="script.js?v=diesel-edit-modal-phase2-20260531-fix5"></script>
+  <script src="script.js?v=bitacora-report-no-timeline-20260601"></script>
 </body>
 </html>
 
