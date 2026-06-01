@@ -120,6 +120,8 @@ const dieselRefs = {
   editSondage: document.querySelector("#dieselEditSondage"),
   editDispatched: document.querySelector("#dieselEditDispatched"),
   editTransferred: document.querySelector("#dieselEditTransferred"),
+  editSondageReturn: document.querySelector("#dieselEditSondageReturn"),
+  editDispatchRows: document.querySelector("#dieselEditDispatchRows"),
   editDispatchVoucher: document.querySelector("#dieselEditDispatchVoucher"),
   editSondageVoucher: document.querySelector("#dieselEditSondageVoucher"),
   editRechargeVoucher: document.querySelector("#dieselEditRechargeVoucher"),
@@ -1552,256 +1554,91 @@ function formatDieselEditableValue(control) {
   return value;
 }
 
-function getDieselGroupSummary(card) {
-  const labels = [...card.querySelectorAll(".diesel-edit-group-active label")];
-
-  if (!labels.length) {
-    return "-";
-  }
-
-  const values = labels
-    .map((label) => {
-      const labelText = label.querySelector("span")?.textContent?.trim();
-      const control = label.querySelector("input, textarea");
-      const value = formatDieselEditableValue(control);
-      return labelText ? `${labelText}: ${value}` : value;
-    })
-    .filter(Boolean);
-
-  return values.join(" · ");
-}
-
-function setDieselEditableCardState(card, isEditing) {
-  if (!card) {
-    return;
-  }
-
-  const control = card.querySelector(".diesel-edit-native-control");
-  const readoutValue = card.querySelector(".diesel-edit-readout-value");
-
-  if (!control || !readoutValue) {
-    return;
-  }
-
-  if (isEditing) {
-    card.dataset.previousValue = control.value;
-    card.classList.add("is-editing");
-    card.classList.remove("is-readonly");
-    window.setTimeout(() => {
-      control.focus();
-      if (typeof control.select === "function") {
-        control.select();
-      }
-    }, 0);
-    return;
-  }
-
-  readoutValue.textContent = formatDieselEditableValue(control);
-  card.classList.remove("is-editing");
-  card.classList.add("is-readonly");
-}
-
-function setDieselEditableGroupState(card, isEditing) {
-  if (!card) {
-    return;
-  }
-
-  const readoutValue = card.querySelector(".diesel-edit-readout-value");
-
-  if (!readoutValue) {
-    return;
-  }
-
-  if (isEditing) {
-    card.querySelectorAll(".diesel-edit-group-active input, .diesel-edit-group-active textarea").forEach((control) => {
-      control.dataset.previousValue = control.value;
+function setDieselModalReadonly() {
+  dieselRefs.editModal?.querySelectorAll("[data-diesel-edit-field]").forEach((field) => {
+    field.classList.remove("is-editing");
+    field.querySelectorAll("input, textarea, select").forEach((control) => {
+      control.disabled = true;
     });
-    card.classList.add("is-editing");
-    card.classList.remove("is-readonly");
-    window.setTimeout(() => {
-      card.querySelector(".diesel-edit-group-active input, .diesel-edit-group-active textarea")?.focus();
-    }, 0);
-    return;
-  }
-
-  readoutValue.textContent = getDieselGroupSummary(card);
-  card.classList.remove("is-editing");
-  card.classList.add("is-readonly");
-}
-
-function syncDieselEditableCards() {
-  dieselRefs.editModal?.querySelectorAll(".diesel-edit-field-card").forEach((card) => {
-    const control = card.querySelector(".diesel-edit-native-control");
-    const readoutValue = card.querySelector(".diesel-edit-readout-value");
-    const updatedLabel = card.querySelector(".diesel-edit-updated");
-
-    if (control && readoutValue) {
-      readoutValue.textContent = formatDieselEditableValue(control);
-    } else if (readoutValue) {
-      readoutValue.textContent = getDieselGroupSummary(card);
-    }
-
-    if (updatedLabel) {
-      updatedLabel.textContent = formatDieselEditTimestamp(dieselEditDraft?.row?.savedAt);
-    }
-
-    if (control) {
-      setDieselEditableCardState(card, false);
-    } else {
-      setDieselEditableGroupState(card, false);
-    }
   });
 }
 
 function setupDieselEditableCards() {
-  dieselRefs.editModal?.querySelectorAll(".diesel-edit-card").forEach((card) => {
-    const control = card.querySelector(":scope > input, :scope > textarea");
-
-    if (!control || card.dataset.editableReady === "true") {
-      if (card.dataset.editableReady === "true") {
-        return;
-      }
-
-      const groupedControls = [...card.querySelectorAll(":scope label input, :scope label textarea, :scope .diesel-edit-docs input, :scope .diesel-edit-docs textarea")];
-
-      if (!groupedControls.length) {
-        return;
-      }
-
-      const head = card.querySelector(".diesel-edit-card-head");
-      const editingLabel = document.createElement("span");
-      const readout = document.createElement("div");
-      const readoutValue = document.createElement("strong");
-      const editButton = document.createElement("button");
-      const activeGroup = document.createElement("div");
-      const actions = document.createElement("div");
-      const confirmButton = document.createElement("button");
-      const cancelButton = document.createElement("button");
-      const updatedLabel = document.createElement("span");
-      const originalValues = new Map();
-      const contentNodes = [...card.children].filter((child) => child !== head);
-
-      card.dataset.editableReady = "true";
-      card.classList.add("diesel-edit-field-card", "is-readonly");
-
-      editingLabel.className = "diesel-edit-editing-label";
-      editingLabel.textContent = "Campo en edición";
-      head?.appendChild(editingLabel);
-
-      readout.className = "diesel-edit-readout";
-      readoutValue.className = "diesel-edit-readout-value diesel-edit-group-summary";
-      editButton.className = "diesel-edit-readout-button";
-      editButton.type = "button";
-      editButton.setAttribute("aria-label", "Editar campo");
-      editButton.innerHTML = '<i data-lucide="square-pen"></i>';
-      readout.append(readoutValue, editButton);
-
-      activeGroup.className = "diesel-edit-group-active";
-      contentNodes.forEach((node) => activeGroup.appendChild(node));
-
-      actions.className = "diesel-edit-group-actions";
-      confirmButton.className = "diesel-edit-confirm-button";
-      confirmButton.type = "button";
-      confirmButton.setAttribute("aria-label", "Confirmar edición");
-      confirmButton.innerHTML = '<i data-lucide="check"></i>';
-      cancelButton.className = "diesel-edit-cancel-button";
-      cancelButton.type = "button";
-      cancelButton.setAttribute("aria-label", "Cancelar edición");
-      cancelButton.innerHTML = '<i data-lucide="x"></i>';
-      actions.append(confirmButton, cancelButton);
-      activeGroup.appendChild(actions);
-
-      card.append(readout, activeGroup);
-
-      updatedLabel.className = "diesel-edit-updated";
-      card.appendChild(updatedLabel);
-
-      editButton.addEventListener("click", () => {
-        groupedControls.forEach((groupControl) => originalValues.set(groupControl, groupControl.value));
-        setDieselEditableGroupState(card, true);
-      });
-      confirmButton.addEventListener("click", () => setDieselEditableGroupState(card, false));
-      cancelButton.addEventListener("click", () => {
-        groupedControls.forEach((groupControl) => {
-          groupControl.value = originalValues.get(groupControl) || "";
-        });
-        setDieselEditableGroupState(card, false);
-      });
-      groupedControls.forEach((groupControl) => {
-        groupControl.addEventListener("keydown", (event) => {
-          if (event.key === "Escape") {
-            event.preventDefault();
-            groupedControls.forEach((currentControl) => {
-              currentControl.value = originalValues.get(currentControl) || "";
-            });
-            setDieselEditableGroupState(card, false);
-          }
-        });
-      });
+  dieselRefs.editModal?.querySelectorAll("[data-diesel-edit-field]").forEach((field) => {
+    if (field.dataset.editableReady === "true") {
       return;
     }
 
-    const head = card.querySelector(".diesel-edit-card-head");
-    const editingLabel = document.createElement("span");
-    const readout = document.createElement("div");
-    const readoutValue = document.createElement("strong");
-    const editButton = document.createElement("button");
-    const activeField = document.createElement("div");
-    const confirmButton = document.createElement("button");
-    const cancelButton = document.createElement("button");
-    const updatedLabel = document.createElement("span");
+    const button = field.querySelector(".diesel-modal-edit-button");
+    const controls = [...field.querySelectorAll("input, textarea, select")];
 
-    card.dataset.editableReady = "true";
-    card.classList.add("diesel-edit-field-card", "is-readonly");
-    control.classList.add("diesel-edit-native-control");
+    if (!button || !controls.length) {
+      return;
+    }
 
-    editingLabel.className = "diesel-edit-editing-label";
-    editingLabel.textContent = "Campo en edición";
-    head?.appendChild(editingLabel);
-
-    readout.className = "diesel-edit-readout";
-    readoutValue.className = "diesel-edit-readout-value";
-    editButton.className = "diesel-edit-readout-button";
-    editButton.type = "button";
-    editButton.setAttribute("aria-label", "Editar campo");
-    editButton.innerHTML = '<i data-lucide="square-pen"></i>';
-    readout.append(readoutValue, editButton);
-
-    activeField.className = "diesel-edit-active-field";
-    confirmButton.className = "diesel-edit-confirm-button";
-    confirmButton.type = "button";
-    confirmButton.setAttribute("aria-label", "Confirmar edición");
-    confirmButton.innerHTML = '<i data-lucide="check"></i>';
-    cancelButton.className = "diesel-edit-cancel-button";
-    cancelButton.type = "button";
-    cancelButton.setAttribute("aria-label", "Cancelar edición");
-    cancelButton.innerHTML = '<i data-lucide="x"></i>';
-
-    control.after(readout);
-    activeField.append(control, confirmButton, cancelButton);
-    readout.after(activeField);
-
-    updatedLabel.className = "diesel-edit-updated";
-    card.appendChild(updatedLabel);
-
-    editButton.addEventListener("click", () => setDieselEditableCardState(card, true));
-    confirmButton.addEventListener("click", () => setDieselEditableCardState(card, false));
-    cancelButton.addEventListener("click", () => {
-      control.value = card.dataset.previousValue || "";
-      setDieselEditableCardState(card, false);
+    field.dataset.editableReady = "true";
+    controls.forEach((control) => {
+      control.disabled = true;
     });
-    control.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" && control.tagName !== "TEXTAREA") {
-        event.preventDefault();
-        setDieselEditableCardState(card, false);
-      }
-      if (event.key === "Escape") {
-        event.preventDefault();
-        control.value = card.dataset.previousValue || "";
-        setDieselEditableCardState(card, false);
-      }
+
+    button.addEventListener("click", () => {
+      field.classList.add("is-editing");
+      controls.forEach((control) => {
+        control.disabled = false;
+      });
+      window.setTimeout(() => {
+        controls[0]?.focus();
+        if (typeof controls[0]?.select === "function") {
+          controls[0].select();
+        }
+      }, 0);
     });
   });
+}
+
+function syncDieselEditableCards() {
+  setDieselModalReadonly();
+}
+
+function setDieselInputValue(input, value) {
+  if (!input) {
+    return;
+  }
+  input.value = value === null || value === undefined ? "" : value;
+}
+
+function renderDieselEditDispatchRows(row) {
+  if (!dieselRefs.editDispatchRows) {
+    return;
+  }
+
+  const rows = [];
+  const dispatched = Number(row?.dispatched || 0);
+  const transferred = Number(row?.transferred || 0);
+  const received = Number(row?.received || 0);
+
+  if (dispatched > 0) {
+    rows.push({ vessel: row.ship || "Registro consolidado", amount: dispatched, voucher: "", type: "Despacho" });
+  }
+  if (transferred > 0) {
+    rows.push({ vessel: row.ship || "Registro consolidado", amount: transferred, voucher: "", type: "Transferencia" });
+  }
+  if (!rows.length && received > 0) {
+    rows.push({ vessel: row.receivedFrom && row.receivedFrom !== "-" ? row.receivedFrom : "Origen registrado", amount: received, voucher: "", type: "Recepción" });
+  }
+
+  dieselRefs.editDispatchRows.innerHTML = rows.length
+    ? rows.map((item, index) => `
+        <div class="diesel-edit-dispatch-row" data-diesel-edit-field>
+          <input type="text" value="${escapeHtml(item.vessel)}" aria-label="Nave recibe" disabled>
+          <input type="number" min="0" step="0.001" value="${item.amount}" aria-label="Cantidad" disabled>
+          <input type="text" value="${escapeHtml(item.voucher)}" placeholder="-" aria-label="Número de vale" disabled>
+          <button class="diesel-modal-edit-button" type="button" aria-label="Editar ${escapeHtml(item.type)} ${index + 1}"><i data-lucide="square-pen"></i></button>
+        </div>
+      `).join("")
+    : '<p class="diesel-edit-empty-row">Sin despacho ni transferencia registrada.</p>';
+
+  setupDieselEditableCards();
 }
 
 function openDieselEditModal(row, context = {}) {
@@ -1812,31 +1649,42 @@ function openDieselEditModal(row, context = {}) {
   dieselEditDraft = { row, context };
   const shiftValue = getDieselEditShiftValue(context.selectedShift);
   const dateLabel = formatDisplayDate(context.selectedDate || getTodayValue());
-
-  dieselRefs.editSubtitle.textContent = `${row.ship || "-"} · ${getDieselEditTypeLabel(row)}`;
-  dieselRefs.editVesselLabel.textContent = row.ship || "-";
-  dieselRefs.editDateLabel.textContent = dateLabel;
-  dieselRefs.editReceived.value = row.received || 0;
-  dieselRefs.editReceivedFrom.value = row.receivedFrom && row.receivedFrom !== "-" ? row.receivedFrom : "";
-  dieselRefs.editRecharge.value = row.recharge || 0;
-  dieselRefs.editConsumption.value = row.consumption || 0;
-  dieselRefs.editDispatched.value = row.dispatched || 0;
-  dieselRefs.editTransferred.value = row.transferred || 0;
-  dieselRefs.editSondage.value = row.sondage || 0;
-  dieselRefs.editInitial.textContent = `${formatNumber(row.initialStock)} gal`;
-  dieselRefs.editFinal.textContent = `${formatNumber(row.finalStock)} gal`;
-  dieselRefs.editDispatchVoucher.value = "";
-  dieselRefs.editSondageVoucher.value = "";
-  dieselRefs.editRechargeVoucher.value = "";
-  dieselRefs.editObservations.value = row.receivedFrom && row.receivedFrom !== "-" ? `Recibido de ${row.receivedFrom}.` : "";
   const activeCrew = shiftValue === "B" ? row.nightCrew : row.dayCrew;
-  dieselRefs.editCaptain.value = activeCrew?.captain && activeCrew.captain !== "-" ? activeCrew.captain : "";
-  dieselRefs.editDriver.value = activeCrew?.driver && activeCrew.driver !== "-" ? activeCrew.driver : "";
+  const sondageValue = Number(row.sondage || 0);
+  const sondageReturn = sondageValue > 0 ? sondageValue : 0;
+  const sondageDifference = sondageValue < 0 ? Math.abs(sondageValue) : 0;
+
+  if (dieselRefs.editSubtitle) {
+    dieselRefs.editSubtitle.textContent = `${row.ship || "-"} · ${getDieselEditTypeLabel(row)}`;
+  }
+  if (dieselRefs.editVesselLabel) {
+    dieselRefs.editVesselLabel.textContent = row.ship || "-";
+  }
+  if (dieselRefs.editDateLabel) {
+    dieselRefs.editDateLabel.textContent = dateLabel;
+  }
+  setDieselInputValue(dieselRefs.editRecharge, row.recharge || row.received || 0);
+  setDieselInputValue(dieselRefs.editConsumption, row.consumption || 0);
+  setDieselInputValue(dieselRefs.editSondageReturn, sondageReturn);
+  setDieselInputValue(dieselRefs.editSondage, sondageDifference);
+  setDieselInputValue(dieselRefs.editSondageVoucher, "");
+  setDieselInputValue(dieselRefs.editRechargeVoucher, "");
+  setDieselInputValue(dieselRefs.editObservations, row.receivedFrom && row.receivedFrom !== "-" ? `Recibido de ${row.receivedFrom}.` : "");
+  setDieselInputValue(dieselRefs.editCaptain, activeCrew?.captain && activeCrew.captain !== "-" ? activeCrew.captain : "");
+  setDieselInputValue(dieselRefs.editDriver, activeCrew?.driver && activeCrew.driver !== "-" ? activeCrew.driver : "");
+
+  if (dieselRefs.editInitial) {
+    dieselRefs.editInitial.textContent = formatNumber(row.initialStock);
+  }
+  if (dieselRefs.editFinal) {
+    dieselRefs.editFinal.textContent = formatNumber(row.finalStock);
+  }
 
   dieselRefs.editShiftInputs.forEach((input) => {
     input.checked = input.value === shiftValue;
   });
 
+  renderDieselEditDispatchRows(row);
   setupDieselEditableCards();
   syncDieselEditableCards();
   dieselRefs.editModal.hidden = false;
@@ -1853,6 +1701,62 @@ function closeDieselEditModal() {
   dieselRefs.editModal.hidden = true;
   document.body.classList.remove("modal-open");
 }
+
+function openDieselEditModalFromButton(button) {
+  if (!button) {
+    return;
+  }
+
+  try {
+    const report = buildDieselConsultData();
+    const rows = report.groups.flatMap((group) => group.rows);
+    const index = Number(button.dataset.editIndex);
+    let selectedRow = Number.isFinite(index)
+      ? rows[index]
+      : rows.find((row) => row.ship === (button.dataset.ship || ""));
+
+    if (!selectedRow) {
+      const cells = [...(button.closest("tr")?.children || [])];
+      selectedRow = {
+        item: cells[0]?.textContent?.trim() || "",
+        ship: cells[1]?.textContent?.trim() || "-",
+        initialStock: toNumber(cells[2]?.textContent || 0),
+        received: toNumber(cells[3]?.textContent || 0),
+        receivedFrom: cells[4]?.textContent?.trim() || "-",
+        day: toNumber(cells[5]?.textContent || 0),
+        night: toNumber(cells[6]?.textContent || 0),
+        consumption: toNumber(cells[7]?.textContent || 0),
+        dispatched: toNumber(cells[8]?.textContent || 0),
+        transferred: toNumber(cells[9]?.textContent || 0),
+        sondage: toNumber(cells[10]?.textContent || 0),
+        finalStock: toNumber(cells[11]?.textContent || 0),
+        dayCrew: parseCrew(cells[12]?.innerText || ""),
+        nightCrew: parseCrew(cells[13]?.innerText || "")
+      };
+    }
+
+    openDieselEditModal(selectedRow, {
+      selectedDate: report.selectedDate,
+      selectedShift: report.selectedShift
+    });
+  } catch (error) {
+    console.error("No se pudo abrir el modal de edición diésel.", error);
+    window.alert(error.message || "No se pudo abrir el modal de edición diésel.");
+  }
+}
+
+window.openDieselEditModalFromButton = openDieselEditModalFromButton;
+document.addEventListener("click", (event) => {
+  const editButton = event.target.closest?.("#dieselConsultGroups .table-icon.edit");
+  if (!editButton) {
+    return;
+  }
+
+  event.preventDefault();
+  event.stopPropagation();
+  event.stopImmediatePropagation();
+  openDieselEditModalFromButton(editButton);
+}, true);
 
 async function renderDieselConsult({ showError = false } = {}) {
   if (!dieselRefs.consultGroups || !dieselRefs.consultTabs) {
@@ -1895,9 +1799,14 @@ async function renderDieselConsult({ showError = false } = {}) {
   }
 
   const formatCrew = (crew) => `<span class="crew-lines"><b>CAP:</b> ${crew.captain || "-"}<br><b>MOT:</b> ${crew.driver || "-"}</span>`;
+  const editRows = report.groups.flatMap((currentGroup) => currentGroup.rows);
+  let editRowIndex = 0;
 
   dieselRefs.consultGroups.innerHTML = report.groups.map(({ group, icon, rows, totals }) => {
     const tableRows = rows.map((row) => {
+      const currentEditIndex = editRowIndex;
+      editRowIndex += 1;
+
       return `
         <tr>
           <td>${row.item}</td>
@@ -1914,7 +1823,7 @@ async function renderDieselConsult({ showError = false } = {}) {
           <td>${formatNumber(row.finalStock)}</td>
           <td>${formatCrew(row.dayCrew)}</td>
           <td>${formatCrew(row.nightCrew)}</td>
-          <td><button class="table-icon edit" type="button" data-ship="${row.ship}" aria-label="Editar ${row.ship}"><i data-lucide="pencil"></i></button></td>
+          <td><button class="table-icon edit" type="button" data-edit-index="${currentEditIndex}" aria-label="Editar ${row.ship}" onclick="event.preventDefault(); event.stopPropagation(); window.openDieselEditModalFromButton?.(this); return false;"><i data-lucide="pencil"></i></button></td>
           <td><button class="table-icon delete" type="button" aria-label="Eliminar ${row.ship}"><i data-lucide="trash-2"></i></button></td>
         </tr>
       `;
@@ -1989,20 +1898,21 @@ async function renderDieselConsult({ showError = false } = {}) {
   });
 
   dieselRefs.consultGroups.querySelectorAll(".table-icon.edit").forEach((button) => {
-    button.addEventListener("click", () => {
-      const ship = button.dataset.ship || "";
-      const selectedRow = report.groups
-        .flatMap((group) => group.rows)
-        .find((row) => row.ship === ship);
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const editButton = event.currentTarget;
+      const selectedRow = editRows[Number(editButton.dataset.editIndex)];
 
-      if (!selectedRow) {
+      if (selectedRow) {
+        openDieselEditModal(selectedRow, {
+          selectedDate: report.selectedDate,
+          selectedShift: report.selectedShift
+        });
         return;
       }
 
-      openDieselEditModal(selectedRow, {
-        selectedDate: report.selectedDate,
-        selectedShift: report.selectedShift
-      });
+      openDieselEditModalFromButton(editButton);
     });
   });
 
@@ -2521,6 +2431,15 @@ function bootDiesel() {
   dieselRefs.consultModeToggle?.addEventListener("click", () => {
     showAllDieselConsultItems = !showAllDieselConsultItems;
     renderDieselConsult();
+  });
+  dieselRefs.consultGroups?.addEventListener("click", (event) => {
+    const editButton = event.target.closest?.(".table-icon.edit");
+    if (!editButton || !dieselRefs.consultGroups.contains(editButton)) {
+      return;
+    }
+
+    event.preventDefault();
+    openDieselEditModalFromButton(editButton);
   });
   dieselRefs.consultPdf?.addEventListener("click", downloadDieselConsultPdf);
   dieselRefs.consultExcel?.addEventListener("click", exportDieselConsultExcel);

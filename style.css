@@ -5204,3 +5204,465 @@ button {
     justify-content: space-between;
   }
 }
+
+/* Diesel consulta modal - replacement */
+.diesel-edit-modal[hidden] {
+  display: none !important;
+}
+
+.diesel-edit-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+}
+
+.diesel-edit-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(7, 20, 32, 0.64);
+  backdrop-filter: blur(7px);
+}
+
+.diesel-edit-dialog {
+  position: relative;
+  width: min(1060px, calc(100vw - 44px));
+  max-height: min(900px, calc(100vh - 44px));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: #071d3a;
+  background: #ffffff;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 18px;
+  box-shadow: 0 28px 90px rgba(7, 20, 32, 0.34);
+}
+
+.diesel-edit-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 22px 12px;
+  border-bottom: 1px solid #e3ebf4;
+}
+
+.diesel-edit-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.diesel-edit-title h2 {
+  margin: 0;
+  font-size: 1.32rem;
+  line-height: 1.1;
+  letter-spacing: 0;
+}
+
+.diesel-edit-title strong {
+  display: block;
+  margin-top: 4px;
+  color: #5b6b82;
+  font-size: 0.82rem;
+}
+
+.diesel-edit-badge {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  color: #008874;
+  background: #e8f8f2;
+  border-radius: 13px;
+}
+
+.diesel-edit-badge svg,
+.diesel-edit-close svg,
+.diesel-modal-edit-button svg,
+.diesel-edit-footer-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.diesel-edit-close {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  color: #50637d;
+  background: #ffffff;
+  border: 1px solid #d8e2ee;
+  border-radius: 11px;
+  cursor: pointer;
+}
+
+.diesel-edit-body {
+  padding: 16px;
+  overflow: auto;
+}
+
+.diesel-edit-topbar {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.2fr;
+  gap: 0;
+  margin-bottom: 16px;
+  border: 1px solid #dfe8f2;
+  border-radius: 13px;
+  background: #ffffff;
+}
+
+.diesel-edit-info-tile {
+  min-height: 94px;
+  padding: 18px 26px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  border-right: 1px solid #dfe8f2;
+}
+
+.diesel-edit-info-tile:last-child {
+  border-right: 0;
+}
+
+.diesel-edit-info-tile > span,
+.diesel-edit-field-title > span,
+.diesel-modal-field label,
+.diesel-edit-dispatch-head span {
+  color: #4c5f79;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.diesel-edit-info-tile strong {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: #071d3a;
+  font-size: 1.18rem;
+}
+
+.diesel-edit-info-tile strong svg {
+  color: #009879;
+}
+
+.diesel-edit-field-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.diesel-edit-shift {
+  display: flex;
+  gap: 10px;
+}
+
+.diesel-edit-shift-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.diesel-edit-shift-option span {
+  min-width: 122px;
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  color: #4a5c75;
+  font-weight: 800;
+  border: 1px solid #d7e2ee;
+  border-radius: 9px;
+  background: #ffffff;
+}
+
+.diesel-edit-shift-option input:checked + span {
+  color: #008874;
+  border-color: #009879;
+  background: #effbf6;
+}
+
+.diesel-edit-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.diesel-edit-card {
+  min-height: 150px;
+  padding: 16px;
+  background: #ffffff;
+  border: 1px solid #dfe8f2;
+  border-radius: 13px;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.06);
+}
+
+.diesel-edit-card h3 {
+  margin: -7px -7px 16px;
+  padding: 11px 14px;
+  color: #42536f;
+  font-size: 1rem;
+  line-height: 1.1;
+  background: linear-gradient(90deg, #f5f7fa 0%, #ffffff 100%);
+  border-radius: 10px;
+}
+
+.diesel-modal-field {
+  display: grid;
+  gap: 8px;
+}
+
+.diesel-modal-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px;
+  align-items: center;
+  gap: 10px;
+}
+
+.diesel-modal-control input,
+.diesel-modal-control textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 4px 0;
+  color: #050b18;
+  font: inherit;
+  font-size: 1.32rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  background: transparent;
+  border: 0;
+  outline: 0;
+}
+
+.diesel-modal-control textarea {
+  min-height: 42px;
+  resize: vertical;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.diesel-modal-control input:disabled,
+.diesel-modal-control textarea:disabled {
+  opacity: 1;
+  color: #050b18;
+}
+
+.diesel-modal-field.is-editing .diesel-modal-control input,
+.diesel-modal-field.is-editing .diesel-modal-control textarea,
+.diesel-edit-dispatch-row.is-editing input {
+  padding: 8px 10px;
+  background: #f8fbfd;
+  border: 1px solid #b7c8da;
+  border-radius: 8px;
+}
+
+.diesel-modal-edit-button {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  color: #526984;
+  background: #ffffff;
+  border: 1px solid #d8e2ee;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.diesel-modal-field.is-editing .diesel-modal-edit-button,
+.diesel-edit-dispatch-row.is-editing .diesel-modal-edit-button,
+.diesel-edit-shift-tile.is-editing .diesel-modal-edit-button {
+  color: #008874;
+  border-color: #87d4c3;
+  background: #ecfbf6;
+}
+
+.diesel-modal-separator {
+  height: 1px;
+  margin: 16px 0;
+  background: #dfe8f2;
+}
+
+.diesel-edit-summary-card {
+  background: linear-gradient(135deg, #effbf6 0%, #f7fffb 100%);
+  border-color: #cdebe3;
+}
+
+.diesel-edit-stock-values {
+  display: grid;
+  gap: 22px;
+}
+
+.diesel-edit-stock-values div {
+  display: grid;
+  gap: 8px;
+}
+
+.diesel-edit-stock-values div + div {
+  padding-top: 18px;
+  border-top: 1px solid #c7d9d8;
+}
+
+.diesel-edit-stock-values span {
+  color: #071d3a;
+  font-weight: 800;
+}
+
+.diesel-edit-stock-values strong {
+  color: #050b18;
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.diesel-edit-dispatch-card {
+  grid-column: span 2;
+}
+
+.diesel-edit-crew-card {
+  grid-column: span 2;
+}
+
+.diesel-edit-observation-card {
+  grid-column: 1 / -1;
+  min-height: 112px;
+}
+
+.diesel-edit-dispatch-table {
+  display: grid;
+  gap: 8px;
+}
+
+.diesel-edit-dispatch-head,
+.diesel-edit-dispatch-row {
+  display: grid;
+  grid-template-columns: 1.3fr 0.8fr 0.8fr 34px;
+  align-items: center;
+  gap: 12px;
+}
+
+.diesel-edit-dispatch-head {
+  padding: 0 2px 8px;
+  border-bottom: 1px solid #dfe8f2;
+}
+
+.diesel-edit-dispatch-row {
+  min-height: 40px;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.diesel-edit-dispatch-row input {
+  width: 100%;
+  min-width: 0;
+  color: #050b18;
+  font-size: 1.08rem;
+  font-weight: 900;
+  background: transparent;
+  border: 0;
+  outline: 0;
+}
+
+.diesel-edit-dispatch-row input:disabled {
+  opacity: 1;
+}
+
+.diesel-edit-empty-row {
+  margin: 10px 0 0;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.diesel-edit-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 18px 18px;
+  border-top: 1px solid #e3ebf4;
+  background: #ffffff;
+}
+
+.diesel-edit-footer-button {
+  min-width: 158px;
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #25364f;
+  font-weight: 900;
+  background: #ffffff;
+  border: 1px solid #cfdbe8;
+  border-radius: 9px;
+  cursor: pointer;
+}
+
+.diesel-edit-delete {
+  color: #ef233c;
+  border-color: #ff8c98;
+}
+
+.diesel-edit-save {
+  color: #ffffff;
+  background: #049764;
+  border-color: #049764;
+  box-shadow: 0 10px 24px rgba(4, 151, 100, 0.2);
+}
+
+@media (max-width: 1180px) {
+  .diesel-edit-dialog {
+    width: min(980px, calc(100vw - 32px));
+  }
+
+  .diesel-edit-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .diesel-edit-summary-card,
+  .diesel-edit-dispatch-card,
+  .diesel-edit-crew-card {
+    grid-column: span 3;
+  }
+}
+
+@media (max-width: 820px) {
+  .diesel-edit-modal {
+    padding: 12px;
+  }
+
+  .diesel-edit-dialog {
+    width: calc(100vw - 24px);
+    max-height: calc(100vh - 24px);
+  }
+
+  .diesel-edit-topbar,
+  .diesel-edit-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .diesel-edit-info-tile {
+    border-right: 0;
+    border-bottom: 1px solid #dfe8f2;
+  }
+
+  .diesel-edit-info-tile:last-child {
+    border-bottom: 0;
+  }
+
+  .diesel-edit-summary-card,
+  .diesel-edit-dispatch-card,
+  .diesel-edit-crew-card,
+  .diesel-edit-observation-card {
+    grid-column: auto;
+  }
+
+  .diesel-edit-footer {
+    flex-direction: column;
+  }
+
+  .diesel-edit-footer-button {
+    width: 100%;
+  }
+}
