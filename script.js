@@ -2877,6 +2877,11 @@ function createExcelSafeDate(value) {
   return new Date(year, month - 1, day, 12, 0, 0);
 }
 
+function getExcelNumberOrBlank(value) {
+  const numeric = toNumber(value);
+  return numeric || "";
+}
+
 function loadImageDataUrl(src) {
   return new Promise((resolve) => {
     const image = new Image();
@@ -3078,7 +3083,15 @@ async function exportDieselConsultExcel() {
   const allRows = await loadAllDieselRowsForExport();
   const workbook = XLSX.utils.book_new();
   const rows = [
-    ["FECHA", "AÑO", "MES", "TIPO AGRUPADO", "TIPO", "NAVE", "STOCK I.", "CANT. RECIBIDA", "RECIBIDO DE", "CONSUMO DIURNO", "CONSUMO NOCTURNO", "CANT. TRANSFERIDA", "CANT. DESPACHADA", "STOCK F.", "N VALE", "CAPITAN DIURNO", "MOTORISTA DIURNO", "CAPITAN NOCTURNO", "MOTORISTA NOCTURNO", "USUARIO"]
+    [
+      "FECHA", "AÑO", "MES", "TIPO AGRUPADO", "TIPO", "NAVE", "STOCK I.",
+      "CANTI_RECIBI_DIA", "CANTI_RECIBI_NOCHE", "CANT. RECIBIDA", "RECIBIDO DE",
+      "CONSUMO DIURNO", "CONSUMO NOCTURNO", "CONSUMO_TOTAL",
+      "CANTI_TRANS_DIA", "CANTI_TRANS_NOCHE", "CANT. TRANSFERIDA", "DETALLE_TRANSFERENCIA",
+      "CANTI_DESPACHADA_DIA", "CANTI_DESPACHADA_NOCHE", "CANT. DESPACHADA", "DETALLE_DESPACHO",
+      "SONDAJE_INI", "SONDAJE_FIN", "STOCK F.", "N VALE",
+      "CAPITAN DIURNO", "MOTORISTA DIURNO", "CAPITAN NOCTURNO", "MOTORISTA NOCTURNO", "USUARIO"
+    ]
   ];
 
   allRows.forEach((record) => {
@@ -3090,6 +3103,7 @@ async function exportDieselConsultExcel() {
     const ship = normalizeDieselDisplayName(record.unidad_nombre || "");
     const catalog = findDieselCatalogByShip(ship) || {};
     const received = toNumber(record.cantidad_recibida) + toNumber(record.total_recarga);
+    const consumptionTotal = toNumber(record.consumo_dia) + toNumber(record.consumo_noche);
     const dateValue = createExcelSafeDate(fecha);
 
     rows.push([
@@ -3100,12 +3114,23 @@ async function exportDieselConsultExcel() {
       catalog.type || "-",
       ship,
       toNumber(record.stock_inicial_dia),
+      getExcelNumberOrBlank(record.canti_recibi_dia),
+      getExcelNumberOrBlank(record.canti_recibi_noche),
       received || "",
       normalizeDieselDisplayName(record.recibido_de || ""),
       toNumber(record.consumo_dia),
       toNumber(record.consumo_noche) || "",
-      toNumber(record.cantidad_transferida) || "",
-      toNumber(record.cantidad_despachada) || "",
+      consumptionTotal || "",
+      getExcelNumberOrBlank(record.canti_trans_dia),
+      getExcelNumberOrBlank(record.canti_trans_noche),
+      getExcelNumberOrBlank(record.cantidad_transferida),
+      normalizeDieselDisplayName(record.detalle_transferencia || ""),
+      getExcelNumberOrBlank(record.canti_despachada_dia),
+      getExcelNumberOrBlank(record.canti_despachada_noche),
+      getExcelNumberOrBlank(record.cantidad_despachada),
+      normalizeDieselDisplayName(record.detalle_despacho || ""),
+      getExcelNumberOrBlank(record.sondaje_ini),
+      getExcelNumberOrBlank(record.sondaje_fin),
       toNumber(record.stock_final_dia),
       record.n_vale_despacho || record.n_vale_recarga || "",
       record.capitan_dia || "-",
@@ -3119,16 +3144,19 @@ async function exportDieselConsultExcel() {
   const sheet = XLSX.utils.aoa_to_sheet(rows, { cellDates: true });
   sheet["!cols"] = [
     { wch: 12.875 }, { wch: 8.875 }, { wch: 12.875 }, { wch: 30.5 }, { wch: 14.875 }, { wch: 28.875 },
-    { wch: 12.875 }, { wch: 15.875 }, { wch: 18.875 }, { wch: 19.125 }, { wch: 22.125 }, { wch: 16.5 },
-    { wch: 16.5 }, { wch: 10.125 }, { wch: 8.75 }, { wch: 17.25 }, { wch: 20.25 }, { wch: 18.375 },
-    { wch: 21.375 }, { wch: 14 }
+    { wch: 12.875 }, { wch: 17 }, { wch: 19 }, { wch: 15.875 }, { wch: 18.875 },
+    { wch: 19.125 }, { wch: 22.125 }, { wch: 16.5 },
+    { wch: 16.5 }, { wch: 18.5 }, { wch: 16.5 }, { wch: 24 },
+    { wch: 22 }, { wch: 24 }, { wch: 16.5 }, { wch: 24 },
+    { wch: 13.5 }, { wch: 13.5 }, { wch: 10.125 }, { wch: 8.75 },
+    { wch: 17.25 }, { wch: 20.25 }, { wch: 18.375 }, { wch: 21.375 }, { wch: 14 }
   ];
   const headerStyle = {
     fill: { fgColor: { rgb: "0B2E59" } },
     font: { bold: true, color: { rgb: "FFFFFF" } },
     alignment: { horizontal: "center", vertical: "center" }
   };
-  for (let columnIndex = 0; columnIndex < 20; columnIndex += 1) {
+  for (let columnIndex = 0; columnIndex < rows[0].length; columnIndex += 1) {
     const headerRef = XLSX.utils.encode_cell({ c: columnIndex, r: 0 });
     if (sheet[headerRef]) {
       sheet[headerRef].s = headerStyle;
@@ -3139,8 +3167,18 @@ async function exportDieselConsultExcel() {
     if (sheet[dateRef]) {
       sheet[dateRef].z = "dd/mm/yyyy";
     }
+
+    [17, 21].forEach((columnIndex) => {
+      const detailRef = XLSX.utils.encode_cell({ c: columnIndex, r: rowIndex });
+      if (sheet[detailRef]) {
+        sheet[detailRef].s = {
+          ...(sheet[detailRef].s || {}),
+          alignment: { ...(sheet[detailRef].s?.alignment || {}), wrapText: true, vertical: "top" }
+        };
+      }
+    });
   }
-  sheet["!autofilter"] = { ref: XLSX.utils.encode_range({ s: { c: 0, r: 0 }, e: { c: 19, r: rows.length - 1 } }) };
+  sheet["!autofilter"] = { ref: XLSX.utils.encode_range({ s: { c: 0, r: 0 }, e: { c: rows[0].length - 1, r: rows.length - 1 } }) };
   XLSX.utils.book_append_sheet(workbook, sheet, "KARDEX");
   XLSX.writeFile(workbook, "reporte-diesel-completo.xlsx");
 }
