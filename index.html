@@ -168,6 +168,9 @@
         <a class="nav-item" href="#" data-page="usuarios"><i class="nav-icon" data-lucide="user-cog"></i>Usuarios</a>
         <a class="nav-item" href="#" data-page="ajustes"><i class="nav-icon" data-lucide="settings"></i>Ajustes</a>
       </nav>
+      <div class="sidebar-scrollbar" id="sidebarScrollbar" aria-hidden="true">
+        <div class="sidebar-scrollbar-thumb" id="sidebarScrollbarThumb"></div>
+      </div>
     </aside>
 
     <div class="dashboard-workspace">
@@ -660,7 +663,6 @@
               <button class="back-action" type="button" id="backFromConsult" aria-label="Volver a registro de diesel">
                 <i data-lucide="arrow-left"></i>
               </button>
-              <h1>Consulta</h1>
             </div>
             <div class="passenger-actions">
               <button class="outline-action" type="button" id="exportDieselExcel"><i data-lucide="download"></i>Exportar Excel</button>
@@ -684,7 +686,7 @@
               </label>
             </article>
             <article class="panel-card consult-filter-card">
-              <label>Nave / BCZA.
+              <label>Nave/Barcaza
                 <select id="dieselConsultVessel">
                   <option value="">Seleccionar...</option>
                 </select>
@@ -772,23 +774,21 @@
                   <h3>4. Nave/Barcaza</h3>
                   <label class="bitacora-select"><i data-lucide="ship"></i><select id="bitacoraVessel"></select></label>
                 </div>
-
-                <div class="bitacora-event-action">
-                  <button class="bitacora-submit" id="bitacoraSubmit" type="button"><i data-lucide="send"></i>Registrar evento</button>
-                </div>
               </div>
 
               <h3>5. Descripción de evento</h3>
               <label class="bitacora-description"><textarea id="bitacoraDescription" maxlength="200" placeholder="Escribe aquí una descripción corta del evento..."></textarea><small><span id="bitacoraCount">0</span>/200</small></label>
-            </article>
-
-            <aside class="panel-card bitacora-side-status">
-              <div class="bitacora-status-strip">
-                <button class="bitacora-report-button" id="bitacoraReportButton" type="button"><i data-lucide="file-text"></i>Reporte</button>
-                <button class="bitacora-categorize-button" id="bitacoraCategorizeButton" type="button"><i data-lucide="tags"></i>Clasificar</button>
+              <div class="bitacora-bottom-row">
                 <article class="bitacora-last-event" id="bitacoraLastEvent" hidden></article>
+                <div class="bitacora-status-strip">
+                  <button class="bitacora-report-button" id="bitacoraReportButton" type="button"><i data-lucide="file-text"></i>Reporte</button>
+                  <button class="bitacora-categorize-button" id="bitacoraCategorizeButton" type="button"><i data-lucide="tags"></i>Clasificar</button>
+                </div>
+                <div class="bitacora-event-action">
+                  <button class="bitacora-submit" id="bitacoraSubmit" type="button"><i data-lucide="send"></i>Registrar evento</button>
+                </div>
               </div>
-            </aside>
+            </article>
 
             <article class="panel-card bitacora-timeline-card">
               <header><h3>Línea de tiempo - Eventos registrados hoy <span id="bitacoraTimelineCount">0</span></h3><button id="bitacoraViewAll" type="button">Ver todos</button></header>
@@ -803,9 +803,6 @@
               <button class="back-action" id="bitacoraReportBackButton" type="button" aria-label="Volver a bitácora">
                 <i data-lucide="arrow-left"></i>
               </button>
-              <div>
-              <h1>Reporte de Bitácora Operacional</h1>
-              </div>
             </div>
             <div class="report-actions">
               <label class="report-date-filter">Fecha
@@ -841,7 +838,7 @@
             </div>
 
             <div class="categorize-metrics">
-              <button class="metric-filter-card" id="categorizePendingFilter" type="button" data-status-filter="pending"><strong id="categorizePendingMetric">0</strong><i data-lucide="clock-3"></i><span>Pendientes de clasificar</span></button>
+              <button class="metric-filter-card metric-filter-card-pending" id="categorizePendingFilter" type="button" data-status-filter="pending"><strong id="categorizePendingMetric">0</strong><i data-lucide="clock-3"></i><span>Pendientes de clasificar</span></button>
               <button class="metric-filter-card" id="categorizeClassifiedFilter" type="button" data-status-filter="classified"><strong id="categorizeClassifiedMetric">0</strong><i data-lucide="shield-check"></i><span>Clasificados</span></button>
               <button class="metric-filter-card active" id="categorizeAllFilter" type="button" data-status-filter="all"><strong id="categorizeTodayMetric">0</strong><i data-lucide="anchor"></i><span>Eventos hoy</span></button>
             </div>
@@ -932,16 +929,6 @@
           <article class="panel-card placeholder-card"><i data-lucide="map"></i><h1>Mapa</h1><p>Pantalla preparada para vista geográfica de operaciones.</p></article>
         </section>
         <section class="page-view birthdays-view" data-view="cumpleanos" hidden>
-          <header class="birthdays-hero">
-            <div>
-              <h1>Cumpleaños</h1>
-              <p>No olvides celebrar a tu equipo. Un gran día para ellos.</p>
-            </div>
-            <div class="birthday-balloons" aria-hidden="true">
-              <span></span><span></span><span></span>
-            </div>
-          </header>
-
           <section class="birthday-stats" aria-label="Resumen de cumpleaños">
             <article class="birthday-stat-card green">
               <span><i data-lucide="cake"></i></span>

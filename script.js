@@ -9,6 +9,9 @@ const loginForm = document.querySelector("#loginForm");
 const authPage = document.querySelector("#authPage");
 const dashboardPage = document.querySelector("#dashboardPage");
 const appSidebar = document.querySelector(".app-sidebar");
+const sidebarNav = document.querySelector(".sidebar-nav");
+const sidebarScrollbar = document.querySelector("#sidebarScrollbar");
+const sidebarScrollbarThumb = document.querySelector("#sidebarScrollbarThumb");
 const usernameInput = document.querySelector("#username");
 const passwordInput = document.querySelector("#password");
 const rememberInput = document.querySelector("#rememberMe");
@@ -32,6 +35,8 @@ const profileMenuRole = document.querySelector("#profileMenuRole");
 const profileInitials = document.querySelector("#profileInitials");
 const profileMenuInitials = document.querySelector("#profileMenuInitials");
 const dashboardGreeting = document.querySelector("#dashboardGreeting");
+
+let sidebarScrollbarHideTimeout = null;
 
 const birthdayPeople = [
   { name: "Mario Enrique Alcedo", role: "Rigger", month: 4, day: 5 },
@@ -572,9 +577,96 @@ function setSidebarCollapsed(isCollapsed) {
   menuButton.setAttribute("aria-expanded", String(!isCollapsed));
   menuButton.setAttribute("aria-label", isCollapsed ? "Expandir menú" : "Contraer menú");
   sessionStorage.setItem("portoErp.sidebarCollapsed", String(isCollapsed));
+  window.requestAnimationFrame(() => {
+    updateSidebarScrollbar();
+  });
+}
+
+function updateSidebarScrollbar() {
+  if (!sidebarNav || !sidebarScrollbar || !sidebarScrollbarThumb) {
+    return;
+  }
+
+  const visibleHeight = sidebarNav.clientHeight;
+  const scrollHeight = sidebarNav.scrollHeight;
+  const maxScrollTop = Math.max(1, scrollHeight - visibleHeight);
+  const canScroll = scrollHeight > visibleHeight + 2;
+
+  sidebarScrollbar.hidden = !canScroll;
+  if (!canScroll) {
+    return;
+  }
+
+  const trackHeight = sidebarScrollbar.clientHeight;
+  const thumbHeight = Math.max(40, (visibleHeight / scrollHeight) * trackHeight);
+  const maxThumbTop = Math.max(0, trackHeight - thumbHeight);
+  const thumbTop = (sidebarNav.scrollTop / maxScrollTop) * maxThumbTop;
+
+  sidebarScrollbarThumb.style.height = `${thumbHeight}px`;
+  sidebarScrollbarThumb.style.transform = `translateY(${thumbTop}px)`;
+}
+
+function hideSidebarScrollbar() {
+  if (!sidebarScrollbar) {
+    return;
+  }
+  sidebarScrollbar.classList.remove("visible");
+}
+
+function scheduleSidebarScrollbarHide(delay = 700) {
+  if (sidebarScrollbarHideTimeout) {
+    window.clearTimeout(sidebarScrollbarHideTimeout);
+  }
+  sidebarScrollbarHideTimeout = window.setTimeout(hideSidebarScrollbar, delay);
+}
+
+function showSidebarScrollbar(delay = 900) {
+  if (!sidebarScrollbar || sidebarScrollbar.hidden) {
+    return;
+  }
+  sidebarScrollbar.classList.add("visible");
+  updateSidebarScrollbar();
+  scheduleSidebarScrollbarHide(delay);
+}
+
+function setupSidebarScrollbar() {
+  if (!sidebarNav || !sidebarScrollbar || !sidebarScrollbarThumb) {
+    return;
+  }
+
+  updateSidebarScrollbar();
+
+  sidebarNav.addEventListener("scroll", () => {
+    updateSidebarScrollbar();
+    showSidebarScrollbar(850);
+  }, { passive: true });
+
+  ["mouseenter", "mousemove", "wheel"].forEach((eventName) => {
+    sidebarNav.addEventListener(eventName, () => {
+      showSidebarScrollbar(eventName === "mouseenter" ? 650 : 900);
+    }, { passive: true });
+  });
+
+  sidebarNav.addEventListener("mouseleave", () => {
+    scheduleSidebarScrollbarHide(120);
+  });
+
+  sidebarScrollbar.addEventListener("mouseenter", () => {
+    if (sidebarScrollbarHideTimeout) {
+      window.clearTimeout(sidebarScrollbarHideTimeout);
+    }
+    sidebarScrollbar.classList.add("visible");
+  });
+
+  sidebarScrollbar.addEventListener("mouseleave", () => {
+    scheduleSidebarScrollbarHide(120);
+  });
+
+  window.addEventListener("resize", updateSidebarScrollbar);
 }
 
 setSidebarCollapsed(sessionStorage.getItem("portoErp.sidebarCollapsed") === "true");
+setupSidebarScrollbar();
 
 function renderIcons() {
   if (window.lucide) {
@@ -1334,10 +1426,28 @@ function getActiveDieselModules() {
   return getDieselModuleStates();
 }
 
+function hasEffectiveDieselDispatchModule(modules = getActiveDieselModules()) {
+  return Boolean(modules.despacho && dieselDispatches.length > 0);
+}
+
+function hasAnyEffectiveDieselOperationalModule(modules = getActiveDieselModules()) {
+  return Boolean(
+    modules.recarga
+    || modules.consumo
+    || modules.sondaje
+    || modules.tripulacion
+    || hasEffectiveDieselDispatchModule(modules)
+  );
+}
+
 function validateDieselRecord() {
   const modules = getActiveDieselModules();
   const errors = [];
   const totals = getDieselTotals();
+
+  if (!hasAnyEffectiveDieselOperationalModule(modules)) {
+    errors.push("Activa al menos un módulo operativo");
+  }
 
   if (!dieselRefs.date.value) {
     errors.push("Fecha");
@@ -1379,22 +1489,9 @@ function validateDieselRecord() {
     errors.push("Reingreso o diferencia, no ambos");
   }
 
-  if (modules.despacho) {
+  if (hasEffectiveDieselDispatchModule(modules)) {
     if (!isDieselMotherShip(dieselRefs.origin.value)) {
       errors.push("Solo TALARA, PARIÑAS y LOBITOS EXPRESS CARGA pueden despachar diesel");
-    }
-
-    const hasPendingDispatchInput = Boolean(dieselRefs.receive.value || dieselRefs.qty.value.trim() || dieselRefs.voucher.value.trim());
-    const pendingDispatchComplete = Boolean(dieselRefs.receive.value && toNumber(dieselRefs.qty.value) > 0 && dieselRefs.voucher.value.trim());
-
-    if (hasPendingDispatchInput) {
-      errors.push(pendingDispatchComplete
-        ? "Agrega el despacho pendiente"
-        : "Completa nave, cantidad y vale del despacho pendiente");
-    }
-
-    if (dieselDispatches.length === 0) {
-      errors.push("Al menos un despacho agregado");
     }
 
     const invalidDispatch = dieselDispatches.some((entry) => entry.quantity <= 0 || !entry.voucher);
@@ -1580,6 +1677,7 @@ function hasDieselMovement(record) {
 
 function buildDieselRecordFromForm() {
   const modules = getActiveDieselModules();
+  const effectiveDispatchModule = hasEffectiveDieselDispatchModule(modules);
   const totals = getDieselTotals();
   const date = dieselRefs.date.value;
   const ship = dieselRefs.origin.value;
@@ -1612,14 +1710,17 @@ function buildDieselRecordFromForm() {
     transferred: totals.transferred,
     initialStock: totals.initialStock,
     finalStock: totals.finalStock,
-    dispatches: (modules.despacho ? dieselDispatches : []).map((entry) => ({
+    dispatches: (effectiveDispatchModule ? dieselDispatches : []).map((entry) => ({
       vessel: entry.vessel,
       quantity: entry.quantity,
       voucher: entry.voucher,
       type: isDieselTransfer(ship, entry.vessel) ? "Transferencia" : "Despacho"
     })),
     observation: dieselRefs.observation.value.trim(),
-    moduleStates: modules,
+    moduleStates: {
+      ...modules,
+      despacho: effectiveDispatchModule
+    },
     hasMovement,
     savedAt: new Date().toISOString()
   };
@@ -1807,7 +1908,7 @@ function buildDieselConsultData() {
       ship,
       initialStock,
       received,
-      receivedFrom: record.recibido_de || "-",
+      receivedFrom: normalizeDieselDisplayName(record.recibido_de || "-"),
       day,
       night,
       consumption,
@@ -1869,6 +1970,15 @@ function getDieselEditShiftValue(selectedShift) {
     return selectedShift;
   }
   return "A";
+}
+
+function getDieselEditShiftCode(shiftValue) {
+  return getDieselEditShiftValue(shiftValue) === "B" ? "nocturno" : "diurno";
+}
+
+function normalizeDieselEditShiftKey(turno) {
+  const normalized = String(turno || "").trim().toLowerCase();
+  return normalized === "nocturno" ? "B" : "A";
 }
 
 function getDieselEditTypeLabel(row) {
@@ -1981,6 +2091,173 @@ function setDieselInputValue(input, value) {
   input.value = value === null || value === undefined ? "" : value;
 }
 
+function createEmptyDieselEditShiftDetail(row, shiftKey = "A") {
+  const fallbackCrew = shiftKey === "B" ? row?.nightCrew : row?.dayCrew;
+  return {
+    initialStock: 0,
+    finalStock: 0,
+    recharge: 0,
+    consumption: 0,
+    dispatched: 0,
+    transferred: 0,
+    sondageReturn: 0,
+    sondageDifference: 0,
+    receivedFrom: "",
+    crew: fallbackCrew || { captain: "-", driver: "-" },
+    document: "",
+    rechargeVoucher: "",
+    dispatchVoucher: "",
+    observation: "",
+    dispatchRows: []
+  };
+}
+
+function buildDieselEditShiftDetailsFromSource(row) {
+  const baseDetails = {
+    A: {
+      initialStock: toNumber(row?.initialStock),
+      finalStock: toNumber(row?.finalStock),
+      recharge: toNumber(row?.sourceRecord?.total_recarga || row?.recharge || row?.received || 0),
+      consumption: toNumber(row?.day || 0),
+      dispatched: toNumber(row?.dispatched || 0),
+      transferred: toNumber(row?.transferred || 0),
+      sondageReturn: Math.max(0, toNumber(row?.sondage || 0)),
+      sondageDifference: Math.max(0, -toNumber(row?.sondage || 0)),
+      receivedFrom: row?.receivedFrom || "",
+      crew: row?.dayCrew || { captain: "-", driver: "-" },
+      document: row?.sourceRecord?.acta_sondaje || "",
+      rechargeVoucher: row?.sourceRecord?.n_vale_recarga || "",
+      dispatchVoucher: row?.sourceRecord?.n_vale_despacho || "",
+      observation: row?.sourceRecord?.observaciones || (row?.receivedFrom && row.receivedFrom !== "-" ? `Recibido de ${row.receivedFrom}.` : ""),
+      dispatchRows: []
+    },
+    B: {
+      initialStock: toNumber(row?.initialStock),
+      finalStock: toNumber(row?.finalStock),
+      recharge: toNumber(row?.sourceRecord?.total_recarga || row?.recharge || row?.received || 0),
+      consumption: toNumber(row?.night || 0),
+      dispatched: toNumber(row?.dispatched || 0),
+      transferred: toNumber(row?.transferred || 0),
+      sondageReturn: Math.max(0, toNumber(row?.sondage || 0)),
+      sondageDifference: Math.max(0, -toNumber(row?.sondage || 0)),
+      receivedFrom: row?.receivedFrom || "",
+      crew: row?.nightCrew || { captain: "-", driver: "-" },
+      document: row?.sourceRecord?.acta_sondaje || "",
+      rechargeVoucher: row?.sourceRecord?.n_vale_recarga || "",
+      dispatchVoucher: row?.sourceRecord?.n_vale_despacho || "",
+      observation: row?.sourceRecord?.observaciones || (row?.receivedFrom && row.receivedFrom !== "-" ? `Recibido de ${row.receivedFrom}.` : ""),
+      dispatchRows: []
+    }
+  };
+
+  const fallbackRows = [];
+  if (toNumber(row?.dispatched) > 0) {
+    fallbackRows.push({ vessel: row?.ship || "Registro consolidado", amount: toNumber(row.dispatched), voucher: "", type: "Despacho" });
+  }
+  if (toNumber(row?.transferred) > 0) {
+    fallbackRows.push({ vessel: row?.ship || "Registro consolidado", amount: toNumber(row.transferred), voucher: "", type: "Transferencia" });
+  }
+
+  baseDetails.A.dispatchRows = [...fallbackRows];
+  baseDetails.B.dispatchRows = [...fallbackRows];
+  return baseDetails;
+}
+
+async function loadDieselEditShiftDetails(row, selectedDate) {
+  const session = getSession();
+  const unidadId = row?.sourceRecord?.unidad_id;
+  const fecha = selectedDate || row?.sourceRecord?.fecha;
+
+  if (!session?.accessToken || !unidadId || !fecha) {
+    return buildDieselEditShiftDetailsFromSource(row);
+  }
+
+  const kardexQuery = new URLSearchParams({
+    select: "id,turno,stock_inicial,stock_final,total_recarga,total_despacho,total_transferencia,total_consumo,sondaje_reingreso,sondaje_diferencia,recibido_de,observaciones,capitan_turno,motorista_turno,acta_sondaje,n_vale_recarga,n_vale_despacho,cabecera",
+    fecha: `eq.${fecha}`,
+    unidad_id: `eq.${unidadId}`,
+    order: "created_at.asc"
+  });
+
+  const kardexRows = await supabaseRequest(`/rest/v1/diesel_kardex?${kardexQuery}`, {
+    headers: { Authorization: `Bearer ${session.accessToken}` }
+  });
+
+  const baseDetails = buildDieselEditShiftDetailsFromSource(row);
+  if (!Array.isArray(kardexRows) || !kardexRows.length) {
+    return baseDetails;
+  }
+
+  const kardexIds = kardexRows.map((item) => item.id).filter(Boolean);
+  let movementRows = [];
+
+  if (kardexIds.length) {
+    const movementsQuery = new URLSearchParams({
+      select: "id,kardex_id,turno,tipo,cantidad,n_vale,detalle,nave_destino:unidades!diesel_movimientos_nave_destino_id_fkey(nombre),nave_origen:unidades!diesel_movimientos_nave_origen_id_fkey(nombre)",
+      kardex_id: `in.(${kardexIds.join(",")})`,
+      estado: "eq.vigente",
+      order: "created_at.asc"
+    });
+
+    movementRows = await supabaseRequest(`/rest/v1/diesel_movimientos?${movementsQuery}`, {
+      headers: { Authorization: `Bearer ${session.accessToken}` }
+    });
+  }
+
+  const details = {
+    A: createEmptyDieselEditShiftDetail(row, "A"),
+    B: createEmptyDieselEditShiftDetail(row, "B")
+  };
+
+  kardexRows.forEach((kardex) => {
+    const shiftKey = normalizeDieselEditShiftKey(kardex.turno);
+    const cabecera = kardex.cabecera && typeof kardex.cabecera === "object" ? kardex.cabecera : {};
+    details[shiftKey] = {
+      initialStock: toNumber(kardex.stock_inicial),
+      finalStock: toNumber(kardex.stock_final),
+      recharge: toNumber(kardex.total_recarga),
+      consumption: toNumber(kardex.total_consumo),
+      dispatched: toNumber(kardex.total_despacho),
+      transferred: toNumber(kardex.total_transferencia),
+      sondageReturn: toNumber(kardex.sondaje_reingreso),
+      sondageDifference: toNumber(kardex.sondaje_diferencia),
+      receivedFrom: normalizeDieselDisplayName(kardex.recibido_de || ""),
+      crew: {
+        captain: kardex.capitan_turno || cabecera.capitan || "-",
+        driver: kardex.motorista_turno || cabecera.motorista || "-"
+      },
+      document: kardex.acta_sondaje || "",
+      rechargeVoucher: kardex.n_vale_recarga || "",
+      dispatchVoucher: kardex.n_vale_despacho || "",
+      observation: kardex.observaciones || "",
+      dispatchRows: []
+    };
+  });
+
+  (movementRows || []).forEach((movement) => {
+    const shiftKey = normalizeDieselEditShiftKey(movement.turno);
+    const detail = details[shiftKey];
+    if (!detail) {
+      return;
+    }
+
+    const type = String(movement.tipo || "").toLowerCase();
+    if (type !== "despacho" && type !== "transferencia") {
+      return;
+    }
+
+    detail.dispatchRows.push({
+      id: movement.id || "",
+      vessel: normalizeDieselDisplayName(movement.nave_destino?.nombre || movement.nave_origen?.nombre || "Destino"),
+      amount: toNumber(movement.cantidad),
+      voucher: movement.n_vale || "",
+      type: type === "transferencia" ? "Transferencia" : "Despacho"
+    });
+  });
+
+  return details;
+}
+
 function getDieselSourceValue(row, shiftValue, baseKeys, fallback = 0) {
   const source = row?.sourceRecord || {};
   const suffixes = shiftValue === "B"
@@ -2001,6 +2278,27 @@ function getDieselSourceValue(row, shiftValue, baseKeys, fallback = 0) {
 }
 
 function getDieselEditShiftSnapshot(row, shiftValue) {
+  const detail = dieselEditDraft?.turnDetails?.[getDieselEditShiftValue(shiftValue)];
+  if (detail) {
+    return {
+      initialStock: toNumber(detail.initialStock),
+      finalStock: toNumber(detail.finalStock),
+      recharge: toNumber(detail.recharge),
+      consumption: toNumber(detail.consumption),
+      dispatched: toNumber(detail.dispatched),
+      transferred: toNumber(detail.transferred),
+      sondageReturn: toNumber(detail.sondageReturn),
+      sondageDifference: toNumber(detail.sondageDifference),
+      crew: detail.crew || { captain: "-", driver: "-" },
+      document: detail.document || "",
+      rechargeVoucher: detail.rechargeVoucher || "",
+      dispatchVoucher: detail.dispatchVoucher || "",
+      observation: detail.observation || "",
+      receivedFrom: detail.receivedFrom || "",
+      dispatchRows: Array.isArray(detail.dispatchRows) ? detail.dispatchRows : []
+    };
+  }
+
   const isNight = shiftValue === "B";
   const consumption = isNight ? toNumber(row?.night) : toNumber(row?.day);
   const crew = isNight ? row?.nightCrew : row?.dayCrew;
@@ -2012,14 +2310,22 @@ function getDieselEditShiftSnapshot(row, shiftValue) {
   const finalStock = getDieselSourceValue(row, shiftValue, ["stock_final"], row?.finalStock || 0);
 
   return {
+    initialStock: toNumber(row?.initialStock || 0),
     consumption,
     crew,
     recharge,
-    received,
     dispatched,
     transferred,
-    sondage,
-    finalStock
+    sondageReturn: Math.max(0, sondage),
+    sondageDifference: Math.max(0, -sondage),
+    finalStock,
+    document: row?.sourceRecord?.acta_sondaje || "",
+    rechargeVoucher: row?.sourceRecord?.n_vale_recarga || "",
+    dispatchVoucher: row?.sourceRecord?.n_vale_despacho || "",
+    observation: row?.sourceRecord?.observaciones || (row?.receivedFrom && row.receivedFrom !== "-" ? `Recibido de ${row.receivedFrom}.` : ""),
+    receivedFrom: row?.receivedFrom || "",
+    dispatchRows: [],
+    received
   };
 }
 
@@ -2028,25 +2334,12 @@ function renderDieselEditDispatchRows(row, shiftValue = "A") {
     return;
   }
 
-  const rows = [];
   const snapshot = getDieselEditShiftSnapshot(row, shiftValue);
-  const dispatched = Number(snapshot.dispatched || 0);
-  const transferred = Number(snapshot.transferred || 0);
-  const received = Number(snapshot.received || 0);
-
-  if (dispatched > 0) {
-    rows.push({ vessel: row.ship || "Registro consolidado", amount: dispatched, voucher: "", type: "Despacho" });
-  }
-  if (transferred > 0) {
-    rows.push({ vessel: row.ship || "Registro consolidado", amount: transferred, voucher: "", type: "Transferencia" });
-  }
-  if (!rows.length && received > 0) {
-    rows.push({ vessel: row.receivedFrom && row.receivedFrom !== "-" ? row.receivedFrom : "Origen registrado", amount: received, voucher: "", type: "Recepción" });
-  }
+  const rows = Array.isArray(snapshot.dispatchRows) ? snapshot.dispatchRows : [];
 
   dieselRefs.editDispatchRows.innerHTML = rows.length
     ? rows.map((item, index) => `
-        <div class="diesel-edit-dispatch-row" data-diesel-edit-field>
+        <div class="diesel-edit-dispatch-row" data-diesel-edit-field data-movement-id="${escapeHtml(item.id || "")}">
           <input type="text" value="${escapeHtml(item.vessel)}" aria-label="Nave recibe" disabled>
           <input type="number" min="0" step="0.001" value="${item.amount}" aria-label="Cantidad" disabled>
           <input type="text" value="${escapeHtml(item.voucher)}" placeholder="-" aria-label="Número de vale" disabled>
@@ -2066,17 +2359,20 @@ function applyDieselEditShift(shiftValue) {
   const row = dieselEditDraft.row;
   dieselEditDraft.currentShift = getDieselEditShiftValue(shiftValue);
   const snapshot = getDieselEditShiftSnapshot(row, dieselEditDraft.currentShift);
-  const sondageValue = Number(snapshot.sondage || 0);
-  const sondageReturn = sondageValue > 0 ? sondageValue : 0;
-  const sondageDifference = sondageValue < 0 ? Math.abs(sondageValue) : 0;
 
-  setDieselInputValue(dieselRefs.editRecharge, snapshot.recharge || snapshot.received || 0);
+  setDieselInputValue(dieselRefs.editRecharge, snapshot.recharge || 0);
   setDieselInputValue(dieselRefs.editConsumption, snapshot.consumption || 0);
-  setDieselInputValue(dieselRefs.editSondageReturn, sondageReturn);
-  setDieselInputValue(dieselRefs.editSondage, sondageDifference);
+  setDieselInputValue(dieselRefs.editSondageReturn, snapshot.sondageReturn || 0);
+  setDieselInputValue(dieselRefs.editSondage, snapshot.sondageDifference || 0);
+  setDieselInputValue(dieselRefs.editSondageVoucher, snapshot.document || "");
+  setDieselInputValue(dieselRefs.editRechargeVoucher, snapshot.rechargeVoucher || "");
+  setDieselInputValue(dieselRefs.editObservations, snapshot.observation || (snapshot.receivedFrom ? `Recibido de ${snapshot.receivedFrom}.` : ""));
   setDieselInputValue(dieselRefs.editCaptain, snapshot.crew?.captain && snapshot.crew.captain !== "-" ? snapshot.crew.captain : "");
   setDieselInputValue(dieselRefs.editDriver, snapshot.crew?.driver && snapshot.crew.driver !== "-" ? snapshot.crew.driver : "");
 
+  if (dieselRefs.editInitial) {
+    dieselRefs.editInitial.textContent = formatNumber(snapshot.initialStock);
+  }
   if (dieselRefs.editFinal) {
     dieselRefs.editFinal.textContent = formatNumber(snapshot.finalStock);
   }
@@ -2090,13 +2386,140 @@ function applyDieselEditShift(shiftValue) {
   renderIcons();
 }
 
+function getDieselEditNumber(input) {
+  return toNumber(input?.value || 0);
+}
+
+function getDieselEditText(input) {
+  return String(input?.value || "").trim();
+}
+
+function getDieselEditDispatchesFromModal(originShip) {
+  if (!dieselRefs.editDispatchRows) {
+    return [];
+  }
+
+  return [...dieselRefs.editDispatchRows.querySelectorAll(".diesel-edit-dispatch-row")]
+    .map((row) => {
+      const controls = row.querySelectorAll("input");
+      const vessel = getDieselEditText(controls[0]);
+      const quantity = getDieselEditNumber(controls[1]);
+      const voucher = getDieselEditText(controls[2]);
+      return {
+        id: row.dataset.movementId || "",
+        vessel,
+        quantity,
+        voucher,
+        type: isDieselTransfer(originShip, vessel) ? "Transferencia" : "Despacho"
+      };
+    })
+    .filter((entry) => entry.vessel && entry.quantity > 0);
+}
+
+function buildDieselEditPayloadFromModal() {
+  if (!dieselEditDraft?.row) {
+    return null;
+  }
+
+  const row = dieselEditDraft.row;
+  const selectedShift = dieselEditDraft.currentShift || "A";
+  const shiftCode = getDieselEditShiftCode(selectedShift);
+  const dispatches = getDieselEditDispatchesFromModal(row.ship);
+  const recharge = getDieselEditNumber(dieselRefs.editRecharge);
+  const consumption = getDieselEditNumber(dieselRefs.editConsumption);
+  const returnVolume = getDieselEditNumber(dieselRefs.editSondageReturn);
+  const difference = getDieselEditNumber(dieselRefs.editSondage);
+  const captain = getDieselEditText(dieselRefs.editCaptain);
+  const driver = getDieselEditText(dieselRefs.editDriver);
+  const documentValue = getDieselEditText(dieselRefs.editSondageVoucher);
+  const rechargeVoucher = getDieselEditText(dieselRefs.editRechargeVoucher);
+  const observation = getDieselEditText(dieselRefs.editObservations);
+
+  return {
+    modo: "editar",
+    fecha: dieselEditDraft.context?.selectedDate || row.sourceRecord?.fecha || getTodayValue(),
+    nave: row.ship,
+    turno: shiftCode,
+    registrado_por: getCurrentUserDisplayName(),
+    capitan: captain,
+    motorista: driver,
+    acta_sondaje: documentValue,
+    vale_recarga: rechargeVoucher,
+    vale_despacho: dispatches.map((entry) => entry.voucher).filter(Boolean).join(" / "),
+    recarga: recharge,
+    recibido: 0,
+    recibido_de: "",
+    consumo: consumption,
+    reingreso: returnVolume,
+    diferencia: difference,
+    stock_inicial: toNumber(String(dieselRefs.editInitial?.textContent || "").replace(/,/g, "")),
+    observaciones: observation,
+    modulos_estado: {
+      recarga: true,
+      consumo: true,
+      sondaje: true,
+      tripulacion: true,
+      despacho: dispatches.length > 0,
+      observaciones: true
+    },
+    cabecera: {
+      registrado_por_texto: getCurrentUserDisplayName(),
+      origen_web_id: `consulta-edit-${row.ship}-${selectedShift}`
+    },
+    movimientos: dispatches.map((entry) => ({
+      destino: entry.vessel,
+      cantidad: entry.quantity,
+      vale: entry.voucher,
+      tipo: entry.type
+    }))
+  };
+}
+
+async function saveDieselEditModal() {
+  const payload = buildDieselEditPayloadFromModal();
+  const session = getSession();
+
+  if (!payload || !session?.accessToken) {
+    window.alert("No se pudo preparar la edición. Vuelve a iniciar sesión e intenta otra vez.");
+    return;
+  }
+
+  const originalHtml = dieselRefs.editSave?.innerHTML;
+  if (dieselRefs.editSave) {
+    dieselRefs.editSave.disabled = true;
+    dieselRefs.editSave.innerHTML = '<i data-lucide="loader-circle"></i>Guardando...';
+    renderIcons();
+  }
+
+  try {
+    await supabaseRequest("/rest/v1/rpc/editar_diesel_registro", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${session.accessToken}` },
+      body: JSON.stringify({ payload })
+    });
+
+    closeDieselEditModal();
+    await renderDieselConsult({ showError: true });
+    window.alert("Cambios guardados y stock histórico recalculado.");
+  } catch (error) {
+    console.error("No se pudo guardar la edición diésel.", error);
+    window.alert(error.message || "No se pudo guardar la edición diésel.");
+  } finally {
+    if (dieselRefs.editSave) {
+      dieselRefs.editSave.disabled = false;
+      dieselRefs.editSave.innerHTML = originalHtml || '<i data-lucide="check"></i>Guardar cambios';
+      renderIcons();
+    }
+  }
+}
+
 function openDieselEditModal(row, context = {}) {
   if (!dieselRefs.editModal || !row) {
     return;
   }
 
   const shiftValue = getDieselEditShiftValue(context.selectedShift);
-  dieselEditDraft = { row, context, currentShift: shiftValue };
+  dieselEditDraft = { row, context, currentShift: shiftValue, turnDetails: buildDieselEditShiftDetailsFromSource(row) };
   const dateLabel = formatDisplayDate(context.selectedDate || getTodayValue());
 
   if (dieselRefs.editSubtitle) {
@@ -2108,19 +2531,23 @@ function openDieselEditModal(row, context = {}) {
   if (dieselRefs.editDateLabel) {
     dieselRefs.editDateLabel.textContent = dateLabel;
   }
-  setDieselInputValue(dieselRefs.editSondageVoucher, "");
-  setDieselInputValue(dieselRefs.editRechargeVoucher, "");
-  setDieselInputValue(dieselRefs.editObservations, row.receivedFrom && row.receivedFrom !== "-" ? `Recibido de ${row.receivedFrom}.` : "");
-
-  if (dieselRefs.editInitial) {
-    dieselRefs.editInitial.textContent = formatNumber(row.initialStock);
-  }
-
   setupDieselEditableCards();
   applyDieselEditShift(shiftValue);
   dieselRefs.editModal.hidden = false;
   document.body.classList.add("modal-open");
   renderIcons();
+
+  loadDieselEditShiftDetails(row, context.selectedDate)
+    .then((turnDetails) => {
+      if (!dieselEditDraft || dieselEditDraft.row !== row) {
+        return;
+      }
+      dieselEditDraft.turnDetails = turnDetails;
+      applyDieselEditShift(dieselEditDraft.currentShift);
+    })
+    .catch((error) => {
+      console.warn("No se pudo cargar el detalle por turno de diesel.", error);
+    });
 }
 
 function closeDieselEditModal() {
@@ -2240,7 +2667,6 @@ async function renderDieselConsult({ showError = false } = {}) {
 
       return `
         <tr>
-          <td>${row.item}</td>
           <td>${row.ship}</td>
           <td>${formatNumber(row.initialStock)}</td>
           <td>${row.received ? formatNumber(row.received) : "-"}</td>
@@ -2255,7 +2681,6 @@ async function renderDieselConsult({ showError = false } = {}) {
           <td>${formatCrew(row.dayCrew)}</td>
           <td>${formatCrew(row.nightCrew)}</td>
           <td><button class="table-icon edit" type="button" data-edit-index="${currentEditIndex}" aria-label="Editar ${row.ship}" onclick="event.preventDefault(); event.stopPropagation(); window.openDieselEditModalFromButton?.(this); return false;"><i data-lucide="pencil"></i></button></td>
-          <td><button class="table-icon delete" type="button" aria-label="Eliminar ${row.ship}"><i data-lucide="trash-2"></i></button></td>
         </tr>
       `;
     }).join("");
@@ -2270,8 +2695,7 @@ async function renderDieselConsult({ showError = false } = {}) {
           <table class="consult-kardex-table">
             <thead>
               <tr>
-                <th>Ítem</th>
-                <th>Nave / BCZA.</th>
+                <th>Nave/Barcaza</th>
                 <th>Stock Inicial</th>
                 <th>Cantidad Recibida</th>
                 <th>Recibido de</th>
@@ -2285,13 +2709,12 @@ async function renderDieselConsult({ showError = false } = {}) {
                 <th>Guardia Diurna<br><small>06:00 - 18:00 Hrs.<br>Capitán / Motorista</small></th>
                 <th>Guardia Nocturna<br><small>18:00 - 06:00 Hrs.<br>Capitán / Motorista</small></th>
                 <th>Editar</th>
-                <th>Eliminar</th>
               </tr>
             </thead>
             <tbody>${tableRows}</tbody>
             <tfoot>
               <tr>
-                <td colspan="2">TOTALES</td>
+                <td>TOTALES</td>
                 <td>${formatNumber(totals.initialStock)}</td>
                 <td>${formatNumber(totals.received)}</td>
                 <td>-</td>
@@ -2304,7 +2727,6 @@ async function renderDieselConsult({ showError = false } = {}) {
                 <td>${formatNumber(totals.finalStock)}</td>
                 <td>-</td>
                 <td>-</td>
-                <td></td>
                 <td></td>
               </tr>
             </tfoot>
@@ -2374,6 +2796,46 @@ function getConsultReportName(extension) {
   return `reporte-diesel-${date}.${extension}`;
 }
 
+async function loadAllDieselRowsForExport() {
+  const session = getSession();
+
+  if (!session?.accessToken) {
+    return [];
+  }
+
+  const pageSize = 1000;
+  const rows = [];
+  let offset = 0;
+
+  while (true) {
+    const query = new URLSearchParams({
+      select: "*",
+      order: "fecha.asc,unidad_orden.asc",
+      limit: String(pageSize),
+      offset: String(offset)
+    });
+
+    const batch = await supabaseRequest(`/rest/v1/v_diesel_resumen_diario?${query}`, {
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`
+      }
+    });
+
+    if (!Array.isArray(batch) || batch.length === 0) {
+      break;
+    }
+
+    rows.push(...batch);
+    if (batch.length < pageSize) {
+      break;
+    }
+
+    offset += pageSize;
+  }
+
+  return rows;
+}
+
 function getConsultShiftLabel() {
   const value = dieselRefs.consultShift?.value || "";
   if (value === "A") {
@@ -2404,6 +2866,15 @@ function downloadBlob(blob, filename) {
   link.remove();
   window.setTimeout(() => URL.revokeObjectURL(url), 30000);
   return url;
+}
+
+function createExcelSafeDate(value) {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return "";
+  }
+
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day, 12, 0, 0);
 }
 
 function loadImageDataUrl(src) {
@@ -2493,7 +2964,7 @@ async function downloadDieselConsultPdf() {
       row.ship,
       formatNumber(row.initialStock),
       row.received ? formatNumber(row.received) : "-",
-      row.receivedFrom,
+      normalizeDieselDisplayName(row.receivedFrom),
       formatNumber(row.day),
       formatNumber(row.night),
       formatNumber(row.consumption),
@@ -2598,75 +3069,80 @@ async function downloadDieselConsultPdf() {
   }
 }
 
-function exportDieselConsultExcel() {
+async function exportDieselConsultExcel() {
   if (!window.XLSX) {
     window.alert("No se pudo cargar el exportador de Excel. Revisa tu conexion a internet e intenta otra vez.");
     return;
   }
 
-  const report = buildDieselConsultData();
-  const selectedDate = dieselRefs.consultDate?.value || "";
+  const allRows = await loadAllDieselRowsForExport();
   const workbook = XLSX.utils.book_new();
   const rows = [
-    ["GUARDIA", "FECHA", "ANO", "MES", "TIPO AGRUPADO", "TIPO", "USUARIO", "NAVE", "STOCK I.", "CANT. RECIBIDA", "RECIBIDO DE", "CONSUMO POR GUARDIA", "STOCK F.", "N VALE", "CAPITAN", "MOTORISTA"]
+    ["FECHA", "AÑO", "MES", "TIPO AGRUPADO", "TIPO", "NAVE", "STOCK I.", "CANT. RECIBIDA", "RECIBIDO DE", "CONSUMO DIURNO", "CONSUMO NOCTURNO", "CANT. TRANSFERIDA", "CANT. DESPACHADA", "STOCK F.", "N VALE", "CAPITAN DIURNO", "MOTORISTA DIURNO", "CAPITAN NOCTURNO", "MOTORISTA NOCTURNO", "USUARIO"]
   ];
 
-  report.groups.forEach((group) => {
-    group.rows.forEach((row) => {
-      const base = {
-        year: selectedDate ? selectedDate.slice(0, 4) : "",
-        month: selectedDate ? new Date(`${selectedDate}T00:00:00`).toLocaleDateString("es-PE", { month: "long" }) : ""
-      };
+  allRows.forEach((record) => {
+    const fecha = record.fecha || "";
+    const monthLabel = fecha
+      ? new Date(`${fecha}T00:00:00`).toLocaleDateString("es-PE", { month: "long" })
+      : "";
+    const formattedMonth = monthLabel ? monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1) : "";
+    const ship = normalizeDieselDisplayName(record.unidad_nombre || "");
+    const catalog = findDieselCatalogByShip(ship) || {};
+    const received = toNumber(record.cantidad_recibida) + toNumber(record.total_recarga);
+    const dateValue = createExcelSafeDate(fecha);
 
-      rows.push([
-        "A",
-        selectedDate,
-        base.year,
-        base.month,
-        group.group,
-        row.type,
-        "PRODUCCION",
-        row.ship,
-        row.initialStock,
-        row.received || "",
-        row.receivedFrom === "-" ? "" : row.receivedFrom,
-        row.day,
-        row.initialStock + row.received - row.day - row.dispatched - row.transferred,
-        "",
-        row.dayCrew.captain,
-        row.dayCrew.driver
-      ]);
-
-      rows.push([
-        "B",
-        selectedDate,
-        base.year,
-        base.month,
-        group.group,
-        row.type,
-        "PRODUCCION",
-        row.ship,
-        row.initialStock + row.received - row.day - row.dispatched - row.transferred,
-        "",
-        "",
-        row.night,
-        row.finalStock,
-        "",
-        row.nightCrew.captain,
-        row.nightCrew.driver
-      ]);
-    });
+    rows.push([
+      dateValue,
+      fecha ? fecha.slice(0, 4) : "",
+      formattedMonth,
+      catalog.group || record.unidad_tipo || "SIN AGRUPAR",
+      catalog.type || "-",
+      ship,
+      toNumber(record.stock_inicial_dia),
+      received || "",
+      normalizeDieselDisplayName(record.recibido_de || ""),
+      toNumber(record.consumo_dia),
+      toNumber(record.consumo_noche) || "",
+      toNumber(record.cantidad_transferida) || "",
+      toNumber(record.cantidad_despachada) || "",
+      toNumber(record.stock_final_dia),
+      record.n_vale_despacho || record.n_vale_recarga || "",
+      record.capitan_dia || "-",
+      record.motorista_dia || "-",
+      record.capitan_noche || "-",
+      record.motorista_noche || "-",
+      record.registrado_por_dia || record.registrado_por_noche || "PRODUCCION"
+    ]);
   });
 
-  const sheet = XLSX.utils.aoa_to_sheet(rows);
+  const sheet = XLSX.utils.aoa_to_sheet(rows, { cellDates: true });
   sheet["!cols"] = [
-    { wch: 8 }, { wch: 12 }, { wch: 8 }, { wch: 12 }, { wch: 28 }, { wch: 14 },
-    { wch: 14 }, { wch: 28 }, { wch: 12 }, { wch: 15 }, { wch: 18 }, { wch: 18 },
-    { wch: 12 }, { wch: 10 }, { wch: 28 }, { wch: 28 }
+    { wch: 12.875 }, { wch: 8.875 }, { wch: 12.875 }, { wch: 30.5 }, { wch: 14.875 }, { wch: 28.875 },
+    { wch: 12.875 }, { wch: 15.875 }, { wch: 18.875 }, { wch: 19.125 }, { wch: 22.125 }, { wch: 16.5 },
+    { wch: 16.5 }, { wch: 10.125 }, { wch: 8.75 }, { wch: 17.25 }, { wch: 20.25 }, { wch: 18.375 },
+    { wch: 21.375 }, { wch: 14 }
   ];
-  sheet["!autofilter"] = { ref: XLSX.utils.encode_range({ s: { c: 0, r: 0 }, e: { c: 15, r: rows.length - 1 } }) };
+  const headerStyle = {
+    fill: { fgColor: { rgb: "0B2E59" } },
+    font: { bold: true, color: { rgb: "FFFFFF" } },
+    alignment: { horizontal: "center", vertical: "center" }
+  };
+  for (let columnIndex = 0; columnIndex < 20; columnIndex += 1) {
+    const headerRef = XLSX.utils.encode_cell({ c: columnIndex, r: 0 });
+    if (sheet[headerRef]) {
+      sheet[headerRef].s = headerStyle;
+    }
+  }
+  for (let rowIndex = 1; rowIndex < rows.length; rowIndex += 1) {
+    const dateRef = XLSX.utils.encode_cell({ c: 0, r: rowIndex });
+    if (sheet[dateRef]) {
+      sheet[dateRef].z = "dd/mm/yyyy";
+    }
+  }
+  sheet["!autofilter"] = { ref: XLSX.utils.encode_range({ s: { c: 0, r: 0 }, e: { c: 19, r: rows.length - 1 } }) };
   XLSX.utils.book_append_sheet(workbook, sheet, "KARDEX");
-  XLSX.writeFile(workbook, getConsultReportName("xlsx"));
+  XLSX.writeFile(workbook, "reporte-diesel-completo.xlsx");
 }
 
 function clearDieselForm() {
@@ -2906,9 +3382,7 @@ function bootDiesel() {
   dieselRefs.editDelete?.addEventListener("click", () => {
     window.alert("La eliminación real se implementará en una siguiente fase.");
   });
-  dieselRefs.editSave?.addEventListener("click", () => {
-    window.alert("La edición visual está lista. El guardado real se implementará en una siguiente fase.");
-  });
+  dieselRefs.editSave?.addEventListener("click", saveDieselEditModal);
   dieselRefs.editShiftInputs.forEach((input) => {
     input.addEventListener("change", () => {
       if (input.checked) {
@@ -3167,6 +3641,34 @@ function getBitacoraEventsForSelectedVessel() {
     });
 }
 
+function getBitacoraEventsForLastEventCard() {
+  const dateValue = bitacoraRefs.date?.value || "";
+  const vesselValue = bitacoraRefs.vessel?.value || "";
+  return bitacoraEventsCache.filter((event) => {
+    const eventVessel = event.nave_nombre || event.nave_texto || "";
+    const matchesDate = !dateValue || event.fecha === dateValue;
+    const matchesVessel = !vesselValue || normalizeDieselName(eventVessel) === normalizeDieselName(vesselValue);
+    return matchesDate && matchesVessel;
+  });
+}
+
+function isBitacoraFormComplete() {
+  return Boolean(
+    bitacoraRefs.date?.value
+    && bitacoraRefs.startTime?.value
+    && bitacoraRefs.endTime?.value
+    && bitacoraRefs.vessel?.value
+    && bitacoraRefs.description?.value.trim()
+  );
+}
+
+function updateBitacoraSubmitState() {
+  if (!bitacoraRefs.submit) {
+    return;
+  }
+  bitacoraRefs.submit.disabled = !isBitacoraFormComplete();
+}
+
 function syncBitacoraStartTimeWithLastEnd() {
   if (!bitacoraRefs.startTime || !bitacoraRefs.vessel?.value) {
     return;
@@ -3187,26 +3689,28 @@ function renderBitacoraLastEvent() {
     return;
   }
 
-  const latestEvent = getBitacoraEventsForSelectedVessel()
+  const latestEvent = getBitacoraEventsForLastEventCard()
     .filter((event) => event.hora_fin || event.hora_inicio || event.created_at)
     .sort(compareBitacoraNewestFirst)[0];
 
   if (!latestEvent) {
-    bitacoraRefs.lastEvent.hidden = true;
+    bitacoraRefs.lastEvent.hidden = false;
+    bitacoraRefs.lastEvent.classList.add("is-empty");
     bitacoraRefs.lastEvent.innerHTML = "";
     return;
   }
 
   const vessel = latestEvent.nave_nombre || latestEvent.nave_texto || "Sin nave";
-  const timeLabel = formatTimeLabel(latestEvent.hora_fin || latestEvent.hora_inicio);
-  const category = latestEvent.categoria_nombre || latestEvent.tipo_evento_nombre || latestEvent.tipo_evento || "Evento";
+  const startLabel = formatTimeLabel(latestEvent.hora_inicio);
+  const endLabel = formatTimeLabel(latestEvent.hora_fin || latestEvent.hora_inicio);
+  const timeLabel = `${startLabel} - ${endLabel}`;
 
   bitacoraRefs.lastEvent.hidden = false;
+  bitacoraRefs.lastEvent.classList.remove("is-empty");
   bitacoraRefs.lastEvent.innerHTML = `
     <span>Último evento registrado</span>
     <strong>${escapeHtml(timeLabel)} · ${escapeHtml(vessel)}</strong>
     <p>${escapeHtml(latestEvent.descripcion || "-")}</p>
-    <small>${escapeHtml(category)}</small>
   `;
 }
 
@@ -3467,19 +3971,22 @@ function renderBitacoraTimeline() {
   }
 
   bitacoraRefs.timeline.innerHTML = todayEvents.map((event, index) => {
-    const typeClass = getBitacoraTypeClass(event.tipo_evento);
+    const typeLabel = getBitacoraReportTypeLabel(event);
+    const typeClass = getBitacoraReportTypeTone(typeLabel);
     const durationMinutes = getBitacoraDurationMinutes(event.hora_inicio, event.hora_fin);
     const durationLabel = durationMinutes === null ? "--" : `${durationMinutes} min`;
+    const startLabel = formatTimeLabel(event.hora_inicio);
+    const endLabel = formatTimeLabel(event.hora_fin || event.hora_inicio);
+    const vesselLabel = event.nave_nombre || event.nave_texto || "Sin nave";
     return `
       <article class="timeline-event ${escapeHtml(typeClass)}" style="--timeline-index: ${index};">
-        <div class="timeline-event-rail">
-          <time>${escapeHtml(formatTimeLabel(event.hora_fin))}</time>
-          <time>${escapeHtml(formatTimeLabel(event.hora_inicio))}</time>
-        </div>
+        <div class="timeline-event-marker" aria-hidden="true"></div>
         <div class="timeline-event-card">
-          <strong>${escapeHtml(event.descripcion)}</strong>
-          <small>${escapeHtml(event.nave_nombre || event.nave_texto)}</small>
-          <em>Duración: ${escapeHtml(durationLabel)}</em>
+          <div class="timeline-event-time"><i data-lucide="clock-3"></i><strong>${escapeHtml(startLabel)} - ${escapeHtml(endLabel)}</strong></div>
+          <div class="timeline-event-vessel"><i data-lucide="ship"></i><span>${escapeHtml(vesselLabel)}</span></div>
+          <div class="timeline-event-description">${escapeHtml(event.descripcion || "-")}</div>
+          <div class="timeline-event-duration"><i data-lucide="clock-3"></i><span>${escapeHtml(durationLabel)}</span></div>
+          <div class="timeline-event-type">${escapeHtml(typeLabel)}</div>
         </div>
       </article>
     `;
@@ -3839,8 +4346,8 @@ async function saveBitacoraEvent() {
     }
     alert(error.message || "No se pudo registrar el evento.");
   } finally {
-    bitacoraRefs.submit.disabled = false;
     bitacoraRefs.submit.innerHTML = originalHtml;
+    updateBitacoraSubmitState();
     renderIcons();
   }
 }
@@ -3914,19 +4421,26 @@ function bootBitacora() {
   }
 
   updateBitacoraHeader();
+  updateBitacoraSubmitState();
 
   bitacoraRefs.description?.addEventListener("input", (event) => {
     if (bitacoraRefs.count) {
       bitacoraRefs.count.textContent = String(event.target.value.length);
     }
+    updateBitacoraSubmitState();
   });
 
-  bitacoraRefs.startTime?.addEventListener("change", updateBitacoraHeader);
+  bitacoraRefs.startTime?.addEventListener("change", () => {
+    updateBitacoraHeader();
+    updateBitacoraSubmitState();
+  });
+  bitacoraRefs.endTime?.addEventListener("change", updateBitacoraSubmitState);
   bitacoraRefs.date?.addEventListener("change", () => {
     if (bitacoraRefs.categorizeDate) {
       bitacoraRefs.categorizeDate.value = bitacoraRefs.date.value;
     }
     updateBitacoraHeader();
+    updateBitacoraSubmitState();
     refreshBitacora();
   });
   bindDateStepper(bitacoraRefs.date, bitacoraRefs.prevDay, bitacoraRefs.nextDay);
@@ -3934,6 +4448,7 @@ function bootBitacora() {
     syncBitacoraStartTimeWithLastEnd();
     renderBitacoraLastEvent();
     renderBitacoraTimeline();
+    updateBitacoraSubmitState();
   });
   bitacoraRefs.submit?.addEventListener("click", saveBitacoraEvent);
   bitacoraRefs.viewAll?.addEventListener("click", () => {
