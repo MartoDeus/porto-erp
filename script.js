@@ -26,6 +26,7 @@ const topbarTitle = document.querySelector(".topbar-title h2");
 const menuButton = document.querySelector(".menu-button");
 const notificationButton = document.querySelector("#notificationButton");
 const notificationPanel = document.querySelector("#notificationPanel");
+const toastContainer = document.querySelector("#toastContainer");
 const profileButton = document.querySelector("#profileButton");
 const profileMenu = document.querySelector("#profileMenu");
 const consultDieselButton = document.querySelector("#consultDieselButton");
@@ -143,6 +144,7 @@ const dieselRefs = {
   consultSummary: document.querySelector("#dieselConsultSummary"),
   consultRefresh: document.querySelector("#refreshDieselConsult"),
   consultExcel: document.querySelector("#exportDieselExcel"),
+  consultReportExcel: document.querySelector("#downloadDieselExcel"),
   consultPdf: document.querySelector("#downloadDieselPdf"),
   consultBack: document.querySelector("#backFromConsult"),
   consultModeToggle: document.querySelector("#toggleDieselConsultMode"),
@@ -678,6 +680,31 @@ function renderIcons() {
   }
 }
 
+function showSuccessToast(title = "Se guardó con éxito", message = "El registro se ha guardado correctamente.") {
+  if (!toastContainer) {
+    return;
+  }
+
+  const toast = document.createElement("div");
+  toast.className = "toast-notification";
+  toast.innerHTML = `
+    <span class="toast-icon"><i data-lucide="check"></i></span>
+    <span class="toast-content"><strong>${escapeHtml(title)}</strong><span>${escapeHtml(message)}</span></span>
+    <button class="toast-close" type="button" aria-label="Cerrar notificación"><i data-lucide="x"></i></button>
+  `;
+
+  const removeToast = () => {
+    toast.classList.remove("visible");
+    window.setTimeout(() => toast.remove(), 250);
+  };
+
+  toast.querySelector(".toast-close")?.addEventListener("click", removeToast);
+  toastContainer.appendChild(toast);
+  renderIcons();
+  window.requestAnimationFrame(() => toast.classList.add("visible"));
+  window.setTimeout(removeToast, 3600);
+}
+
 function closeNotificationPanel() {
   if (notificationPanel && notificationButton) {
     notificationPanel.hidden = true;
@@ -1179,7 +1206,7 @@ async function savePassengerRecords() {
     });
 
     clearPassengerForm();
-    alert("Registro de pasajeros guardado en Supabase.");
+    showSuccessToast("Se guardó con éxito", "El registro de pasajeros se ha guardado correctamente.");
   } catch (error) {
     alert(error.message || "No se pudo guardar el registro de pasajeros.");
   } finally {
@@ -1811,14 +1838,8 @@ async function saveDieselRecord() {
     dieselInitialStockCache.set(normalizeDieselName(record.ship), record.finalStock);
     renderDieselConsult();
 
-    if (notificationPanel && notificationButton) {
-      closeProfileMenu();
-      notificationPanel.hidden = false;
-      notificationButton.setAttribute("aria-expanded", "true");
-    }
-
     clearDieselFormAfterSave();
-    alert("Registro diesel guardado en Supabase.");
+    showSuccessToast("Se guardó con éxito", "El registro de diésel se ha guardado correctamente.");
   } catch (error) {
     alert(error.message || "No se pudo guardar el registro diesel.");
   } finally {
@@ -2836,6 +2857,477 @@ async function loadAllDieselRowsForExport() {
   return rows;
 }
 
+async function loadAllDieselMovementsForExport() {
+  const session = getSession();
+
+  if (!session?.accessToken) {
+    return [];
+  }
+
+  const pageSize = 1000;
+  const rows = [];
+  let offset = 0;
+
+  while (true) {
+    const query = new URLSearchParams({
+      select: "id,kardex_id,fecha,turno,tipo,cantidad,n_vale,nave_origen_id,nave_destino_id,created_at,nave_origen:unidades!diesel_movimientos_nave_origen_id_fkey(nombre),nave_destino:unidades!diesel_movimientos_nave_destino_id_fkey(nombre)",
+      estado: "eq.vigente",
+      order: "fecha.asc,turno.asc,created_at.asc",
+      limit: String(pageSize),
+      offset: String(offset)
+    });
+
+    const batch = await supabaseRequest(`/rest/v1/diesel_movimientos?${query}`, {
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`
+      }
+    });
+
+    if (!Array.isArray(batch) || batch.length === 0) {
+      break;
+    }
+
+    rows.push(...batch);
+    if (batch.length < pageSize) {
+      break;
+    }
+
+    offset += pageSize;
+  }
+
+  return rows;
+}
+
+function getDieselExportUnitDateKey(unitId, fecha) {
+  return `${unitId || ""}|${fecha || ""}`;
+}
+
+function getDieselExportShiftLabel(turno) {
+  return String(turno || "").toLowerCase() === "nocturno" ? "NOCHE" : "DIA";
+}
+
+function getDieselExportShiftOrder(turno) {
+  return String(turno || "").toLowerCase() === "nocturno" ? 2 : 1;
+}
+
+function sortDieselExportMovements(movements) {
+  return [...(movements || [])].sort((first, second) => {
+    const shiftDelta = getDieselExportShiftOrder(first.turno) - getDieselExportShiftOrder(second.turno);
+    if (shiftDelta !== 0) {
+      return shiftDelta;
+    }
+    return String(first.created_at || "").localeCompare(String(second.created_at || ""));
+  });
+}
+
+function formatDieselExportAmount(value) {
+  const numeric = toNumber(value);
+  return Number.isInteger(numeric) ? String(numeric) : String(numeric);
+}
+
+function getDieselMovementVesselName(movement, direction) {
+  const vessel = direction === "origin"
+    ? movement?.nave_origen?.nombre
+    : movement?.nave_destino?.nombre;
+  return normalizeDieselDisplayName(vessel || "");
+}
+
+function formatDieselMovementDetail(movement, direction = "destino") {
+  const vessel = getDieselMovementVesselName(movement, direction === "origen" ? "origin" : "destino");
+  const amount = formatDieselExportAmount(movement?.cantidad);
+  const voucher = String(movement?.n_vale || "-").trim() || "-";
+  return `| ${amount} gl | ${vessel} | vale: ${voucher} |`;
+}
+
+function groupDieselExportMovements(movements) {
+  const receivedByDestination = new Map();
+  const outgoingByOrigin = new Map();
+
+  (movements || []).forEach((movement) => {
+    const type = String(movement.tipo || "").toLowerCase();
+    if (type === "recibido" && movement.nave_destino_id) {
+      const key = getDieselExportUnitDateKey(movement.nave_destino_id, movement.fecha);
+      if (!receivedByDestination.has(key)) {
+        receivedByDestination.set(key, []);
+      }
+      receivedByDestination.get(key).push(movement);
+    }
+
+    if ((type === "despacho" || type === "transferencia") && movement.nave_origen_id) {
+      const key = getDieselExportUnitDateKey(movement.nave_origen_id, movement.fecha);
+      if (!outgoingByOrigin.has(key)) {
+        outgoingByOrigin.set(key, { despacho: [], transferencia: [] });
+      }
+      outgoingByOrigin.get(key)[type].push(movement);
+    }
+  });
+
+  receivedByDestination.forEach((items, key) => {
+    receivedByDestination.set(key, sortDieselExportMovements(items));
+  });
+  outgoingByOrigin.forEach((groups) => {
+    groups.despacho = sortDieselExportMovements(groups.despacho);
+    groups.transferencia = sortDieselExportMovements(groups.transferencia);
+  });
+
+  return { receivedByDestination, outgoingByOrigin };
+}
+
+function buildDieselExportDetailText(movements, direction = "destino") {
+  return (movements || [])
+    .filter((movement) => toNumber(movement.cantidad) > 0)
+    .map((movement) => formatDieselMovementDetail(movement, direction))
+    .filter(Boolean)
+    .join("\n");
+}
+
+function getDieselExportMonthLabel(fecha) {
+  if (!fecha) {
+    return "";
+  }
+  const monthLabel = new Date(`${fecha}T00:00:00`).toLocaleDateString("es-PE", { month: "long" });
+  return monthLabel ? monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1) : "";
+}
+
+function getDieselExportBaseMeta(record) {
+  const fecha = record.fecha || "";
+  const ship = normalizeDieselDisplayName(record.unidad_nombre || "");
+  const catalog = findDieselCatalogByShip(ship) || {};
+  return {
+    fecha,
+    dateValue: createExcelSafeDate(fecha),
+    year: fecha ? fecha.slice(0, 4) : "",
+    month: getDieselExportMonthLabel(fecha),
+    ship,
+    catalog
+  };
+}
+
+function buildDieselExportRow(record, overrides = {}) {
+  const meta = getDieselExportBaseMeta(record);
+  const received = overrides.received ?? (toNumber(record.cantidad_recibida) + toNumber(record.total_recarga));
+  const consumptionDay = overrides.consumptionDay ?? toNumber(record.consumo_dia);
+  const consumptionNight = overrides.consumptionNight ?? toNumber(record.consumo_noche);
+  const consumptionTotal = overrides.consumptionTotal ?? (consumptionDay + consumptionNight);
+  const transferred = overrides.transferred ?? toNumber(record.cantidad_transferida);
+  const dispatched = overrides.dispatched ?? toNumber(record.cantidad_despachada);
+
+  return [
+    meta.dateValue,
+    meta.year,
+    meta.month,
+    meta.catalog.group || record.unidad_tipo || "SIN AGRUPAR",
+    meta.catalog.type || "-",
+    overrides.turno || "DIA/NOCHE",
+    meta.ship,
+    overrides.initialStock ?? toNumber(record.stock_inicial_dia),
+    overrides.receivedDay ?? getExcelNumberOrBlank(record.canti_recibi_dia),
+    overrides.receivedNight ?? getExcelNumberOrBlank(record.canti_recibi_noche),
+    received || "",
+    overrides.receivedFrom ?? normalizeDieselDisplayName(record.recibido_de || ""),
+    consumptionDay || "",
+    consumptionNight || "",
+    consumptionTotal || "",
+    overrides.transferredDay ?? getExcelNumberOrBlank(record.canti_trans_dia),
+    overrides.transferredNight ?? getExcelNumberOrBlank(record.canti_trans_noche),
+    transferred || "",
+    overrides.transferDetail ?? normalizeDieselDisplayName(record.detalle_transferencia || ""),
+    overrides.dispatchedDay ?? getExcelNumberOrBlank(record.canti_despachada_dia),
+    overrides.dispatchedNight ?? getExcelNumberOrBlank(record.canti_despachada_noche),
+    dispatched || "",
+    overrides.dispatchDetail ?? normalizeDieselDisplayName(record.detalle_despacho || ""),
+    overrides.sondajeIni ?? getExcelNumberOrBlank(record.sondaje_ini),
+    overrides.sondajeFin ?? getExcelNumberOrBlank(record.sondaje_fin),
+    overrides.finalStock ?? toNumber(record.stock_final_dia),
+    overrides.voucher ?? (record.n_vale_despacho || record.n_vale_recarga || ""),
+    overrides.capitanDia ?? (record.capitan_dia || "-"),
+    overrides.motoristaDia ?? (record.motorista_dia || "-"),
+    overrides.capitanNoche ?? (record.capitan_noche || "-"),
+    overrides.motoristaNoche ?? (record.motorista_noche || "-"),
+    overrides.usuario ?? (record.registrado_por_dia || record.registrado_por_noche || "PRODUCCION")
+  ];
+}
+
+function buildDieselExportSplitRows(record, receivedMovements, outgoingGroups) {
+  const rows = [];
+  const sortedMovements = sortDieselExportMovements(receivedMovements);
+  const lastMovementByShift = new Map();
+
+  sortedMovements.forEach((movement) => {
+    lastMovementByShift.set(getDieselExportShiftLabel(movement.turno), movement.id);
+  });
+
+  let runningStock = toNumber(record.stock_inicial_dia);
+  const lastOverallId = sortedMovements[sortedMovements.length - 1]?.id;
+
+  sortedMovements.forEach((movement) => {
+    const shiftLabel = getDieselExportShiftLabel(movement.turno);
+    const isDay = shiftLabel === "DIA";
+    const isLastInShift = lastMovementByShift.get(shiftLabel) === movement.id;
+    const isLastOverall = lastOverallId === movement.id;
+    const received = toNumber(movement.cantidad);
+    const consumptionDay = isDay && isLastInShift ? toNumber(record.consumo_dia) : 0;
+    const consumptionNight = !isDay && isLastInShift ? toNumber(record.consumo_noche) : 0;
+    const transferredDay = isDay && isLastInShift ? getExcelNumberOrBlank(record.canti_trans_dia) : "";
+    const transferredNight = !isDay && isLastInShift ? getExcelNumberOrBlank(record.canti_trans_noche) : "";
+    const dispatchedDay = isDay && isLastInShift ? getExcelNumberOrBlank(record.canti_despachada_dia) : "";
+    const dispatchedNight = !isDay && isLastInShift ? getExcelNumberOrBlank(record.canti_despachada_noche) : "";
+    const transferred = toNumber(transferredDay) + toNumber(transferredNight);
+    const dispatched = toNumber(dispatchedDay) + toNumber(dispatchedNight);
+    const sondajeIni = isLastOverall ? getExcelNumberOrBlank(record.sondaje_ini) : "";
+    const sondajeFin = isLastOverall ? getExcelNumberOrBlank(record.sondaje_fin) : "";
+    const recharge = isLastOverall ? toNumber(record.total_recarga) : 0;
+    const finalStock = runningStock + received + recharge + toNumber(sondajeIni) + toNumber(sondajeFin)
+      - consumptionDay - consumptionNight - transferred - dispatched;
+    const currentInitialStock = runningStock;
+    runningStock = finalStock;
+
+    rows.push(buildDieselExportRow(record, {
+      turno: shiftLabel,
+      initialStock: currentInitialStock,
+      receivedDay: isDay ? received : "",
+      receivedNight: isDay ? "" : received,
+      received,
+      receivedFrom: getDieselMovementVesselName(movement, "origin"),
+      consumptionDay,
+      consumptionNight,
+      consumptionTotal: consumptionDay + consumptionNight,
+      transferredDay,
+      transferredNight,
+      transferred,
+      transferDetail: isLastOverall ? buildDieselExportDetailText(outgoingGroups?.transferencia || [], "destino") : "",
+      dispatchedDay,
+      dispatchedNight,
+      dispatched,
+      dispatchDetail: isLastOverall ? buildDieselExportDetailText(outgoingGroups?.despacho || [], "destino") : "",
+      sondajeIni,
+      sondajeFin,
+      finalStock,
+      voucher: movement.n_vale || "",
+      capitanDia: isDay ? (record.capitan_dia || "-") : "-",
+      motoristaDia: isDay ? (record.motorista_dia || "-") : "-",
+      capitanNoche: isDay ? "-" : (record.capitan_noche || "-"),
+      motoristaNoche: isDay ? "-" : (record.motorista_noche || "-"),
+      usuario: isDay
+        ? (record.registrado_por_dia || record.registrado_por_noche || "PRODUCCION")
+        : (record.registrado_por_noche || record.registrado_por_dia || "PRODUCCION")
+    }));
+  });
+
+  return rows;
+}
+
+function formatDieselDailyReportDate(fecha) {
+  if (!fecha) {
+    return "";
+  }
+
+  const date = new Date(`${fecha}T00:00:00`);
+  return date.toLocaleDateString("es-PE", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric"
+  }).replace(/,/g, "").toUpperCase();
+}
+
+function getDieselDailyReportCrew(captain, driver) {
+  const cleanCaptain = captain && captain !== "-" ? captain : "-";
+  const cleanDriver = driver && driver !== "-" ? driver : "-";
+  return `CAPITÁN: ${cleanCaptain}\nMOTORISTA: ${cleanDriver}`;
+}
+
+function setDieselDailyReportRow(sheet, rowNumber, record) {
+  const row = sheet.getRow(rowNumber);
+  const initialStock = toNumber(record?.stock_inicial_dia);
+  const received = toNumber(record?.cantidad_recibida) + toNumber(record?.total_recarga);
+  const receivedFrom = normalizeDieselDisplayName(record?.recibido_de || "");
+  const dayConsumption = toNumber(record?.consumo_dia);
+  const nightConsumption = toNumber(record?.consumo_noche);
+  const delivered = toNumber(record?.cantidad_despachada) + toNumber(record?.cantidad_transferida);
+  const sondage = toNumber(record?.sondaje_neto);
+
+  sheet.getCell(rowNumber, 3).value = initialStock || 0;
+  sheet.getCell(rowNumber, 4).value = received || null;
+  sheet.getCell(rowNumber, 5).value = receivedFrom && receivedFrom !== "-" ? receivedFrom : null;
+  sheet.getCell(rowNumber, 6).value = dayConsumption || 0;
+  sheet.getCell(rowNumber, 7).value = nightConsumption || 0;
+  sheet.getCell(rowNumber, 8).value = { formula: `SUM(F${rowNumber}:G${rowNumber})` };
+  sheet.getCell(rowNumber, 9).value = delivered || null;
+  sheet.getCell(rowNumber, 10).value = sondage || null;
+  sheet.getCell(rowNumber, 11).value = { formula: `C${rowNumber}+D${rowNumber}-H${rowNumber}-I${rowNumber}+J${rowNumber}` };
+  sheet.getCell(rowNumber, 12).value = getDieselDailyReportCrew(record?.capitan_dia, record?.motorista_dia);
+  sheet.getCell(rowNumber, 13).value = getDieselDailyReportCrew(record?.capitan_noche, record?.motorista_noche);
+  row.commit?.();
+}
+
+function cloneExcelStyle(style) {
+  return style ? JSON.parse(JSON.stringify(style)) : {};
+}
+
+function safeUnmergeCells(sheet, range) {
+  try {
+    sheet.unMergeCells(range);
+  } catch (error) {
+    // La plantilla puede venir sin ese merge dependiendo de la versión guardada.
+  }
+}
+
+function safeMergeCells(sheet, range) {
+  try {
+    sheet.mergeCells(range);
+  } catch (error) {
+    // Si ya está unido, no hace falta repetir la operación.
+  }
+}
+
+function prepareDieselDailyReportAbastecedorRows(sheet, rowCount) {
+  const startRow = 42;
+  const endRow = Math.max(55, startRow + Math.max(rowCount, 1) - 1);
+  const baseStyles = [2, 3, 4, 5, 6].reduce((styles, columnNumber) => {
+    styles[columnNumber] = cloneExcelStyle(sheet.getCell(42, columnNumber).style);
+    return styles;
+  }, {});
+
+  ["B42:B45", "B46:B48", "B50:F50"].forEach((range) => safeUnmergeCells(sheet, range));
+
+  for (let rowNumber = startRow; rowNumber <= endRow; rowNumber += 1) {
+    safeUnmergeCells(sheet, `C${rowNumber}:D${rowNumber}`);
+    safeMergeCells(sheet, `C${rowNumber}:D${rowNumber}`);
+    sheet.getRow(rowNumber).height = 15;
+    [2, 3, 4, 5, 6].forEach((columnNumber) => {
+      const cell = sheet.getCell(rowNumber, columnNumber);
+      cell.value = null;
+      cell.style = cloneExcelStyle(baseStyles[columnNumber]);
+      cell.alignment = {
+        ...(cell.alignment || {}),
+        horizontal: "center",
+        vertical: "middle",
+        wrapText: true
+      };
+    });
+  }
+}
+
+function fillDieselDailyReportAbastecedores(sheet, movements) {
+  const rows = sortDieselExportMovements(
+    (movements || []).filter((movement) => {
+      const type = String(movement.tipo || "").toLowerCase();
+      return type === "despacho" || type === "transferencia";
+    })
+  );
+
+  prepareDieselDailyReportAbastecedorRows(sheet, rows.length);
+
+  rows.forEach((movement, index) => {
+    const rowNumber = 42 + index;
+    sheet.getCell(rowNumber, 2).value = getDieselMovementVesselName(movement, "origin");
+    sheet.getCell(rowNumber, 3).value = getDieselMovementVesselName(movement, "destino");
+    sheet.getCell(rowNumber, 5).value = toNumber(movement.cantidad) || null;
+    sheet.getCell(rowNumber, 6).value = movement.n_vale || null;
+  });
+}
+
+async function downloadDieselDailyReportExcel() {
+  if (!window.ExcelJS) {
+    window.alert("No se pudo cargar el exportador de Excel. Revisa tu conexion a internet e intenta otra vez.");
+    return;
+  }
+
+  const selectedDate = dieselRefs.consultDate?.value || getTodayValue();
+  const originalHtml = dieselRefs.consultReportExcel?.innerHTML;
+  if (dieselRefs.consultReportExcel) {
+    dieselRefs.consultReportExcel.disabled = true;
+    dieselRefs.consultReportExcel.innerHTML = '<i data-lucide="loader-circle"></i>Generando...';
+    renderIcons();
+  }
+
+  try {
+    await loadDieselConsultFromSupabase();
+    const [templateResponse, allMovements] = await Promise.all([
+      fetch("assets/templates/nuevo-formato-reporte-diario.xlsx", { cache: "no-store" }),
+      loadAllDieselMovementsForExport()
+    ]);
+
+    if (!templateResponse.ok) {
+      throw new Error("No se pudo cargar la plantilla del reporte diario.");
+    }
+
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(await templateResponse.arrayBuffer());
+    const sheet = workbook.getWorksheet("REPORTE DIARIO");
+    if (!sheet) {
+      throw new Error("La plantilla no contiene la hoja REPORTE DIARIO.");
+    }
+    workbook.worksheets
+      .filter((worksheet) => worksheet.name !== "REPORTE DIARIO")
+      .forEach((worksheet) => workbook.removeWorksheet(worksheet.id));
+
+    const records = (dieselConsultCache.rows || []).filter((record) => record.fecha === selectedDate);
+    const recordByShip = records.reduce((map, record) => {
+      map.set(normalizeDieselName(record.unidad_nombre), record);
+      return map;
+    }, new Map());
+    const rowByShip = new Map([
+      ["LOBITOS_EXPRESS_CARGA", 7],
+      ["LOBITOS_EXPRESS_CONSUMO", 8],
+      ["PARINAS", 11],
+      ["TALARA", 12],
+      ["OLYMPIC_EXPRESS", 13],
+      ["OLYMPIC", 13],
+      ["DONALD_ROBIN", 16],
+      ["SHEILA_R", 17],
+      ["IRIS", 18],
+      ["VILMA", 19],
+      ["ROSLYN", 20],
+      ["CHIP_II", 21],
+      ["CHIPP_II", 21],
+      ["BUCKLEY_EXPRESS", 22],
+      ["CABO_BLANCO", 23],
+      ["ELIZABETH", 26],
+      ["ORO", 27],
+      ["ROGUE", 28],
+      ["MR_BOB", 29],
+      ["LJ_KELLEY", 32]
+    ]);
+
+    const rowsAlreadyFilled = new Set();
+    rowByShip.forEach((rowNumber, shipKey) => {
+      if (rowsAlreadyFilled.has(rowNumber)) {
+        return;
+      }
+
+      const matchingRecord = [...recordByShip.entries()].find(([recordKey]) => rowByShip.get(recordKey) === rowNumber)?.[1];
+      setDieselDailyReportRow(sheet, rowNumber, matchingRecord || {});
+      rowsAlreadyFilled.add(rowNumber);
+    });
+
+    sheet.getCell("B2").value = `${formatDieselDailyReportDate(selectedDate)} | CONTROLADOR: ${getCurrentUserDisplayName().toUpperCase()}`;
+    sheet.getCell("L3").value = createExcelSafeDate(selectedDate);
+    sheet.getCell("L3").numFmt = "dd/mm/yyyy";
+
+    fillDieselDailyReportAbastecedores(
+      sheet,
+      allMovements.filter((movement) => movement.fecha === selectedDate)
+    );
+
+    workbook.calcProperties = { fullCalcOnLoad: true };
+    const buffer = await workbook.xlsx.writeBuffer();
+    downloadBlob(
+      new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }),
+      `reporte-diario-diesel-${selectedDate}.xlsx`
+    );
+  } catch (error) {
+    window.alert(error.message || "No se pudo generar el reporte Excel.");
+  } finally {
+    if (dieselRefs.consultReportExcel) {
+      dieselRefs.consultReportExcel.disabled = false;
+      dieselRefs.consultReportExcel.innerHTML = originalHtml;
+      renderIcons();
+    }
+  }
+}
+
 function getConsultShiftLabel() {
   const value = dieselRefs.consultShift?.value || "";
   if (value === "A") {
@@ -3075,112 +3567,143 @@ async function downloadDieselConsultPdf() {
 }
 
 async function exportDieselConsultExcel() {
-  if (!window.XLSX) {
+  if (!window.ExcelJS) {
     window.alert("No se pudo cargar el exportador de Excel. Revisa tu conexion a internet e intenta otra vez.");
     return;
   }
 
-  const allRows = await loadAllDieselRowsForExport();
-  const workbook = XLSX.utils.book_new();
+  const [allRows, allMovements] = await Promise.all([
+    loadAllDieselRowsForExport(),
+    loadAllDieselMovementsForExport()
+  ]);
+  const movementGroups = groupDieselExportMovements(allMovements);
   const rows = [
     [
-      "FECHA", "AÑO", "MES", "TIPO AGRUPADO", "TIPO", "NAVE", "STOCK I.",
-      "CANTI_RECIBI_DIA", "CANTI_RECIBI_NOCHE", "CANT. RECIBIDA", "RECIBIDO DE",
-      "CONSUMO DIURNO", "CONSUMO NOCTURNO", "CONSUMO_TOTAL",
-      "CANTI_TRANS_DIA", "CANTI_TRANS_NOCHE", "CANT. TRANSFERIDA", "DETALLE_TRANSFERENCIA",
-      "CANTI_DESPACHADA_DIA", "CANTI_DESPACHADA_NOCHE", "CANT. DESPACHADA", "DETALLE_DESPACHO",
-      "SONDAJE_INI", "SONDAJE_FIN", "STOCK F.", "N VALE",
+      "FECHA", "AÑO", "MES", "TIPO AGRUPADO", "TIPO", "TURNO", "NAVE", "STOCK INICIAL",
+      "CANT. RECIBIDA DIA", "CANT. RECIBIDA NOCHE", "TOTAL CANT. RECIBIDA", "RECIBIDO DE",
+      "CONSUMO DIA", "CONSUMO NOCHE", "TOTAL CONSUMO",
+      "CANT. TRANSFERIDA DIA", "CANT. TRANSFERIDA NOCHE", "TOTAL CANT. TRANSFERIDA", "DETALLE TRANSFERENCIA",
+      "CANT. DESPACHADA DIA", "CANT. DESPACHADA NOCHE", "TOTAL CANT. DESPACHADA", "DETALLE DESPACHO",
+      "SONDAJE_INI", "SONDAJE_FIN", "STOCK FINAL", "N VALE ",
       "CAPITAN DIURNO", "MOTORISTA DIURNO", "CAPITAN NOCTURNO", "MOTORISTA NOCTURNO", "USUARIO"
     ]
   ];
 
   allRows.forEach((record) => {
-    const fecha = record.fecha || "";
-    const monthLabel = fecha
-      ? new Date(`${fecha}T00:00:00`).toLocaleDateString("es-PE", { month: "long" })
-      : "";
-    const formattedMonth = monthLabel ? monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1) : "";
-    const ship = normalizeDieselDisplayName(record.unidad_nombre || "");
-    const catalog = findDieselCatalogByShip(ship) || {};
-    const received = toNumber(record.cantidad_recibida) + toNumber(record.total_recarga);
-    const consumptionTotal = toNumber(record.consumo_dia) + toNumber(record.consumo_noche);
-    const dateValue = createExcelSafeDate(fecha);
+    const key = getDieselExportUnitDateKey(record.unidad_id, record.fecha);
+    const receivedMovements = movementGroups.receivedByDestination.get(key) || [];
+    const outgoingGroups = movementGroups.outgoingByOrigin.get(key) || { despacho: [], transferencia: [] };
 
-    rows.push([
-      dateValue,
-      fecha ? fecha.slice(0, 4) : "",
-      formattedMonth,
-      catalog.group || record.unidad_tipo || "SIN AGRUPAR",
-      catalog.type || "-",
-      ship,
-      toNumber(record.stock_inicial_dia),
-      getExcelNumberOrBlank(record.canti_recibi_dia),
-      getExcelNumberOrBlank(record.canti_recibi_noche),
-      received || "",
-      normalizeDieselDisplayName(record.recibido_de || ""),
-      toNumber(record.consumo_dia),
-      toNumber(record.consumo_noche) || "",
-      consumptionTotal || "",
-      getExcelNumberOrBlank(record.canti_trans_dia),
-      getExcelNumberOrBlank(record.canti_trans_noche),
-      getExcelNumberOrBlank(record.cantidad_transferida),
-      normalizeDieselDisplayName(record.detalle_transferencia || ""),
-      getExcelNumberOrBlank(record.canti_despachada_dia),
-      getExcelNumberOrBlank(record.canti_despachada_noche),
-      getExcelNumberOrBlank(record.cantidad_despachada),
-      normalizeDieselDisplayName(record.detalle_despacho || ""),
-      getExcelNumberOrBlank(record.sondaje_ini),
-      getExcelNumberOrBlank(record.sondaje_fin),
-      toNumber(record.stock_final_dia),
-      record.n_vale_despacho || record.n_vale_recarga || "",
-      record.capitan_dia || "-",
-      record.motorista_dia || "-",
-      record.capitan_noche || "-",
-      record.motorista_noche || "-",
-      record.registrado_por_dia || record.registrado_por_noche || "PRODUCCION"
-    ]);
+    if (receivedMovements.length > 1) {
+      rows.push(...buildDieselExportSplitRows(record, receivedMovements, outgoingGroups));
+      return;
+    }
+
+    rows.push(buildDieselExportRow(record, {
+      receivedFrom: receivedMovements.length === 1
+        ? getDieselMovementVesselName(receivedMovements[0], "origin")
+        : normalizeDieselDisplayName(record.recibido_de || ""),
+      transferDetail: buildDieselExportDetailText(outgoingGroups.transferencia, "destino")
+        || normalizeDieselDisplayName(record.detalle_transferencia || ""),
+      dispatchDetail: buildDieselExportDetailText(outgoingGroups.despacho, "destino")
+        || normalizeDieselDisplayName(record.detalle_despacho || ""),
+      voucher: receivedMovements[0]?.n_vale || record.n_vale_despacho || record.n_vale_recarga || ""
+    }));
   });
 
-  const sheet = XLSX.utils.aoa_to_sheet(rows, { cellDates: true });
-  sheet["!cols"] = [
-    { wch: 12.875 }, { wch: 8.875 }, { wch: 12.875 }, { wch: 30.5 }, { wch: 14.875 }, { wch: 28.875 },
-    { wch: 12.875 }, { wch: 17 }, { wch: 19 }, { wch: 15.875 }, { wch: 18.875 },
-    { wch: 19.125 }, { wch: 22.125 }, { wch: 16.5 },
-    { wch: 16.5 }, { wch: 18.5 }, { wch: 16.5 }, { wch: 24 },
-    { wch: 22 }, { wch: 24 }, { wch: 16.5 }, { wch: 24 },
-    { wch: 13.5 }, { wch: 13.5 }, { wch: 10.125 }, { wch: 8.75 },
-    { wch: 17.25 }, { wch: 20.25 }, { wch: 18.375 }, { wch: 21.375 }, { wch: 14 }
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet("KARDEX", {
+    views: [{ state: "frozen", ySplit: 1 }]
+  });
+  const columnWidths = [
+    10.25, 8.625, 8.375, 18.75, 8.75, 11, 21, 9, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+    13, 21, 9.625, 13, 13, 21, 15.625, 16, 9, 10.75, 19.25, 22.25, 22.375, 25.375, 12.375
   ];
-  const headerStyle = {
-    fill: { fgColor: { rgb: "0B2E59" } },
-    font: { bold: true, color: { rgb: "FFFFFF" } },
-    alignment: { horizontal: "center", vertical: "center" }
+  const headerFills = [
+    "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA",
+    "FFD7E4BD", "FFCCC1DA", "FFCCC1DA", "FFDCE6F2", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFDCE6F2",
+    "FFCCC1DA", "FFCCC1DA", "FFDCE6F2", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFDCE6F2",
+    "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFD7E4BD", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA",
+    "FFCCC1DA", "FFCCC1DA", "FFCCC1DA"
+  ];
+  const thinBorder = { style: "thin", color: { argb: "FF808080" } };
+  const cellStyle = {
+    font: { name: "Calibri", size: 10, color: { argb: "FF000000" } },
+    alignment: { horizontal: "center", vertical: "middle", wrapText: true },
+    border: { top: thinBorder, right: thinBorder, bottom: thinBorder, left: thinBorder }
   };
-  for (let columnIndex = 0; columnIndex < rows[0].length; columnIndex += 1) {
-    const headerRef = XLSX.utils.encode_cell({ c: columnIndex, r: 0 });
-    if (sheet[headerRef]) {
-      sheet[headerRef].s = headerStyle;
-    }
-  }
-  for (let rowIndex = 1; rowIndex < rows.length; rowIndex += 1) {
-    const dateRef = XLSX.utils.encode_cell({ c: 0, r: rowIndex });
-    if (sheet[dateRef]) {
-      sheet[dateRef].z = "dd/mm/yyyy";
-    }
 
-    [17, 21].forEach((columnIndex) => {
-      const detailRef = XLSX.utils.encode_cell({ c: columnIndex, r: rowIndex });
-      if (sheet[detailRef]) {
-        sheet[detailRef].s = {
-          ...(sheet[detailRef].s || {}),
-          alignment: { ...(sheet[detailRef].s?.alignment || {}), wrapText: true, vertical: "top" }
-        };
-      }
+  sheet.columns = rows[0].map((header, index) => ({
+    header,
+    key: `col${index}`,
+    width: columnWidths[index]
+  }));
+  rows.slice(1).forEach((row) => sheet.addRow(row));
+
+  sheet.eachRow((row) => {
+    row.height = 30;
+    row.eachCell((cell) => {
+      cell.font = { ...cellStyle.font };
+      cell.alignment = { ...cellStyle.alignment };
+      cell.border = { ...cellStyle.border };
+    });
+  });
+
+  const bodyColumnFills = {
+    8: "FFD7E4BD",
+    11: "FFDCE6F2",
+    15: "FFDCE6F2",
+    18: "FFDCE6F2",
+    22: "FFDCE6F2",
+    26: "FFD7E4BD"
+  };
+  for (let rowIndex = 2; rowIndex <= sheet.rowCount; rowIndex += 1) {
+    Object.entries(bodyColumnFills).forEach(([columnNumber, fillColor]) => {
+      sheet.getCell(rowIndex, Number(columnNumber)).fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: fillColor }
+      };
     });
   }
-  sheet["!autofilter"] = { ref: XLSX.utils.encode_range({ s: { c: 0, r: 0 }, e: { c: rows[0].length - 1, r: rows.length - 1 } }) };
-  XLSX.utils.book_append_sheet(workbook, sheet, "KARDEX");
-  XLSX.writeFile(workbook, "reporte-diesel-completo.xlsx");
+
+  const headerRow = sheet.getRow(1);
+  headerRow.eachCell((cell, columnNumber) => {
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: headerFills[columnNumber - 1] } };
+  });
+
+  for (let rowIndex = 2; rowIndex <= sheet.rowCount; rowIndex += 1) {
+    sheet.getCell(rowIndex, 1).numFmt = "dd/mm/yyyy";
+    sheet.getCell(rowIndex, 19).alignment = { ...cellStyle.alignment, horizontal: "left" };
+    sheet.getCell(rowIndex, 23).alignment = { ...cellStyle.alignment, horizontal: "left" };
+  }
+
+  [19, 23].forEach((columnNumber) => {
+    const column = sheet.getColumn(columnNumber);
+    let maxLineLength = String(rows[0][columnNumber - 1] || "").length;
+
+    for (let rowIndex = 2; rowIndex <= sheet.rowCount; rowIndex += 1) {
+      const cell = sheet.getCell(rowIndex, columnNumber);
+      const lines = String(cell.value || "").split("\n");
+      maxLineLength = Math.max(maxLineLength, ...lines.map((line) => line.length));
+      if (lines.length > 1) {
+        sheet.getRow(rowIndex).height = Math.max(sheet.getRow(rowIndex).height || 30, 16 * lines.length + 8);
+      }
+    }
+
+    column.width = Math.min(60, Math.max(column.width || 21, maxLineLength + 2));
+  });
+
+  sheet.autoFilter = {
+    from: { row: 1, column: 1 },
+    to: { row: Math.max(1, sheet.rowCount), column: rows[0].length }
+  };
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  downloadBlob(
+    new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }),
+    "reporte-diesel-completo.xlsx"
+  );
 }
 
 function clearDieselForm() {
@@ -3415,6 +3938,7 @@ function bootDiesel() {
   });
   dieselRefs.consultPdf?.addEventListener("click", downloadDieselConsultPdf);
   dieselRefs.consultExcel?.addEventListener("click", exportDieselConsultExcel);
+  dieselRefs.consultReportExcel?.addEventListener("click", downloadDieselDailyReportExcel);
   dieselRefs.editClose?.addEventListener("click", closeDieselEditModal);
   dieselRefs.editCancel?.addEventListener("click", closeDieselEditModal);
   dieselRefs.editDelete?.addEventListener("click", () => {
@@ -4375,7 +4899,7 @@ async function saveBitacoraEvent() {
     }
     updateBitacoraHeader();
     await refreshBitacora();
-    alert("Evento registrado en Supabase.");
+    showSuccessToast("Se guardó con éxito", "El evento de bitácora se ha guardado correctamente.");
   } catch (error) {
     if (error.authExpired) {
       alert(error.message);
