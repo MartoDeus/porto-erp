@@ -508,7 +508,24 @@ function getSession() {
 
 function getCurrentUserDisplayName() {
   const session = getSession();
-  return session?.name || session?.username || "Usuario";
+  return formatShortPersonName(session?.name || session?.username || "Usuario");
+}
+
+function formatShortPersonName(name) {
+  const words = String(name || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (words.length >= 3) {
+    return `${words[2]} ${words[0]}`;
+  }
+
+  if (words.length >= 2) {
+    return `${words[0]} ${words[1]}`;
+  }
+
+  return words[0] || "Usuario";
 }
 
 function getUserInitials(name) {
@@ -534,11 +551,12 @@ function showDashboard(session) {
   setPage("dashboard");
   resetPassengerInitialState();
   resetDieselInitialState();
-  const firstName = (session.name || session.username || "Usuario").trim().split(/\s+/)[0];
-  const initials = getUserInitials(session.name || session.username);
+  const displayName = formatShortPersonName(session.name || session.username);
+  const firstName = displayName.trim().split(/\s+/)[0] || "Usuario";
+  const initials = getUserInitials(displayName);
   welcomeText.textContent = session.role;
-  profileName.textContent = session.name;
-  profileMenuName.textContent = session.name;
+  profileName.textContent = displayName;
+  profileMenuName.textContent = displayName;
   profileMenuRole.textContent = session.role === "Administrador" ? "Administrador General" : session.role;
   if (profileInitials) profileInitials.textContent = initials;
   if (profileMenuInitials) profileMenuInitials.textContent = initials;
@@ -3181,21 +3199,39 @@ function safeMergeCells(sheet, range) {
   }
 }
 
+function clearDieselDailyReportAbastecedorMerges(sheet, startRow, endRow) {
+  const ranges = Array.from(sheet._merges?.keys?.() || []);
+  ranges.forEach((range) => {
+    const match = range.match(/^([A-Z]+)(\d+):([A-Z]+)(\d+)$/);
+    if (!match) return;
+    const rowStart = Number(match[2]);
+    const rowEnd = Number(match[4]);
+    if (rowStart >= startRow && rowEnd <= endRow) {
+      safeUnmergeCells(sheet, range);
+    }
+  });
+}
+
 function prepareDieselDailyReportAbastecedorRows(sheet, rowCount) {
-  const startRow = 42;
-  const endRow = Math.max(55, startRow + Math.max(rowCount, 1) - 1);
-  const baseStyles = [2, 3, 4, 5, 6].reduce((styles, columnNumber) => {
-    styles[columnNumber] = cloneExcelStyle(sheet.getCell(42, columnNumber).style);
+  const startRow = 39;
+  const templateEndRow = 54;
+  const normalizedRowCount = Math.max(rowCount, 0);
+  const endRow = startRow + normalizedRowCount - 1;
+  const baseStyles = [4, 7, 10, 11].reduce((styles, columnNumber) => {
+    styles[columnNumber] = cloneExcelStyle(sheet.getCell(39, columnNumber).style);
     return styles;
   }, {});
 
-  ["B42:B45", "B46:B48", "B50:F50"].forEach((range) => safeUnmergeCells(sheet, range));
+  clearDieselDailyReportAbastecedorMerges(sheet, startRow, templateEndRow);
+  if (normalizedRowCount < templateEndRow - startRow + 1) {
+    sheet.spliceRows(startRow + normalizedRowCount, templateEndRow - startRow + 1 - normalizedRowCount);
+  }
 
   for (let rowNumber = startRow; rowNumber <= endRow; rowNumber += 1) {
-    safeUnmergeCells(sheet, `C${rowNumber}:D${rowNumber}`);
-    safeMergeCells(sheet, `C${rowNumber}:D${rowNumber}`);
+    safeMergeCells(sheet, `D${rowNumber}:F${rowNumber}`);
+    safeMergeCells(sheet, `G${rowNumber}:I${rowNumber}`);
     sheet.getRow(rowNumber).height = 15;
-    [2, 3, 4, 5, 6].forEach((columnNumber) => {
+    [4, 7, 10, 11].forEach((columnNumber) => {
       const cell = sheet.getCell(rowNumber, columnNumber);
       cell.value = null;
       cell.style = cloneExcelStyle(baseStyles[columnNumber]);
@@ -3209,8 +3245,30 @@ function prepareDieselDailyReportAbastecedorRows(sheet, rowCount) {
   }
 }
 
+function getDieselDailyReportOriginOrder(movement) {
+  const origin = normalizeDieselName(getDieselMovementVesselName(movement, "origin"));
+  const order = {
+    TALARA: 1,
+    PARINAS: 2,
+    LOBITOS_EXPRESS_CARGA: 3
+  };
+  return order[origin] || 99;
+}
+
+function sortDieselDailyReportAbastecedores(movements) {
+  return sortDieselExportMovements(movements).sort((first, second) => {
+    const originDelta = getDieselDailyReportOriginOrder(first) - getDieselDailyReportOriginOrder(second);
+    if (originDelta !== 0) {
+      return originDelta;
+    }
+    return normalizeDieselName(getDieselMovementVesselName(first, "origin"))
+      .localeCompare(normalizeDieselName(getDieselMovementVesselName(second, "origin")));
+  });
+}
+
 function fillDieselDailyReportAbastecedores(sheet, movements) {
-  const rows = sortDieselExportMovements(
+  const startRow = 39;
+  const rows = sortDieselDailyReportAbastecedores(
     (movements || []).filter((movement) => {
       const type = String(movement.tipo || "").toLowerCase();
       return type === "despacho" || type === "transferencia";
@@ -3220,12 +3278,37 @@ function fillDieselDailyReportAbastecedores(sheet, movements) {
   prepareDieselDailyReportAbastecedorRows(sheet, rows.length);
 
   rows.forEach((movement, index) => {
-    const rowNumber = 42 + index;
-    sheet.getCell(rowNumber, 2).value = getDieselMovementVesselName(movement, "origin");
-    sheet.getCell(rowNumber, 3).value = getDieselMovementVesselName(movement, "destino");
-    sheet.getCell(rowNumber, 5).value = toNumber(movement.cantidad) || null;
-    sheet.getCell(rowNumber, 6).value = movement.n_vale || null;
+    const rowNumber = startRow + index;
+    sheet.getCell(rowNumber, 4).value = getDieselMovementVesselName(movement, "origin");
+    sheet.getCell(rowNumber, 7).value = getDieselMovementVesselName(movement, "destino");
+    sheet.getCell(rowNumber, 10).value = toNumber(movement.cantidad) || null;
+    sheet.getCell(rowNumber, 11).value = movement.n_vale || null;
   });
+
+  let groupStartRow = startRow;
+  while (groupStartRow < startRow + rows.length) {
+    const originName = getDieselMovementVesselName(rows[groupStartRow - startRow], "origin");
+    let groupEndRow = groupStartRow;
+
+    while (
+      groupEndRow + 1 < startRow + rows.length
+      && normalizeDieselName(getDieselMovementVesselName(rows[groupEndRow + 1 - startRow], "origin")) === normalizeDieselName(originName)
+    ) {
+      groupEndRow += 1;
+    }
+
+    safeUnmergeCells(sheet, `D${groupStartRow}:F${groupEndRow}`);
+    safeMergeCells(sheet, `D${groupStartRow}:F${groupEndRow}`);
+    const originCell = sheet.getCell(groupStartRow, 4);
+    originCell.value = originName;
+    originCell.alignment = {
+      ...(originCell.alignment || {}),
+      horizontal: "center",
+      vertical: "middle",
+      wrapText: true
+    };
+    groupStartRow = groupEndRow + 1;
+  }
 }
 
 async function downloadDieselDailyReportExcel() {
@@ -3259,6 +3342,7 @@ async function downloadDieselDailyReportExcel() {
     if (!sheet) {
       throw new Error("La plantilla no contiene la hoja REPORTE DIARIO.");
     }
+    sheet.conditionalFormattings = [];
     workbook.worksheets
       .filter((worksheet) => worksheet.name !== "REPORTE DIARIO")
       .forEach((worksheet) => workbook.removeWorksheet(worksheet.id));
@@ -3302,9 +3386,10 @@ async function downloadDieselDailyReportExcel() {
       rowsAlreadyFilled.add(rowNumber);
     });
 
-    sheet.getCell("B2").value = `${formatDieselDailyReportDate(selectedDate)} | CONTROLADOR: ${getCurrentUserDisplayName().toUpperCase()}`;
+    sheet.getCell("B2").value = formatDieselDailyReportDate(selectedDate);
     sheet.getCell("L3").value = createExcelSafeDate(selectedDate);
     sheet.getCell("L3").numFmt = "dd/mm/yyyy";
+    await addDieselDailyReportLogos(workbook, sheet);
 
     fillDieselDailyReportAbastecedores(
       sheet,
@@ -3326,6 +3411,44 @@ async function downloadDieselDailyReportExcel() {
       renderIcons();
     }
   }
+}
+
+async function addDieselDailyReportLogos(workbook, sheet) {
+  const [leftLogo, rightLogo] = await Promise.all([
+    loadAssetAsBase64("assets/templates/reporte-diario-logo-izquierdo.png"),
+    loadAssetAsBase64("assets/templates/reporte-diario-logo-derecho.jpeg")
+  ]);
+
+  if (leftLogo) {
+    const leftImageId = workbook.addImage({ base64: leftLogo, extension: "png" });
+    sheet.addImage(leftImageId, {
+      tl: { col: 0, row: 0 },
+      ext: { width: 86, height: 61 }
+    });
+  }
+
+  if (rightLogo) {
+    const rightImageId = workbook.addImage({ base64: rightLogo, extension: "jpeg" });
+    sheet.addImage(rightImageId, {
+      tl: { col: 12.9, row: 0 },
+      ext: { width: 87, height: 62 }
+    });
+  }
+}
+
+async function loadAssetAsBase64(src) {
+  const response = await fetch(src, { cache: "no-store" });
+  if (!response.ok) {
+    return "";
+  }
+
+  const blob = await response.blob();
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result || "");
+    reader.onerror = () => resolve("");
+    reader.readAsDataURL(blob);
+  });
 }
 
 function getConsultShiftLabel() {

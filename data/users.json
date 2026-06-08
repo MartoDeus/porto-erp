@@ -1,20 +1,74 @@
 [
   {
-    "id": "usr-admin",
-    "name": "Administrador",
-    "username": "admin",
-    "email": "admin@portoerp.com",
-    "role": "Administrador",
-    "active": true,
-    "passwordHash": "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"
+    "id": "usr-46234473",
+    "name": "Cespedes Rosales Javier Jonathan",
+    "username": "46234473",
+    "email": "46234473@alm.local",
+    "role": "Controlador de Muelle Tortuga",
+    "roleCode": "controlador",
+    "active": true
   },
   {
-    "id": "usr-operaciones",
-    "name": "Operaciones",
-    "username": "operaciones",
-    "email": "operaciones@portoerp.com",
-    "role": "Operador",
-    "active": true,
-    "passwordHash": "5685745b07b2b502ad24222a0ed3e6f8bdaeecc0a07f81f4bc039ee8b1f7c7aa"
+    "id": "usr-77128290",
+    "name": "Checco Sánchez Martín Elías",
+    "username": "77128290",
+    "email": "77128290@alm.local",
+    "role": "Analista de Operaciones",
+    "roleCode": "analista",
+    "active": true
+  },
+  {
+    "id": "usr-42840397",
+    "name": "Herrera Anzualdo Juan Carlos",
+    "username": "42840397",
+    "email": "42840397@alm.local",
+    "role": "Coordinador de Operaciones",
+    "roleCode": "coordinador",
+    "active": true
+  },
+  {
+    "id": "usr-03835981",
+    "name": "Inga Valiente José Augusto",
+    "username": "03835981",
+    "email": "03835981@alm.local",
+    "role": "Controlador de Muelle Tortuga",
+    "roleCode": "controlador",
+    "active": true
+  },
+  {
+    "id": "usr-72079280",
+    "name": "Morales Ruesta Vania Fernanda",
+    "username": "72079280",
+    "email": "72079280@alm.local",
+    "role": "Supervisor de Operaciones",
+    "roleCode": "supervisor",
+    "active": true
+  },
+  {
+    "id": "usr-72530903",
+    "name": "Panta Pingo Betty Isabel",
+    "username": "72530903",
+    "email": "72530903@alm.local",
+    "role": "Analista de Operaciones",
+    "roleCode": "analista",
+    "active": true
+  },
+  {
+    "id": "usr-43782334",
+    "name": "Pérez Moran Jimmy",
+    "username": "43782334",
+    "email": "43782334@alm.local",
+    "role": "Controlador de Muelle Tortuga",
+    "roleCode": "controlador",
+    "active": true
+  },
+  {
+    "id": "usr-71920224",
+    "name": "Timana Quiroz Renato Fabricio",
+    "username": "71920224",
+    "email": "71920224@alm.local",
+    "role": "Supervisor de Operaciones",
+    "roleCode": "supervisor",
+    "active": true
   }
 ]
