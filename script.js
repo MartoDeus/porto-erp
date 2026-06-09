@@ -1307,6 +1307,11 @@ function isDieselMotherShip(value) {
   return motherShips.has(normalizeDieselName(value));
 }
 
+function isDieselDispatcherShip(value) {
+  const dispatcherShips = new Set(["TALARA", "PARINAS", "LOBITOS_EXPRESS_CARGA", "ORO", "ROGUE", "MR_BOB"]);
+  return dispatcherShips.has(normalizeDieselName(value));
+}
+
 function isDieselTransfer(origin, receive) {
   return isDieselMotherShip(origin) && isDieselMotherShip(receive);
 }
@@ -1535,8 +1540,8 @@ function validateDieselRecord() {
   }
 
   if (hasEffectiveDieselDispatchModule(modules)) {
-    if (!isDieselMotherShip(dieselRefs.origin.value)) {
-      errors.push("Solo TALARA, PARIÑAS y LOBITOS EXPRESS CARGA pueden despachar diesel");
+    if (!isDieselDispatcherShip(dieselRefs.origin.value)) {
+      errors.push("Solo naves abastecedoras y barcazas pueden despachar diesel");
     }
 
     const invalidDispatch = dieselDispatches.some((entry) => entry.quantity <= 0 || !entry.voucher);
@@ -1655,8 +1660,8 @@ function updateDieselSummary() {
 function addDieselDispatch() {
   const quantity = toNumber(dieselRefs.qty.value);
 
-  if (!isDieselMotherShip(dieselRefs.origin.value)) {
-    alert("Solo TALARA, PARIÑAS y LOBITOS EXPRESS CARGA pueden despachar diesel.");
+  if (!isDieselDispatcherShip(dieselRefs.origin.value)) {
+    alert("Solo naves abastecedoras y barcazas pueden despachar diesel.");
     return;
   }
 
@@ -3250,7 +3255,10 @@ function getDieselDailyReportOriginOrder(movement) {
   const order = {
     TALARA: 1,
     PARINAS: 2,
-    LOBITOS_EXPRESS_CARGA: 3
+    LOBITOS_EXPRESS_CARGA: 3,
+    ORO: 4,
+    ROGUE: 5,
+    MR_BOB: 6
   };
   return order[origin] || 99;
 }
