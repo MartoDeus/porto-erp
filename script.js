@@ -103,7 +103,6 @@ const dieselRefs = {
   prevDay: document.querySelector("#dieselPrevDay"),
   nextDay: document.querySelector("#dieselNextDay"),
   origin: document.querySelector("#dieselOriginSelect"),
-  originPlatformToggle: document.querySelector("#dieselOriginPlatformToggle"),
   receive: document.querySelector("#dieselReceiveSelect"),
   receivePlatformToggle: document.querySelector("#dieselReceivePlatformToggle"),
   captain: document.querySelector("#dieselCaptain"),
@@ -1650,7 +1649,7 @@ function populateDieselShips() {
 
   const selectedOrigin = dieselRefs.origin.value;
   const selectedReceive = dieselRefs.receive.value;
-  const originOptions = isDieselPlatformMode(dieselRefs.originPlatformToggle) ? dieselPlatforms : dieselShips;
+  const originOptions = dieselShips;
   const receiveOptions = isDieselPlatformMode(dieselRefs.receivePlatformToggle) ? dieselPlatforms : dieselShips;
 
   fillDieselSelect(dieselRefs.origin, originOptions, selectedOrigin);
@@ -4076,16 +4075,13 @@ function bootDiesel() {
     updateDieselSummary();
     syncDieselInitialStockDisplay();
   });
-  [dieselRefs.originPlatformToggle, dieselRefs.receivePlatformToggle].forEach((button) => {
+  [dieselRefs.receivePlatformToggle].forEach((button) => {
     button?.addEventListener("click", () => {
       const pressed = button.getAttribute("aria-pressed") === "true";
       button.setAttribute("aria-pressed", String(!pressed));
       populateDieselShips();
       renderDieselRows();
       updateDieselSummary();
-      if (button === dieselRefs.originPlatformToggle) {
-        syncDieselInitialStockDisplay();
-      }
       updateDieselSaveState();
     });
   });
