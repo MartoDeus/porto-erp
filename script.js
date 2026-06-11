@@ -4945,6 +4945,266 @@ function renderBitacoraReport() {
   renderIcons();
 }
 
+function formatBitacoraExcelDuration(minutes) {
+  const safeMinutes = Math.max(0, Number(minutes) || 0);
+  const hours = Math.floor(safeMinutes / 60);
+  const remainingMinutes = safeMinutes % 60;
+
+  if (hours > 0 && remainingMinutes > 0) {
+    return `${hours} H ${remainingMinutes} min`;
+  }
+  if (hours > 0) {
+    return `${hours} H`;
+  }
+  return `${remainingMinutes} min`;
+}
+
+function formatBitacoraExcelDateCaption(value) {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return "";
+  }
+
+  const [year, month, day] = value.split("-").map(Number);
+  const startDate = new Date(year, month - 1, day, 12, 0, 0);
+  const nextDate = new Date(year, month - 1, day + 1, 12, 0, 0);
+  const startLabel = startDate.toLocaleDateString("es-PE", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric"
+  });
+  const endLabel = nextDate.toLocaleDateString("es-PE", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric"
+  });
+  return `Día ${startLabel} 06:00 Hrs al ${endLabel} 06:00 hrs`;
+}
+
+function getBitacoraExcelTypeName(event) {
+  const label = String(event?.categoria_nombre || event?.tipo_evento_nombre || event?.tipo_evento || "Sin categoría").trim();
+  if (!label || /sin[_\s-]*tipo/i.test(label)) {
+    return "SIN CATEGORÍA";
+  }
+  return normalizeDieselDisplayName(label).toUpperCase();
+}
+
+function getBitacoraExcelLocation(event) {
+  return normalizeDieselDisplayName(String(event?.detalle?.locacion || "").trim());
+}
+
+function getBitacoraExcelUnit(event) {
+  return normalizeDieselDisplayName(String(event?.detalle?.unidad || event?.nave_nombre || event?.nave_texto || "").trim());
+}
+
+function getBitacoraExcelVesselName(event) {
+  return normalizeDieselDisplayName(String(event?.nave_nombre || event?.nave_texto || "Sin nave").trim());
+}
+
+function getBitacoraExcelStartMinutes(event) {
+  return getTimeMinutes(event?.hora_inicio) ?? 0;
+}
+
+function getBitacoraExcelVesselOrder(name) {
+  const order = {
+    ELIZABETH: 1,
+    ORO: 2,
+    ROGUE: 3,
+    MR_BOB: 4,
+    TALARA: 10,
+    PARINAS: 11,
+    LJ_KELLEY: 12,
+    LOBITOS_EXPRESS_CARGA: 13
+  };
+  return order[normalizeDieselName(name)] || 50;
+}
+
+function clearBitacoraExcelMerges(sheet, startRow, endRow) {
+  const mergeRanges = Array.from(sheet._merges?.keys?.() || []);
+  mergeRanges.forEach((range) => {
+    const match = range.match(/^([A-Z]+)(\d+):([A-Z]+)(\d+)$/);
+    if (!match) {
+      return;
+    }
+    const rowStart = Number(match[2]);
+    const rowEnd = Number(match[4]);
+    if (rowStart >= startRow && rowEnd <= endRow) {
+      safeUnmergeCells(sheet, range);
+    }
+  });
+}
+
+function copyBitacoraTemplateBands(sheet, sourceRowNumber, targetRowNumber) {
+  const bands = [
+    [2, 4, 2],
+    [5, 6, 5],
+    [7, 8, 7],
+    [9, 10, 9],
+    [11, 12, 11],
+    [13, 19, 13],
+    [20, 22, 20],
+    [23, 24, 23],
+    [25, 30, 25]
+  ];
+
+  bands.forEach(([startColumn, endColumn, sourceColumn]) => {
+    const templateStyle = cloneExcelStyle(sheet.getCell(sourceRowNumber, sourceColumn).style);
+    for (let column = startColumn; column <= endColumn; column += 1) {
+      const targetCell = sheet.getCell(targetRowNumber, column);
+      targetCell.value = null;
+      targetCell.style = cloneExcelStyle(templateStyle);
+    }
+  });
+
+  sheet.getRow(targetRowNumber).height = sheet.getRow(sourceRowNumber).height || undefined;
+}
+
+function mergeBitacoraExcelBands(sheet, rowNumber) {
+  safeMergeCells(sheet, `B${rowNumber}:D${rowNumber}`);
+  safeMergeCells(sheet, `E${rowNumber}:F${rowNumber}`);
+  safeMergeCells(sheet, `G${rowNumber}:H${rowNumber}`);
+  safeMergeCells(sheet, `I${rowNumber}:J${rowNumber}`);
+  safeMergeCells(sheet, `K${rowNumber}:L${rowNumber}`);
+  safeMergeCells(sheet, `M${rowNumber}:S${rowNumber}`);
+  safeMergeCells(sheet, `T${rowNumber}:V${rowNumber}`);
+  safeMergeCells(sheet, `W${rowNumber}:X${rowNumber}`);
+  safeMergeCells(sheet, `Y${rowNumber}:AD${rowNumber}`);
+}
+
+function buildBitacoraExcelGroups(events) {
+  const grouped = events.reduce((map, event) => {
+    const vessel = getBitacoraExcelVesselName(event);
+    if (!map.has(vessel)) {
+      map.set(vessel, []);
+    }
+    map.get(vessel).push(event);
+    return map;
+  }, new Map());
+
+  return [...grouped.entries()]
+    .map(([vessel, rows]) => ({
+      vessel,
+      rows: [...rows].sort((first, second) => getBitacoraExcelStartMinutes(first) - getBitacoraExcelStartMinutes(second))
+    }))
+    .sort((first, second) => {
+      const orderDelta = getBitacoraExcelVesselOrder(first.vessel) - getBitacoraExcelVesselOrder(second.vessel);
+      if (orderDelta !== 0) {
+        return orderDelta;
+      }
+      const firstMinute = getBitacoraExcelStartMinutes(first.rows[0]);
+      const secondMinute = getBitacoraExcelStartMinutes(second.rows[0]);
+      return firstMinute - secondMinute || first.vessel.localeCompare(second.vessel, "es");
+    });
+}
+
+function fillBitacoraExcelSheet(sheet, events, selectedDate) {
+  const dataStartRow = 9;
+  const templateEndRow = 95;
+  const templateRowCount = templateEndRow - dataStartRow + 1;
+  const groups = buildBitacoraExcelGroups(events);
+  const requiredRows = Math.max(groups.reduce((total, group) => total + group.rows.length, 0), 1);
+
+  clearBitacoraExcelMerges(sheet, dataStartRow, sheet.rowCount);
+
+  if (requiredRows < templateRowCount) {
+    sheet.spliceRows(dataStartRow + requiredRows, templateRowCount - requiredRows);
+  }
+
+  sheet.getCell("F4").value = formatBitacoraExcelDateCaption(selectedDate);
+
+  let currentRow = dataStartRow;
+  if (groups.length === 0) {
+    copyBitacoraTemplateBands(sheet, 13, currentRow);
+    mergeBitacoraExcelBands(sheet, currentRow);
+    sheet.getCell(currentRow, 13).value = "SIN ACTIVIDADES REGISTRADAS";
+    sheet.getCell(currentRow, 20).value = "SIN CATEGORÍA";
+    return;
+  }
+
+  groups.forEach((group) => {
+    const groupStartRow = currentRow;
+    const totalMinutes = group.rows.reduce((sum, event) => sum + (getBitacoraDurationMinutes(event.hora_inicio, event.hora_fin, event.detalle?.duration_minutes) || 0), 0);
+
+    group.rows.forEach((event, index) => {
+      const templateRow = index === 0 ? 13 : 14;
+      copyBitacoraTemplateBands(sheet, templateRow, currentRow);
+      mergeBitacoraExcelBands(sheet, currentRow);
+
+      const durationMinutes = getBitacoraDurationMinutes(event.hora_inicio, event.hora_fin, event.detalle?.duration_minutes) || 0;
+      sheet.getCell(currentRow, 7).value = formatTimeLabel(event.hora_inicio);
+      sheet.getCell(currentRow, 9).value = formatTimeLabel(event.hora_fin || event.hora_inicio);
+      sheet.getCell(currentRow, 11).value = formatBitacoraExcelDuration(durationMinutes);
+      sheet.getCell(currentRow, 13).value = normalizeDieselDisplayName(event.descripcion || "");
+      sheet.getCell(currentRow, 20).value = getBitacoraExcelTypeName(event);
+      sheet.getCell(currentRow, 23).value = getBitacoraExcelUnit(event);
+      sheet.getCell(currentRow, 25).value = getBitacoraExcelLocation(event);
+      currentRow += 1;
+    });
+
+    safeMergeCells(sheet, `B${groupStartRow}:D${currentRow - 1}`);
+    safeMergeCells(sheet, `E${groupStartRow}:F${currentRow - 1}`);
+    sheet.getCell(groupStartRow, 2).value = group.vessel;
+    sheet.getCell(groupStartRow, 5).value = formatBitacoraExcelDuration(totalMinutes);
+  });
+}
+
+async function downloadBitacoraReportExcel() {
+  if (!window.ExcelJS) {
+    window.alert("No se pudo cargar el exportador de Excel. Revisa tu conexion a internet e intenta otra vez.");
+    return;
+  }
+
+  const selectedDate = bitacoraRefs.reportDate?.value || bitacoraRefs.date?.value || getTodayValue();
+  const originalHtml = bitacoraRefs.reportExcel?.innerHTML;
+
+  if (bitacoraRefs.reportExcel) {
+    bitacoraRefs.reportExcel.disabled = true;
+    bitacoraRefs.reportExcel.innerHTML = '<i data-lucide="loader-circle"></i>Generando...';
+    renderIcons();
+  }
+
+  try {
+    if (bitacoraRefs.categorizeDate) {
+      bitacoraRefs.categorizeDate.value = selectedDate;
+    }
+    await refreshBitacora();
+
+    const templateResponse = await fetch("assets/templates/ejemplo-bitacora.xlsx", { cache: "no-store" });
+    if (!templateResponse.ok) {
+      throw new Error("No se pudo cargar la plantilla de bitácora.");
+    }
+
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(await templateResponse.arrayBuffer());
+    const sheet = workbook.getWorksheet("bitacora") || workbook.worksheets[0];
+
+    if (!sheet) {
+      throw new Error("La plantilla no contiene una hoja utilizable.");
+    }
+
+    workbook.worksheets
+      .filter((worksheet) => worksheet.id !== sheet.id)
+      .forEach((worksheet) => workbook.removeWorksheet(worksheet.id));
+
+    const events = getBitacoraReportEvents();
+    fillBitacoraExcelSheet(sheet, events, selectedDate);
+    workbook.calcProperties = { fullCalcOnLoad: true };
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    downloadBlob(
+      new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }),
+      `reporte-bitacora-${selectedDate}.xlsx`
+    );
+  } catch (error) {
+    window.alert(error.message || "No se pudo generar el reporte Excel de bitácora.");
+  } finally {
+    if (bitacoraRefs.reportExcel) {
+      bitacoraRefs.reportExcel.disabled = false;
+      bitacoraRefs.reportExcel.innerHTML = originalHtml;
+      renderIcons();
+    }
+  }
+}
+
 function getFilteredBitacoraEvents() {
   const vesselValue = bitacoraRefs.categorizeVessel?.value || "";
   const typeValue = bitacoraRefs.categorizeType?.value || "";
@@ -5046,7 +5306,7 @@ function renderBitacoraCategorizeTable() {
         if (!category) {
           input.checked = false;
           if (bitacoraRefs.saveMessage) {
-            bitacoraRefs.saveMessage.textContent = "Selecciona una categoría antes de marcar un evento.";
+            bitacoraRefs.saveMessage.textContent = "Selecciona una categoría antes de marcar una actividad.";
           }
           updateBitacoraSelectionCount();
           return;
@@ -5280,6 +5540,7 @@ function bootBitacora() {
   });
   bindDateStepper(bitacoraRefs.reportDate, bitacoraRefs.reportPrevDay, bitacoraRefs.reportNextDay);
   bitacoraRefs.reportShift?.addEventListener("change", renderBitacoraReport);
+  bitacoraRefs.reportExcel?.addEventListener("click", downloadBitacoraReportExcel);
   bitacoraRefs.reportBack?.addEventListener("click", () => setPage("bitacora"));
   bitacoraRefs.backButton?.addEventListener("click", () => setPage("bitacora"));
   bitacoraRefs.saveCategorized?.addEventListener("click", saveBitacoraClassification);
