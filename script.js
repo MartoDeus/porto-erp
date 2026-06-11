@@ -103,7 +103,9 @@ const dieselRefs = {
   prevDay: document.querySelector("#dieselPrevDay"),
   nextDay: document.querySelector("#dieselNextDay"),
   origin: document.querySelector("#dieselOriginSelect"),
+  originPlatformToggle: document.querySelector("#dieselOriginPlatformToggle"),
   receive: document.querySelector("#dieselReceiveSelect"),
+  receivePlatformToggle: document.querySelector("#dieselReceivePlatformToggle"),
   captain: document.querySelector("#dieselCaptain"),
   driver: document.querySelector("#dieselDriver"),
   document: document.querySelector("#dieselDocument"),
@@ -262,7 +264,8 @@ const dieselCatalog = [
   { item: 16, group: "BARCAZA", tab: "Barcaza", icon: "ship", ship: "ORO", initialStock: 2228, type: "Barge", dayCrew: "ALFREDO CAVERO / FERNANDO SUAREZ", nightCrew: "RODOLFO CRUZ / FRANCISCO CHUNGA", received: 0, receivedFrom: "-", day: 36, night: 36, dispatched: 0, transferred: 0 },
   { item: 17, group: "BARCAZA", tab: "Barcaza", icon: "ship", ship: "ROGUE", initialStock: 1970, type: "Barge", dayCrew: "EDGAR FERNANDEZ SEMINARIO / JOSE VALVERDE ESPINOZA", nightCrew: "EDGAR FERNANDEZ SEMINARIO / JUAN MAYO LIZARBE", received: 0, receivedFrom: "-", day: 33, night: 38, dispatched: 0, transferred: 0 },
   { item: 18, group: "BARCAZA", tab: "Barcaza", icon: "ship", ship: "MR BOB", initialStock: 2086, type: "Barge", dayCrew: "CARLOS MORE / DIEGO NIZAMA MORE", nightCrew: "JAIME ROJAS / GERMAN CHUNGA", received: 0, receivedFrom: "-", day: 15, night: 40, dispatched: 0, transferred: 0 },
-  { item: 19, group: "FLOTA TALARA", tab: "Flota Talara", icon: "ship-wheel", ship: "LJ KELLEY", initialStock: 678, type: "Field", dayCrew: "RAMON JACINTO TUME / PERCY NAVARRO MARTINEZ", nightCrew: "T.DIA", received: 0, receivedFrom: "-", day: 0, night: 0, dispatched: 0, transferred: 0 }
+  { item: 19, group: "BARCAZA", tab: "Barcaza", icon: "ship", ship: "JADE (IMI)", initialStock: 0, type: "Barge", dayCrew: "-", nightCrew: "-", received: 0, receivedFrom: "-", day: 0, night: 0, dispatched: 0, transferred: 0 },
+  { item: 20, group: "FLOTA TALARA", tab: "Flota Talara", icon: "ship-wheel", ship: "LJ KELLEY", initialStock: 678, type: "Field", dayCrew: "RAMON JACINTO TUME / PERCY NAVARRO MARTINEZ", nightCrew: "T.DIA", received: 0, receivedFrom: "-", day: 0, night: 0, dispatched: 0, transferred: 0 }
 ];
 
 const navesFleet = [
@@ -279,6 +282,47 @@ let selectedNaveId = "talara";
 let navesSceneState = null;
 
 const dieselShips = dieselCatalog.map((unit) => unit.ship);
+const dieselPlatforms = [
+  "ESPERANZA 1",
+  "GENERADOR ES1",
+  "GRUA ES1",
+  "ES1",
+  "LT12",
+  "PP",
+  "DD",
+  "NN",
+  "GG",
+  "PN2",
+  "PN1",
+  "YY",
+  "PN3",
+  "PN5",
+  "PN7",
+  "PN9",
+  "HH",
+  "LO13",
+  "LO14",
+  "LO16",
+  "LO6",
+  "LO7",
+  "LO11",
+  "LO9",
+  "LO19",
+  "LL",
+  "LO10",
+  "LO18",
+  "LO3",
+  "LO4",
+  "KK",
+  "R",
+  "BB",
+  "SP1",
+  "CC",
+  "PN8",
+  "SP1A",
+  "TT",
+  "ZZ"
+];
 
 const dieselShifts = ["Diurno", "Nocturno"];
 const dieselInitialStockByShip = {
@@ -787,6 +831,10 @@ function setPage(pageName) {
 
   if (pageName === "cumpleanos") {
     initBirthdaysView();
+  }
+
+  if (pageName === "diesel") {
+    syncDieselInitialStockDisplay();
   }
 }
 
@@ -1302,14 +1350,23 @@ function normalizeDieselDisplayName(value) {
   return text;
 }
 
+function isDieselPlatform(value) {
+  const normalized = normalizeDieselName(value);
+  return dieselPlatforms.some((platform) => normalizeDieselName(platform) === normalized);
+}
+
+function isDieselImiUnit(value) {
+  return /\(\s*IMI\s*\)\s*$/i.test(String(value || "").trim());
+}
+
 function isDieselMotherShip(value) {
   const motherShips = new Set(["TALARA", "PARINAS", "LOBITOS_EXPRESS_CARGA"]);
   return motherShips.has(normalizeDieselName(value));
 }
 
 function isDieselDispatcherShip(value) {
-  const dispatcherShips = new Set(["TALARA", "PARINAS", "LOBITOS_EXPRESS_CARGA", "ORO", "ROGUE", "MR_BOB"]);
-  return dispatcherShips.has(normalizeDieselName(value));
+  const dispatcherShips = new Set(["TALARA", "PARINAS", "LOBITOS_EXPRESS_CARGA", "ORO", "ROGUE", "MR_BOB", "JADE_IMI"]);
+  return dispatcherShips.has(normalizeDieselName(value)) || isDieselPlatform(value);
 }
 
 function isDieselTransfer(origin, receive) {
@@ -1359,6 +1416,7 @@ function getDieselInitialStock(ship) {
 async function refreshDieselInitialStock() {
   const session = getSession();
   const ship = dieselRefs.origin?.value;
+  const requestedShip = ship;
 
   if (!session?.accessToken || !ship) {
     return;
@@ -1375,7 +1433,10 @@ async function refreshDieselInitialStock() {
       }
     });
     const stock = Number(rows?.[0]?.stock_final ?? 0);
-    dieselInitialStockCache.set(normalizeDieselName(ship), Number.isFinite(stock) ? stock : 0);
+    if (dieselRefs.origin?.value !== requestedShip) {
+      return;
+    }
+    dieselInitialStockCache.set(normalizeDieselName(requestedShip), Number.isFinite(stock) ? stock : 0);
     updateDieselSummary();
   } catch (error) {
     console.warn("No se pudo cargar el stock inicial diesel.", error);
@@ -1561,29 +1622,39 @@ function updateDieselSaveState() {
   dieselRefs.save.disabled = validateDieselRecord().length > 0;
 }
 
+function isDieselPlatformMode(toggle) {
+  return toggle?.getAttribute("aria-pressed") === "true";
+}
+
+function fillDieselSelect(select, options, selectedValue, excludeValue = "") {
+  if (!select) {
+    return;
+  }
+
+  select.innerHTML = "";
+  options
+    .filter((option) => option !== excludeValue)
+    .forEach((option) => select.add(new Option(option, option)));
+
+  if (selectedValue && options.includes(selectedValue) && selectedValue !== excludeValue) {
+    select.value = selectedValue;
+  } else {
+    select.selectedIndex = -1;
+  }
+}
+
 function populateDieselShips() {
   if (!dieselRefs.origin || !dieselRefs.receive) {
     return;
   }
 
-  if (!dieselRefs.origin.options.length) {
-    dieselShips.forEach((ship) => {
-      dieselRefs.origin.add(new Option(ship, ship));
-    });
-    dieselRefs.origin.selectedIndex = -1;
-  }
-
+  const selectedOrigin = dieselRefs.origin.value;
   const selectedReceive = dieselRefs.receive.value;
-  dieselRefs.receive.innerHTML = "";
-  dieselShips
-    .filter((ship) => ship !== dieselRefs.origin.value)
-    .forEach((ship) => dieselRefs.receive.add(new Option(ship, ship)));
+  const originOptions = isDieselPlatformMode(dieselRefs.originPlatformToggle) ? dieselPlatforms : dieselShips;
+  const receiveOptions = isDieselPlatformMode(dieselRefs.receivePlatformToggle) ? dieselPlatforms : dieselShips;
 
-  if (selectedReceive && selectedReceive !== dieselRefs.origin.value) {
-    dieselRefs.receive.value = selectedReceive;
-  } else if (!dieselRefs.origin.value) {
-    dieselRefs.receive.selectedIndex = -1;
-  }
+  fillDieselSelect(dieselRefs.origin, originOptions, selectedOrigin);
+  fillDieselSelect(dieselRefs.receive, receiveOptions, selectedReceive, dieselRefs.origin.value);
 }
 
 function populateDieselConsultFilters() {
@@ -3258,7 +3329,8 @@ function getDieselDailyReportOriginOrder(movement) {
     LOBITOS_EXPRESS_CARGA: 3,
     ORO: 4,
     ROGUE: 5,
-    MR_BOB: 6
+    MR_BOB: 6,
+    JADE_IMI: 7
   };
   return order[origin] || 99;
 }
@@ -3380,6 +3452,7 @@ async function downloadDieselDailyReportExcel() {
       ["ORO", 27],
       ["ROGUE", 28],
       ["MR_BOB", 29],
+      ["JADE_IMI", 30],
       ["LJ_KELLEY", 32]
     ]);
 
@@ -3720,7 +3793,9 @@ async function exportDieselConsultExcel() {
     ]
   ];
 
-  allRows.forEach((record) => {
+  allRows
+    .filter((record) => !isDieselImiUnit(record.unidad_nombre || record.nave || record.ship))
+    .forEach((record) => {
     const key = getDieselExportUnitDateKey(record.unidad_id, record.fecha);
     const receivedMovements = movementGroups.receivedByDestination.get(key) || [];
     const outgoingGroups = movementGroups.outgoingByOrigin.get(key) || { despacho: [], transferencia: [] };
@@ -3866,6 +3941,15 @@ function clearDieselForm() {
   updateDieselSummary();
 }
 
+function syncDieselInitialStockDisplay() {
+  if (!dieselRefs.origin?.value) {
+    updateDieselSummary();
+    return;
+  }
+
+  refreshDieselInitialStock();
+}
+
 function clearDieselFormAfterSave() {
   dieselRefs.receive.selectedIndex = -1;
   dieselRefs.captain.value = "";
@@ -3990,7 +4074,20 @@ function bootDiesel() {
     populateDieselShips();
     renderDieselRows();
     updateDieselSummary();
-    refreshDieselInitialStock();
+    syncDieselInitialStockDisplay();
+  });
+  [dieselRefs.originPlatformToggle, dieselRefs.receivePlatformToggle].forEach((button) => {
+    button?.addEventListener("click", () => {
+      const pressed = button.getAttribute("aria-pressed") === "true";
+      button.setAttribute("aria-pressed", String(!pressed));
+      populateDieselShips();
+      renderDieselRows();
+      updateDieselSummary();
+      if (button === dieselRefs.originPlatformToggle) {
+        syncDieselInitialStockDisplay();
+      }
+      updateDieselSaveState();
+    });
   });
   dieselRefs.add?.addEventListener("click", addDieselDispatch);
   [dieselRefs.receive, dieselRefs.qty, dieselRefs.voucher].forEach((control) => {
@@ -4028,7 +4125,7 @@ function bootDiesel() {
       dieselRefs.consultDate.value = dieselRefs.date.value;
     }
     renderDieselConsult();
-    refreshDieselInitialStock();
+    syncDieselInitialStockDisplay();
   });
   dieselRefs.prevDay?.addEventListener("click", () => {
     dieselRefs.date.value = shiftDateValue(dieselRefs.date.value, -1);
@@ -4105,6 +4202,7 @@ function bootDiesel() {
     dieselRefs.consultDate.value = getTodayValue();
   }
   renderDieselConsult();
+  syncDieselInitialStockDisplay();
 
   dieselRefs.observation?.addEventListener("input", () => {
     dieselRefs.observationCount.textContent = String(dieselRefs.observation.value.length);

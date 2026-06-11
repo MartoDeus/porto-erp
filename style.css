@@ -3630,8 +3630,8 @@ button {
 
 .diesel-register-top {
   display: grid;
-  grid-template-columns: minmax(240px, 0.95fr) minmax(220px, 1fr) minmax(260px, 1.25fr) minmax(150px, 0.45fr);
-  gap: 26px;
+  grid-template-columns: minmax(204px, 0.8075fr) minmax(220px, 1fr) minmax(128px, auto) minmax(221px, 1.0625fr) minmax(150px, 0.45fr);
+  gap: 18px;
   align-items: end;
   margin-bottom: 14px;
   padding: 18px 24px;
@@ -3646,6 +3646,39 @@ button {
   width: 100%;
   min-height: 44px;
   justify-content: center;
+}
+
+.list-toggle {
+  min-height: 32px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--teal-dark);
+  background: #ffffff;
+  border: 1px solid #c9d7e7;
+  border-radius: 6px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.list-toggle svg {
+  width: 17px;
+  height: 17px;
+}
+
+.list-toggle[aria-pressed="true"] {
+  color: #ffffff;
+  background: var(--teal-dark);
+  border-color: var(--teal-dark);
+  box-shadow: 0 8px 18px rgba(0, 131, 116, 0.18);
+}
+
+.diesel-register-top .diesel-platform-toggle {
+  min-height: 32px;
+  align-self: end;
 }
 
 .diesel-register-top label,
@@ -3901,9 +3934,13 @@ button {
 
 .diesel-entry-form {
   display: grid;
-  grid-template-columns: minmax(160px, 1.4fr) minmax(110px, 0.8fr) minmax(100px, 0.7fr) 40px;
-  gap: 14px;
+  grid-template-columns: minmax(150px, 1.25fr) minmax(128px, auto) minmax(110px, 0.75fr) minmax(100px, 0.65fr) 40px;
+  gap: 12px;
   align-items: end;
+}
+
+.diesel-entry-form .diesel-platform-toggle {
+  min-height: 32px;
 }
 
 .add-square {

@@ -559,9 +559,12 @@
                 <button type="button" id="dieselNextDay" aria-label="Día siguiente"><i data-lucide="chevron-right"></i></button>
               </span>
             </label>
-            <label>Nave Origen
+            <label>Nave/Barcaza Origen
               <select id="dieselOriginSelect"></select>
             </label>
+            <button class="list-toggle diesel-platform-toggle" type="button" id="dieselOriginPlatformToggle" aria-pressed="false">
+              <i data-lucide="layers"></i><span>Plataformas</span>
+            </button>
             <fieldset>
               <legend>Turno</legend>
               <label class="radio-row option-card diesel-shift-card"><input type="radio" name="dieselShift" value="Diurno"><i data-lucide="sun"></i><span>Diurno</span></label>
@@ -603,7 +606,10 @@
               <article class="panel-card diesel-module diesel-dispatch" data-module="despacho">
                 <div class="diesel-module-head"><h3>Despacho</h3><span class="module-state">Activo</span><label class="switch"><input type="checkbox"><b></b></label></div>
                 <div class="diesel-entry-form">
-                  <label>Nave Recibe<select id="dieselReceiveSelect"></select></label>
+                  <label>Nave/Barcaza Recibe<select id="dieselReceiveSelect"></select></label>
+                  <button class="list-toggle diesel-platform-toggle" type="button" id="dieselReceivePlatformToggle" aria-pressed="false">
+                    <i data-lucide="layers"></i><span>Plataformas</span>
+                  </button>
                   <label>Cantidad (gal)<input id="dieselDispatchQty" type="number" min="1" placeholder="Cantidad"></label>
                 <label>N° Vale<input id="dieselDispatchVoucher" type="text" placeholder="N° Vale"></label>
                   <button class="add-square" type="button" id="addDieselDispatch"><i data-lucide="plus"></i></button>
@@ -611,7 +617,7 @@
                 <div class="passenger-table-wrap diesel-table-wrap">
                   <table class="passenger-table diesel-table">
                     <thead>
-                      <tr><th>Nave recibe</th><th>Cantidad (gal)</th><th>N° Vale</th><th>Tipo</th><th>Acción</th></tr>
+                      <tr><th>Nave/Barcaza recibe</th><th>Cantidad (gal)</th><th>N° Vale</th><th>Tipo</th><th>Acción</th></tr>
                     </thead>
                     <tbody id="dieselDispatchRows"></tbody>
                   </table>
