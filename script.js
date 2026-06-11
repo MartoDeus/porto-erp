@@ -200,6 +200,7 @@ const bitacoraRefs = {
   reportShift: document.querySelector("#bitacoraReportShift"),
   reportGroups: document.querySelector("#bitacoraReportGroups"),
   reportBack: document.querySelector("#bitacoraReportBackButton"),
+  reportExcel: document.querySelector("#bitacoraReportExcel"),
   categorizeButton: document.querySelector("#bitacoraCategorizeButton"),
   backButton: document.querySelector("#bitacoraBackButton"),
   categorizeDate: document.querySelector("#categorizeDateFilter"),
@@ -806,7 +807,7 @@ function setPage(pageName) {
       cargas: "Cargas",
       bitacora: "Bitácora",
       "bitacora-reporte": "Reporte de Bitácora",
-      "bitacora-categorizar": "Clasificar Eventos",
+      "bitacora-categorizar": "Clasificar Actividades",
       mapa: "Mapa",
       naves: "Naves",
       rutas: "Rutas",
@@ -4399,11 +4400,18 @@ function getTimeMinutes(value) {
   return (hour * 60) + minute;
 }
 
-function getBitacoraDurationMinutes(startTime, endTime) {
+function getBitacoraDurationMinutes(startTime, endTime, explicitDuration = null) {
+  const normalizedExplicitDuration = Number(explicitDuration);
+  if (Number.isFinite(normalizedExplicitDuration) && normalizedExplicitDuration >= 0) {
+    return normalizedExplicitDuration;
+  }
   const startMinutes = getTimeMinutes(startTime);
   const endMinutes = getTimeMinutes(endTime);
-  if (startMinutes === null || endMinutes === null || endMinutes < startMinutes) {
+  if (startMinutes === null || endMinutes === null) {
     return null;
+  }
+  if (endMinutes < startMinutes) {
+    return (24 * 60) - startMinutes + endMinutes;
   }
   return endMinutes - startMinutes;
 }
@@ -4495,7 +4503,7 @@ function renderBitacoraLastEvent() {
   bitacoraRefs.lastEvent.hidden = false;
   bitacoraRefs.lastEvent.classList.remove("is-empty");
   bitacoraRefs.lastEvent.innerHTML = `
-    <span>Último evento registrado</span>
+    <span>Última actividad registrada</span>
     <strong>${escapeHtml(timeLabel)} · ${escapeHtml(vessel)}</strong>
     <p>${escapeHtml(latestEvent.descripcion || "-")}</p>
   `;
@@ -4550,8 +4558,18 @@ function getBitacoraCategoryName(categoryId) {
 
 function normalizeBitacoraRawEvent(event) {
   const vessel = normalizeDieselDisplayName(event.nave_nombre || event.nave_texto || "");
+  const detail = typeof event.detalle === "string"
+    ? (() => {
+        try {
+          return JSON.parse(event.detalle);
+        } catch (error) {
+          return {};
+        }
+      })()
+    : (event.detalle && typeof event.detalle === "object" ? event.detalle : {});
   return {
     ...event,
+    detalle: detail,
     nave_nombre: vessel,
     nave_texto: vessel,
     tipo_evento_nombre: event.tipo_evento_nombre || getBitacoraTypeName(event.tipo_evento),
@@ -4696,7 +4714,7 @@ async function loadBitacoraEvents() {
 
   const loadFromBaseTable = async () => {
     const fallbackQuery = new URLSearchParams({
-      select: "id,fecha,hora_inicio,hora_fin,nave_texto,tipo_evento,descripcion,categoria_id,estado,created_by,created_at",
+      select: "id,fecha,hora_inicio,hora_fin,nave_texto,tipo_evento,descripcion,categoria_id,estado,detalle,created_by,created_at",
       fecha: `eq.${selectedDate}`,
       order: "hora_inicio.desc"
     });
@@ -4749,8 +4767,8 @@ function renderBitacoraTimeline() {
     bitacoraRefs.timeline.innerHTML = `
       <article class="empty-consult-card bitacora-empty-card">
         <i data-lucide="calendar-clock"></i>
-        <h3>Sin eventos para esta nave</h3>
-        <p>Los eventos registrados aparecerán del más reciente al más antiguo.</p>
+        <h3>Sin actividades para esta nave</h3>
+        <p>Las actividades registradas aparecerán de la más reciente a la más antigua.</p>
       </article>
     `;
     renderIcons();
@@ -4760,7 +4778,7 @@ function renderBitacoraTimeline() {
   bitacoraRefs.timeline.innerHTML = todayEvents.map((event, index) => {
     const typeLabel = getBitacoraReportTypeLabel(event);
     const typeClass = getBitacoraReportTypeTone(typeLabel);
-    const durationMinutes = getBitacoraDurationMinutes(event.hora_inicio, event.hora_fin);
+    const durationMinutes = getBitacoraDurationMinutes(event.hora_inicio, event.hora_fin, event.detalle?.duration_minutes);
     const durationLabel = durationMinutes === null ? "--" : `${durationMinutes} min`;
     const startLabel = formatTimeLabel(event.hora_inicio);
     const endLabel = formatTimeLabel(event.hora_fin || event.hora_inicio);
@@ -4888,7 +4906,7 @@ function renderBitacoraReport() {
         <summary>
           <i data-lucide="ship"></i>
           <strong>${escapeHtml(vessel)}</strong>
-          <span>Eventos<br><b>${rows.length}</b></span>
+          <span>Actividades<br><b>${rows.length}</b></span>
           <span>Transferencias<br><b>${transferCount}</b></span>
           <span>Incidentes<br><b>${incidentCount}</b></span>
           <span>Duración total<br><b>${formatBitacoraDurationSummary(totalMinutes)}</b></span>
@@ -4908,10 +4926,10 @@ function renderBitacoraReport() {
           </aside>
           <div class="report-vessel-table-wrap">
             <table>
-              <thead><tr><th>Hora inicio</th><th>Hora fin</th><th>Descripción del evento</th><th>Tipo</th><th>Duración</th><th>Registrado por</th></tr></thead>
+              <thead><tr><th>Hora inicio</th><th>Hora fin</th><th>Descripción de la actividad</th><th>Tipo</th><th>Duración</th><th>Registrado por</th></tr></thead>
               <tbody>
                 ${rows.map((event) => {
-                  const durationMinutes = getBitacoraDurationMinutes(event.hora_inicio, event.hora_fin);
+                  const durationMinutes = getBitacoraDurationMinutes(event.hora_inicio, event.hora_fin, event.detalle?.duration_minutes);
                   const typeLabel = getBitacoraReportTypeLabel(event);
                   const typeTone = getBitacoraReportTypeTone(typeLabel);
                   return `<tr><td>${escapeHtml(formatTimeLabel(event.hora_inicio))}</td><td>${escapeHtml(formatTimeLabel(event.hora_fin))}</td><td>${escapeHtml(event.descripcion)}</td><td><em class="is-${escapeHtml(typeTone)}">${escapeHtml(typeLabel)}</em></td><td>${durationMinutes === null ? "--" : `${durationMinutes} min`}</td><td>${escapeHtml(event.created_by_nombre || event.registrado_por || "Martín Checco")}</td></tr>`;
@@ -4968,14 +4986,14 @@ function renderBitacoraCategorizeTable() {
     bitacoraRefs.visibleCount.textContent = String(events.length);
   }
   if (bitacoraRefs.tableSummary) {
-    bitacoraRefs.tableSummary.textContent = `Mostrando ${events.length} de ${bitacoraEventsCache.length} eventos`;
+    bitacoraRefs.tableSummary.textContent = `Mostrando ${events.length} de ${bitacoraEventsCache.length} actividades`;
   }
   const title = document.querySelector(".categorize-table-card h3");
   if (title) {
     const labels = {
-      all: "Eventos pendientes de revisión",
-      pending: "Eventos pendientes de clasificar",
-      classified: "Eventos clasificados"
+      all: "Actividades pendientes de revisión",
+      pending: "Actividades pendientes de clasificar",
+      classified: "Actividades clasificadas"
     };
     title.firstChild.textContent = `${labels[bitacoraStatusFilter] || labels.all} `;
   }
@@ -4986,7 +5004,7 @@ function renderBitacoraCategorizeTable() {
         <td colspan="6">
           <article class="empty-consult-card bitacora-empty-card">
             <i data-lucide="inbox"></i>
-            <h3>Sin eventos para clasificar</h3>
+            <h3>Sin actividades para clasificar</h3>
             <p>No hay registros reales con los filtros actuales.</p>
           </article>
         </td>
@@ -5004,7 +5022,7 @@ function renderBitacoraCategorizeTable() {
     const categoryStyle = draft ? ` style="color: ${escapeHtml(draft.color)}; background: ${escapeHtml(draft.bg)};"` : "";
     const stateClass = draft ? "validated" : getBitacoraStateClass(event.estado);
     const stateLabel = draft ? "Validado" : getBitacoraStateLabel(event.estado);
-    const durationMinutes = getBitacoraDurationMinutes(event.hora_inicio, event.hora_fin);
+    const durationMinutes = getBitacoraDurationMinutes(event.hora_inicio, event.hora_fin, event.detalle?.duration_minutes);
     return `
       <tr data-event-id="${event.id}" class="${draft ? "is-categorized" : ""}">
         <td class="event-time-cell">
@@ -5079,7 +5097,7 @@ async function saveBitacoraEvent() {
   const session = getSession();
 
   if (!session?.accessToken) {
-    alert("Vuelve a iniciar sesión para registrar eventos.");
+    alert("Vuelve a iniciar sesión para registrar actividades.");
     showLogin();
     return;
   }
@@ -5124,14 +5142,14 @@ async function saveBitacoraEvent() {
     }
     updateBitacoraHeader();
     await refreshBitacora();
-    showSuccessToast("Se guardó con éxito", "El evento de bitácora se ha guardado correctamente.");
+    showSuccessToast("Se guardó con éxito", "La actividad de bitácora se ha guardado correctamente.");
   } catch (error) {
     if (error.authExpired) {
       alert(error.message);
       showLogin();
       return;
     }
-    alert(error.message || "No se pudo registrar el evento.");
+    alert(error.message || "No se pudo registrar la actividad.");
   } finally {
     bitacoraRefs.submit.innerHTML = originalHtml;
     updateBitacoraSubmitState();
@@ -5145,13 +5163,13 @@ async function saveBitacoraClassification() {
   const eventCount = [...classificationGroups.values()].reduce((total, ids) => total + ids.length, 0);
 
   if (!session?.accessToken) {
-    alert("Vuelve a iniciar sesión para clasificar eventos.");
+    alert("Vuelve a iniciar sesión para clasificar actividades.");
     showLogin();
     return;
   }
 
   if (eventCount === 0) {
-    bitacoraRefs.saveMessage.textContent = "Marca al menos un evento pendiente de revisión.";
+    bitacoraRefs.saveMessage.textContent = "Marca al menos una actividad pendiente de revisión.";
     return;
   }
 
@@ -5175,7 +5193,7 @@ async function saveBitacoraClassification() {
     const updatedCount = updates.reduce((total, updated, index) => total + (Number(updated) || [...classificationGroups.values()][index].length), 0);
 
     bitacoraClassificationDraft.clear();
-    bitacoraRefs.saveMessage.textContent = `${updatedCount || eventCount} evento(s) clasificado(s) guardado(s).`;
+    bitacoraRefs.saveMessage.textContent = `${updatedCount || eventCount} actividad(es) clasificada(s) guardada(s).`;
     await refreshBitacora();
   } catch (error) {
     if (error.authExpired) {

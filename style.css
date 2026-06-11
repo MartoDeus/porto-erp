@@ -3296,12 +3296,14 @@ button {
 }
 
 .report-export-slot {
-  display: grid;
+  display: flex;
+  gap: 12px;
   align-items: end;
   padding-top: calc(0.88rem + 6px);
 }
 
-.report-actions #bitacoraReportPdf {
+.report-actions #bitacoraReportPdf,
+.report-actions #bitacoraReportExcel {
   min-height: 44px;
 }
 
@@ -3929,16 +3931,16 @@ button {
 
 .diesel-entry-form {
   display: grid;
-  grid-template-columns: minmax(150px, 1.25fr) 96px minmax(110px, 0.75fr) minmax(100px, 0.65fr) 40px;
+  grid-template-columns: minmax(150px, 1.25fr) 74px minmax(110px, 0.75fr) minmax(100px, 0.65fr) 40px;
   gap: 12px;
   align-items: end;
 }
 
 .diesel-entry-form .diesel-platform-toggle {
-  min-height: 32px;
-  padding: 0 8px;
-  gap: 6px;
-  font-size: 0.84rem;
+  min-height: 30px;
+  padding: 0 6px;
+  gap: 4px;
+  font-size: 0.78rem;
 }
 
 .diesel-entry-form .diesel-platform-toggle svg {
