@@ -1323,8 +1323,18 @@ function parseCrew(crew) {
   return { captain, driver };
 }
 
+function repairLegacyText(value) {
+  const text = String(value || "");
+  return text
+    .replace(/PARI(?:Ã‘|ï¿½)AS/gi, "PARIÑAS")
+    .replace(/PE(?:Ã‘|ï¿½)A/gi, "PEÑA")
+    .replace(/PE(?:Ã‘|ï¿½)AS/gi, "PEÑAS")
+    .replace(/MUELLETE/gi, "MUELLETE")
+    .replace(/nAVEGA/g, "NAVEGA");
+}
+
 function normalizeDieselName(value) {
-  const normalized = String(value || "")
+  const normalized = repairLegacyText(value)
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/gi, "_")
@@ -1343,7 +1353,7 @@ function normalizeDieselName(value) {
 }
 
 function normalizeDieselDisplayName(value) {
-  const text = String(value || "");
+  const text = repairLegacyText(value);
   if (normalizeDieselName(text) === "PARINAS" || text.includes(`PARI${String.fromCharCode(195)}`)) {
     return "PARIÑAS";
   }
@@ -4569,9 +4579,13 @@ function normalizeBitacoraRawEvent(event) {
     : (event.detalle && typeof event.detalle === "object" ? event.detalle : {});
   return {
     ...event,
-    detalle: detail,
+    detalle: Object.fromEntries(Object.entries(detail).map(([key, value]) => [
+      key,
+      typeof value === "string" ? repairLegacyText(value) : value
+    ])),
     nave_nombre: vessel,
     nave_texto: vessel,
+    descripcion: repairLegacyText(event.descripcion || ""),
     tipo_evento_nombre: event.tipo_evento_nombre || getBitacoraTypeName(event.tipo_evento),
     categoria_nombre: event.categoria_nombre || getBitacoraCategoryName(event.categoria_id),
     registrado_por: event.registrado_por || "Usuario"
