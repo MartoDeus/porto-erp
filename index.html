@@ -585,11 +585,23 @@
                 <label>Volumen (gal)<input id="dieselConsumption" type="number" min="0"></label>
               </article>
 
-              <article class="panel-card diesel-module" data-module="sondaje">
+              <article class="panel-card diesel-module diesel-sondaje-module" data-module="sondaje">
                 <div class="diesel-module-head"><h3>Acta de Sondaje</h3><span class="module-state">Activo</span><label class="switch"><input type="checkbox"><b></b></label></div>
-                <label>N° Documento<input id="dieselDocument" type="text"></label>
-                <label>Reingreso (gal)<input id="dieselReturn" type="number" min="0"></label>
-                <label>Diferencia (gal)<input id="dieselDifference" type="number" min="0" placeholder="Diferencia"></label>
+                <div class="diesel-sondaje-body">
+                  <label class="diesel-sondaje-select-label">
+                    <select id="dieselSondajeSelect">
+                      <option value="1">Sondaje 1</option>
+                      <option value="2">Sondaje 2</option>
+                      <option value="3">Sondaje 3</option>
+                      <option value="4">Sondaje 4</option>
+                      <option value="5">Sondaje 5</option>
+                    </select>
+                  </label>
+                  <label><span>N° Documento <b data-diesel-sondaje-index>1</b></span><input id="dieselDocument" type="text"></label>
+                  <label><span>Reingreso (gal) <b data-diesel-sondaje-index>1</b></span><input id="dieselReturn" type="number" min="0"></label>
+                  <label><span>Diferencia (gal) <b data-diesel-sondaje-index>1</b></span><input id="dieselDifference" type="number" min="0" placeholder="Diferencia"></label>
+                  <label><span>Consumo <b data-diesel-sondaje-index>1</b></span><input id="dieselSondajeConsumption" type="number" min="0"></label>
+                </div>
               </article>
 
               <article class="panel-card diesel-module" data-module="tripulacion">

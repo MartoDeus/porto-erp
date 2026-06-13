@@ -3722,19 +3722,20 @@ button {
 
 .diesel-layout {
   display: grid;
-  grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+  grid-template-columns: minmax(250px, 290px) minmax(0, 1fr);
   gap: 16px;
   align-items: start;
 }
 
 .diesel-left-stack {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   grid-template-areas:
-    "recarga sondaje"
-    "consumo sondaje"
-    "tripulacion tripulacion";
-  gap: 14px 13px;
+    "sondaje"
+    "recarga"
+    "consumo"
+    "tripulacion";
+  gap: 14px;
   align-content: start;
   min-width: 0;
 }
@@ -3776,17 +3777,17 @@ button {
 
 .diesel-left-stack > [data-module="recarga"] {
   grid-area: recarga;
-  min-height: 164px;
+  min-height: 152px;
 }
 
 .diesel-left-stack > [data-module="consumo"] {
   grid-area: consumo;
-  min-height: 192px;
+  min-height: 152px;
 }
 
 .diesel-left-stack > [data-module="sondaje"] {
   grid-area: sondaje;
-  min-height: 370px;
+  min-height: 0;
 }
 
 .diesel-left-stack > [data-module="tripulacion"] {
@@ -3902,6 +3903,50 @@ button {
 
 .diesel-module.is-blocked .module-state {
   color: #dc2626;
+}
+
+.diesel-sondaje-module {
+  gap: 0;
+}
+
+.diesel-sondaje-body {
+  display: grid;
+  gap: 10px;
+  padding-top: 10px;
+}
+
+.diesel-sondaje-body[hidden] {
+  display: none !important;
+}
+
+.diesel-module[data-module="sondaje"].is-blocked > :not(.diesel-module-head) {
+  opacity: 1;
+  pointer-events: none;
+}
+
+.diesel-module[data-module="sondaje"].is-blocked .diesel-sondaje-body {
+  display: none;
+}
+
+.diesel-sondaje-select-label {
+  margin-bottom: 2px;
+}
+
+.diesel-sondaje-select-label select {
+  width: 100%;
+}
+
+.diesel-sondaje-body label > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.diesel-sondaje-body label > span b {
+  font-weight: 800;
+  color: inherit;
 }
 
 .positive-field,

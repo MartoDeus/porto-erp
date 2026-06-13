@@ -105,6 +105,9 @@ const dieselRefs = {
   origin: document.querySelector("#dieselOriginSelect"),
   receive: document.querySelector("#dieselReceiveSelect"),
   receivePlatformToggle: document.querySelector("#dieselReceivePlatformToggle"),
+  sondajeSelect: document.querySelector("#dieselSondajeSelect"),
+  sondajeIndices: document.querySelectorAll("[data-diesel-sondaje-index]"),
+  sondajeBody: document.querySelector(".diesel-sondaje-body"),
   captain: document.querySelector("#dieselCaptain"),
   driver: document.querySelector("#dieselDriver"),
   document: document.querySelector("#dieselDocument"),
@@ -113,6 +116,7 @@ const dieselRefs = {
   consumption: document.querySelector("#dieselConsumption"),
   returnVolume: document.querySelector("#dieselReturn"),
   difference: document.querySelector("#dieselDifference"),
+  sondajeConsumption: document.querySelector("#dieselSondajeConsumption"),
   qty: document.querySelector("#dieselDispatchQty"),
   voucher: document.querySelector("#dieselDispatchVoucher"),
   add: document.querySelector("#addDieselDispatch"),
@@ -352,6 +356,8 @@ let usersCache = [];
 const dieselInitialStockCache = new Map();
 let passengerEntries = [];
 let dieselDispatches = [];
+let dieselSondajeEntries = [];
+let activeDieselSondajeIndex = 0;
 let showAllDieselConsultItems = false;
 let dieselConsultCache = { key: "", rows: [] };
 let dieselEditDraft = null;
@@ -1512,14 +1518,93 @@ function ensureDieselDaySkeleton(date) {
   }
 }
 
+function createEmptyDieselSondajeEntry() {
+  return {
+    document: "",
+    returnVolume: "",
+    difference: "",
+    consumption: ""
+  };
+}
+
+function resetDieselSondajeEntries() {
+  dieselSondajeEntries = Array.from({ length: 5 }, () => createEmptyDieselSondajeEntry());
+  activeDieselSondajeIndex = 0;
+}
+
+function saveCurrentDieselSondajeEntry() {
+  dieselSondajeEntries[activeDieselSondajeIndex] = {
+    document: dieselRefs.document?.value || "",
+    returnVolume: dieselRefs.returnVolume?.value || "",
+    difference: dieselRefs.difference?.value || "",
+    consumption: dieselRefs.sondajeConsumption?.value || ""
+  };
+}
+
+function syncDieselSondajeLabels(index) {
+  const labelIndex = String(index + 1);
+  dieselRefs.sondajeIndices?.forEach((element) => {
+    element.textContent = labelIndex;
+  });
+}
+
+function loadDieselSondajeEntry(index) {
+  const entry = dieselSondajeEntries[index] || createEmptyDieselSondajeEntry();
+  activeDieselSondajeIndex = index;
+
+  if (dieselRefs.sondajeSelect) {
+    dieselRefs.sondajeSelect.value = String(index + 1);
+  }
+
+  syncDieselSondajeLabels(index);
+  dieselRefs.document.value = entry.document || "";
+  dieselRefs.returnVolume.value = entry.returnVolume || "";
+  dieselRefs.difference.value = entry.difference || "";
+  if (dieselRefs.sondajeConsumption) {
+    dieselRefs.sondajeConsumption.value = entry.consumption || "";
+  }
+}
+
+function handleDieselSondajeSelectChange() {
+  saveCurrentDieselSondajeEntry();
+  const nextIndex = Math.max(0, Number(dieselRefs.sondajeSelect?.value || 1) - 1);
+  loadDieselSondajeEntry(nextIndex);
+  updateSondageInputs();
+}
+
+function getDieselSondajeEntriesSnapshot() {
+  saveCurrentDieselSondajeEntry();
+  return dieselSondajeEntries.map((entry, index) => ({
+    index: index + 1,
+    document: String(entry?.document || "").trim(),
+    returnVolume: toNumber(entry?.returnVolume),
+    difference: toNumber(entry?.difference),
+    consumption: toNumber(entry?.consumption)
+  }));
+}
+
+function getPrimaryDieselSondajeEntry(entries) {
+  return (entries || []).find((entry) =>
+    entry.document
+    || Math.abs(toNumber(entry.returnVolume)) > 0
+    || Math.abs(toNumber(entry.difference)) > 0
+    || Math.abs(toNumber(entry.consumption)) > 0
+  ) || { document: "", returnVolume: 0, difference: 0, consumption: 0 };
+}
+
 function getDieselTotals() {
   const modules = getActiveDieselModules();
   const origin = dieselRefs.origin.value;
   const initialStock = getDieselInitialStock(origin);
   const recharge = modules.recarga ? toNumber(dieselRefs.recharge.value) : 0;
   const consumption = modules.consumo ? toNumber(dieselRefs.consumption.value) : 0;
-  const returnVolume = modules.sondaje ? toNumber(dieselRefs.returnVolume.value) : 0;
-  const differenceValue = modules.sondaje ? toNumber(dieselRefs.difference.value) : 0;
+  const sondajes = modules.sondaje ? getDieselSondajeEntriesSnapshot() : [];
+  const returnVolume = modules.sondaje
+    ? sondajes.reduce((sum, entry) => sum + toNumber(entry.returnVolume), 0)
+    : 0;
+  const differenceValue = modules.sondaje
+    ? sondajes.reduce((sum, entry) => sum + toNumber(entry.difference), 0)
+    : 0;
   const sondage = returnVolume > 0 ? returnVolume : -differenceValue;
   const activeDispatches = modules.despacho ? dieselDispatches : [];
   const dispatched = activeDispatches
@@ -1810,6 +1895,11 @@ function buildDieselRecordFromForm() {
   const modules = getActiveDieselModules();
   const effectiveDispatchModule = hasEffectiveDieselDispatchModule(modules);
   const totals = getDieselTotals();
+  const sondajes = modules.sondaje ? getDieselSondajeEntriesSnapshot() : [];
+  const primarySondaje = getPrimaryDieselSondajeEntry(sondajes);
+  const sondajeDocuments = sondajes
+    .map((entry) => String(entry.document || "").trim())
+    .filter(Boolean);
   const date = dieselRefs.date.value;
   const ship = dieselRefs.origin.value;
   const shift = getCheckedValue("dieselShift");
@@ -1830,7 +1920,7 @@ function buildDieselRecordFromForm() {
     registeredBy: getCurrentUserDisplayName(),
     captain: modules.tripulacion ? dieselRefs.captain.value.trim() : "",
     driver: modules.tripulacion ? dieselRefs.driver.value.trim() : "",
-    document: modules.sondaje ? dieselRefs.document.value.trim() : "",
+    document: modules.sondaje ? (sondajeDocuments.join(" / ") || primarySondaje.document) : "",
     recharge: totals.recharge,
     rechargeVoucher: modules.recarga ? dieselRefs.rechargeVoucher.value.trim() : "",
     consumption: totals.consumption,
@@ -1841,6 +1931,7 @@ function buildDieselRecordFromForm() {
     transferred: totals.transferred,
     initialStock: totals.initialStock,
     finalStock: totals.finalStock,
+    sondajes,
     dispatches: (effectiveDispatchModule ? dieselDispatches : []).map((entry) => ({
       vessel: entry.vessel,
       quantity: entry.quantity,
@@ -1880,7 +1971,8 @@ function buildDieselPayload(record) {
     modulos_estado: record.moduleStates,
     cabecera: {
       registrado_por_texto: record.registeredBy,
-      origen_web_id: record.id
+      origen_web_id: record.id,
+      sondajes: record.sondajes || []
     },
     movimiento_ids_reemplazar: Array.isArray(record.movementIdsToReplace) ? record.movementIdsToReplace : [],
     movimientos: record.dispatches.map((entry) => ({
@@ -2961,6 +3053,47 @@ async function loadAllDieselRowsForExport() {
   return rows;
 }
 
+async function loadAllDieselKardexForExport() {
+  const session = getSession();
+
+  if (!session?.accessToken) {
+    return [];
+  }
+
+  const pageSize = 1000;
+  const rows = [];
+  let offset = 0;
+
+  while (true) {
+    const query = new URLSearchParams({
+      select: "fecha,unidad_id,turno,cabecera,acta_sondaje",
+      estado: "eq.vigente",
+      order: "fecha.asc,unidad_id.asc,turno.asc",
+      limit: String(pageSize),
+      offset: String(offset)
+    });
+
+    const batch = await supabaseRequest(`/rest/v1/diesel_kardex?${query}`, {
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`
+      }
+    });
+
+    if (!Array.isArray(batch) || batch.length === 0) {
+      break;
+    }
+
+    rows.push(...batch);
+    if (batch.length < pageSize) {
+      break;
+    }
+
+    offset += pageSize;
+  }
+
+  return rows;
+}
+
 async function loadAllDieselMovementsForExport() {
   const session = getSession();
 
@@ -3004,6 +3137,34 @@ async function loadAllDieselMovementsForExport() {
 
 function getDieselExportUnitDateKey(unitId, fecha) {
   return `${unitId || ""}|${fecha || ""}`;
+}
+
+function getDieselSondajeExportData(kardexRows) {
+  const consumptions = [0, 0, 0, 0, 0];
+  const documents = [new Set(), new Set(), new Set(), new Set(), new Set()];
+
+  (kardexRows || []).forEach((row) => {
+    const cabecera = row?.cabecera && typeof row.cabecera === "object" ? row.cabecera : {};
+    const entries = Array.isArray(cabecera.sondajes) && cabecera.sondajes.length
+      ? cabecera.sondajes
+      : [{ index: 1, document: row?.acta_sondaje || "", consumption: 0 }];
+
+    entries.forEach((entry, rawIndex) => {
+      const index = Math.max(0, Math.min(4, Number(entry?.index || rawIndex + 1) - 1));
+      consumptions[index] += toNumber(entry?.consumption);
+      const document = String(entry?.document || "").trim();
+      if (document) {
+        documents[index].add(document);
+      }
+    });
+  });
+
+  const documentValues = documents.map((items) => [...items].join(" / "));
+  return {
+    consumptions,
+    totalConsumption: consumptions.reduce((sum, value) => sum + value, 0),
+    documents: documentValues
+  };
 }
 
 function getDieselExportShiftLabel(turno) {
@@ -3115,6 +3276,18 @@ function buildDieselExportRow(record, overrides = {}) {
   const consumptionTotal = overrides.consumptionTotal ?? (consumptionDay + consumptionNight);
   const transferred = overrides.transferred ?? toNumber(record.cantidad_transferida);
   const dispatched = overrides.dispatched ?? toNumber(record.cantidad_despachada);
+  const overrideSondajeConsumptions = overrides.sondajeConsumptions || [];
+  const legacySondajeValues = [
+    toNumber(record.sondaje_ini),
+    toNumber(record.sondaje_fin),
+    0,
+    0,
+    0
+  ];
+  const hasOverrideSondajeData = overrideSondajeConsumptions.some((value) => Math.abs(toNumber(value)) > 0);
+  const sondajeConsumptions = hasOverrideSondajeData ? overrideSondajeConsumptions : legacySondajeValues;
+  const sondajeDocuments = overrides.sondajeDocuments || [];
+  const totalSondajeConsumption = overrides.totalSondajeConsumption ?? sondajeConsumptions.reduce((sum, value) => sum + toNumber(value), 0);
 
   return [
     meta.dateValue,
@@ -3140,8 +3313,17 @@ function buildDieselExportRow(record, overrides = {}) {
     overrides.dispatchedNight ?? getExcelNumberOrBlank(record.canti_despachada_noche),
     dispatched || "",
     overrides.dispatchDetail ?? normalizeDieselDisplayName(record.detalle_despacho || ""),
-    overrides.sondajeIni ?? getExcelNumberOrBlank(record.sondaje_ini),
-    overrides.sondajeFin ?? getExcelNumberOrBlank(record.sondaje_fin),
+    getExcelNumberOrBlank(sondajeConsumptions[0]),
+    getExcelNumberOrBlank(sondajeConsumptions[1]),
+    getExcelNumberOrBlank(sondajeConsumptions[2]),
+    getExcelNumberOrBlank(sondajeConsumptions[3]),
+    getExcelNumberOrBlank(sondajeConsumptions[4]),
+    getExcelNumberOrBlank(totalSondajeConsumption),
+    sondajeDocuments[0] || record.acta_sondaje || "",
+    sondajeDocuments[1] || "",
+    sondajeDocuments[2] || "",
+    sondajeDocuments[3] || "",
+    sondajeDocuments[4] || "",
     overrides.finalStock ?? toNumber(record.stock_final_dia),
     overrides.voucher ?? (record.n_vale_despacho || record.n_vale_recarga || ""),
     overrides.capitanDia ?? (record.capitan_dia || "-"),
@@ -3152,7 +3334,7 @@ function buildDieselExportRow(record, overrides = {}) {
   ];
 }
 
-function buildDieselExportSplitRows(record, receivedMovements, outgoingGroups) {
+function buildDieselExportSplitRows(record, receivedMovements, outgoingGroups, sondajeData = {}) {
   const rows = [];
   const sortedMovements = sortDieselExportMovements(receivedMovements);
   const lastMovementByShift = new Map();
@@ -3178,10 +3360,8 @@ function buildDieselExportSplitRows(record, receivedMovements, outgoingGroups) {
     const dispatchedNight = !isDay && isLastInShift ? getExcelNumberOrBlank(record.canti_despachada_noche) : "";
     const transferred = toNumber(transferredDay) + toNumber(transferredNight);
     const dispatched = toNumber(dispatchedDay) + toNumber(dispatchedNight);
-    const sondajeIni = isLastOverall ? getExcelNumberOrBlank(record.sondaje_ini) : "";
-    const sondajeFin = isLastOverall ? getExcelNumberOrBlank(record.sondaje_fin) : "";
     const recharge = isLastOverall ? toNumber(record.total_recarga) : 0;
-    const finalStock = runningStock + received + recharge + toNumber(sondajeIni) + toNumber(sondajeFin)
+    const finalStock = runningStock + received + recharge + toNumber(record.sondaje_ini) + toNumber(record.sondaje_fin)
       - consumptionDay - consumptionNight - transferred - dispatched;
     const currentInitialStock = runningStock;
     runningStock = finalStock;
@@ -3204,8 +3384,9 @@ function buildDieselExportSplitRows(record, receivedMovements, outgoingGroups) {
       dispatchedNight,
       dispatched,
       dispatchDetail: isLastOverall ? buildDieselExportDetailText(outgoingGroups?.despacho || [], "destino") : "",
-      sondajeIni,
-      sondajeFin,
+      sondajeConsumptions: isLastOverall ? (sondajeData.consumptions || []) : [],
+      totalSondajeConsumption: isLastOverall ? toNumber(sondajeData.totalConsumption) : 0,
+      sondajeDocuments: isLastOverall ? (sondajeData.documents || []) : [],
       finalStock,
       voucher: movement.n_vale || "",
       capitanDia: isDay ? (record.capitan_dia || "-") : "-",
@@ -3786,11 +3967,20 @@ async function exportDieselConsultExcel() {
     return;
   }
 
-  const [allRows, allMovements] = await Promise.all([
+  const [allRows, allMovements, allKardexRows] = await Promise.all([
     loadAllDieselRowsForExport(),
-    loadAllDieselMovementsForExport()
+    loadAllDieselMovementsForExport(),
+    loadAllDieselKardexForExport()
   ]);
   const movementGroups = groupDieselExportMovements(allMovements);
+  const kardexGroups = new Map();
+  allKardexRows.forEach((row) => {
+    const key = getDieselExportUnitDateKey(row.unidad_id, row.fecha);
+    if (!kardexGroups.has(key)) {
+      kardexGroups.set(key, []);
+    }
+    kardexGroups.get(key).push(row);
+  });
   const rows = [
     [
       "FECHA", "AÑO", "MES", "TIPO AGRUPADO", "TIPO", "TURNO", "NAVE", "STOCK INICIAL",
@@ -3798,7 +3988,9 @@ async function exportDieselConsultExcel() {
       "CONSUMO DIA", "CONSUMO NOCHE", "TOTAL CONSUMO",
       "CANT. TRANSFERIDA DIA", "CANT. TRANSFERIDA NOCHE", "TOTAL CANT. TRANSFERIDA", "DETALLE TRANSFERENCIA",
       "CANT. DESPACHADA DIA", "CANT. DESPACHADA NOCHE", "TOTAL CANT. DESPACHADA", "DETALLE DESPACHO",
-      "SONDAJE_INI", "SONDAJE_FIN", "STOCK FINAL", "N VALE ",
+      "CONSUMO SONDAJE 1", "CONSUMO SONDAJE 2", "CONSUMO SONDAJE 3", "CONSUMO SONDAJE 4", "CONSUMO SONDAJE 5",
+      "TOTAL CONSUMO SONDAJES", "N ACTA SONDAJE 1", "N ACTA SONDAJE 2", "N ACTA SONDAJE 3", "N ACTA SONDAJE 4", "N ACTA SONDAJE 5",
+      "STOCK FINAL", "N VALE ",
       "CAPITAN DIURNO", "MOTORISTA DIURNO", "CAPITAN NOCTURNO", "MOTORISTA NOCTURNO", "USUARIO"
     ]
   ];
@@ -3809,9 +4001,10 @@ async function exportDieselConsultExcel() {
     const key = getDieselExportUnitDateKey(record.unidad_id, record.fecha);
     const receivedMovements = movementGroups.receivedByDestination.get(key) || [];
     const outgoingGroups = movementGroups.outgoingByOrigin.get(key) || { despacho: [], transferencia: [] };
+    const sondajeData = getDieselSondajeExportData(kardexGroups.get(key) || []);
 
     if (receivedMovements.length > 1) {
-      rows.push(...buildDieselExportSplitRows(record, receivedMovements, outgoingGroups));
+      rows.push(...buildDieselExportSplitRows(record, receivedMovements, outgoingGroups, sondajeData));
       return;
     }
 
@@ -3823,6 +4016,9 @@ async function exportDieselConsultExcel() {
         || normalizeDieselDisplayName(record.detalle_transferencia || ""),
       dispatchDetail: buildDieselExportDetailText(outgoingGroups.despacho, "destino")
         || normalizeDieselDisplayName(record.detalle_despacho || ""),
+      sondajeConsumptions: sondajeData.consumptions,
+      totalSondajeConsumption: sondajeData.totalConsumption,
+      sondajeDocuments: sondajeData.documents,
       voucher: receivedMovements[0]?.n_vale || record.n_vale_despacho || record.n_vale_recarga || ""
     }));
   });
@@ -3833,14 +4029,16 @@ async function exportDieselConsultExcel() {
   });
   const columnWidths = [
     10.25, 8.625, 8.375, 18.75, 8.75, 11, 21, 9, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-    13, 21, 9.625, 13, 13, 21, 15.625, 16, 9, 10.75, 19.25, 22.25, 22.375, 25.375, 12.375
+    13, 21, 9.625, 13, 13, 21, 11, 11, 11, 11, 11, 14, 12, 12, 12, 12, 12, 9, 10.75,
+    19.25, 22.25, 22.375, 25.375, 12.375
   ];
   const headerFills = [
     "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA",
     "FFD7E4BD", "FFCCC1DA", "FFCCC1DA", "FFDCE6F2", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFDCE6F2",
     "FFCCC1DA", "FFCCC1DA", "FFDCE6F2", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFDCE6F2",
-    "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFD7E4BD", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA",
-    "FFCCC1DA", "FFCCC1DA", "FFCCC1DA"
+    "FFFFE5CC", "FFFFE5CC", "FFFFE5CC", "FFFFE5CC", "FFFFE5CC", "FFFFE5CC", "FFDCE6F2",
+    "FFFFF2E2", "FFFFF2E2", "FFFFF2E2", "FFFFF2E2", "FFFFF2E2",
+    "FFD7E4BD", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA"
   ];
   const thinBorder = { style: "thin", color: { argb: "FF808080" } };
   const cellStyle = {
@@ -3871,7 +4069,18 @@ async function exportDieselConsultExcel() {
     15: "FFDCE6F2",
     18: "FFDCE6F2",
     22: "FFDCE6F2",
-    26: "FFD7E4BD"
+    24: "FFFFE5CC",
+    25: "FFFFE5CC",
+    26: "FFFFE5CC",
+    27: "FFFFE5CC",
+    28: "FFFFE5CC",
+    29: "FFDCE6F2",
+    30: "FFFFF2E2",
+    31: "FFFFF2E2",
+    32: "FFFFF2E2",
+    33: "FFFFF2E2",
+    34: "FFFFF2E2",
+    35: "FFD7E4BD"
   };
   for (let rowIndex = 2; rowIndex <= sheet.rowCount; rowIndex += 1) {
     Object.entries(bodyColumnFills).forEach(([columnNumber, fillColor]) => {
@@ -3923,6 +4132,7 @@ async function exportDieselConsultExcel() {
 }
 
 function clearDieselForm() {
+  resetDieselSondajeEntries();
   dieselRefs.date.value = "";
   dieselRefs.origin.selectedIndex = -1;
   dieselRefs.receive.selectedIndex = -1;
@@ -3934,6 +4144,9 @@ function clearDieselForm() {
   dieselRefs.consumption.value = "";
   dieselRefs.returnVolume.value = "";
   dieselRefs.difference.value = "";
+  if (dieselRefs.sondajeConsumption) {
+    dieselRefs.sondajeConsumption.value = "";
+  }
   dieselRefs.qty.value = "";
   dieselRefs.voucher.value = "";
   dieselRefs.observation.value = "";
@@ -3946,6 +4159,7 @@ function clearDieselForm() {
     updateModuleState(input.closest(".diesel-module"));
   });
   dieselDispatches = [];
+  loadDieselSondajeEntry(0);
   updateSondageInputs();
   renderDieselRows();
   updateDieselSummary();
@@ -3961,6 +4175,7 @@ function syncDieselInitialStockDisplay() {
 }
 
 function clearDieselFormAfterSave() {
+  resetDieselSondajeEntries();
   dieselRefs.receive.selectedIndex = -1;
   dieselRefs.captain.value = "";
   dieselRefs.driver.value = "";
@@ -3970,11 +4185,15 @@ function clearDieselFormAfterSave() {
   dieselRefs.consumption.value = "";
   dieselRefs.returnVolume.value = "";
   dieselRefs.difference.value = "";
+  if (dieselRefs.sondajeConsumption) {
+    dieselRefs.sondajeConsumption.value = "";
+  }
   dieselRefs.qty.value = "";
   dieselRefs.voucher.value = "";
   dieselRefs.observation.value = "";
   dieselRefs.observationCount.textContent = "0";
   dieselDispatches = [];
+  loadDieselSondajeEntry(0);
   updateSondageInputs();
   renderDieselRows();
   updateDieselSummary();
@@ -3998,6 +4217,9 @@ function updateModuleState(module) {
   module.classList.toggle("is-blocked", !isActive);
   state.textContent = isActive ? "Activo" : "Bloqueado";
   module.setAttribute("aria-pressed", String(isActive));
+  if (module.dataset.module === "sondaje" && dieselRefs.sondajeBody) {
+    dieselRefs.sondajeBody.hidden = !isActive;
+  }
   updateDieselSummary();
 }
 
@@ -4043,6 +4265,7 @@ function updateSondageInputs(changedControl = null) {
   dieselRefs.returnVolume.disabled = toNumber(dieselRefs.difference.value) > 0;
   dieselRefs.difference.classList.toggle("negative", toNumber(dieselRefs.difference.value) > 0);
   dieselRefs.returnVolume.classList.toggle("positive-field", toNumber(dieselRefs.returnVolume.value) > 0);
+  saveCurrentDieselSondajeEntry();
   updateDieselSummary();
 }
 
@@ -4102,6 +4325,7 @@ function bootDiesel() {
   });
   dieselRefs.clear?.addEventListener("click", clearDieselForm);
   dieselRefs.save?.addEventListener("click", saveDieselRecord);
+  dieselRefs.sondajeSelect?.addEventListener("change", handleDieselSondajeSelectChange);
 
   [
     dieselRefs.date,
@@ -4115,6 +4339,7 @@ function bootDiesel() {
     dieselRefs.consumption,
     dieselRefs.returnVolume,
     dieselRefs.difference,
+    dieselRefs.sondajeConsumption,
     dieselRefs.qty,
     dieselRefs.voucher,
     dieselRefs.observation
@@ -4202,6 +4427,11 @@ function bootDiesel() {
 
   [dieselRefs.returnVolume, dieselRefs.difference].forEach((control) => {
     control?.addEventListener("input", () => updateSondageInputs(control));
+  });
+
+  [dieselRefs.document, dieselRefs.sondajeConsumption].forEach((control) => {
+    control?.addEventListener("input", saveCurrentDieselSondajeEntry);
+    control?.addEventListener("change", saveCurrentDieselSondajeEntry);
   });
 
   updateSondageInputs();
