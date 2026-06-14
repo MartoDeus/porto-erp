@@ -70,5 +70,41 @@
     "role": "Supervisor de Operaciones",
     "roleCode": "supervisor",
     "active": true
+  },
+  {
+    "id": "usr-08691075",
+    "name": "Yañez Carrasco Elder Leonel",
+    "username": "08691075",
+    "email": "08691075@alm.local",
+    "role": "Coordinador OPEMAR",
+    "roleCode": "coordinador",
+    "active": true
+  },
+  {
+    "id": "usr-47038747",
+    "name": "Merino Garcia Damaris Liseth",
+    "username": "47038747",
+    "email": "47038747@alm.local",
+    "role": "Supervisora OPEMAR",
+    "roleCode": "supervisor",
+    "active": true
+  },
+  {
+    "id": "usr-45604716",
+    "name": "Quino Quino Jhosep Edward",
+    "username": "45604716",
+    "email": "45604716@alm.local",
+    "role": "Supervisor OPEMAR",
+    "roleCode": "supervisor",
+    "active": true
+  },
+  {
+    "id": "usr-45292287",
+    "name": "Castro Currasco Carmen Rosa",
+    "username": "45292287",
+    "email": "45292287@alm.local",
+    "role": "Supervisora OPEMAR",
+    "roleCode": "supervisor",
+    "active": true
   }
 ]

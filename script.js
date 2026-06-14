@@ -104,7 +104,10 @@ const dieselRefs = {
   nextDay: document.querySelector("#dieselNextDay"),
   origin: document.querySelector("#dieselOriginSelect"),
   receive: document.querySelector("#dieselReceiveSelect"),
+  receiveLabel: document.querySelector("#dieselReceiveLabel"),
   receivePlatformToggle: document.querySelector("#dieselReceivePlatformToggle"),
+  moduleNavButtons: document.querySelectorAll(".diesel-nav-button"),
+  modulePanels: document.querySelectorAll(".diesel-stage-panel"),
   sondajeSelect: document.querySelector("#dieselSondajeSelect"),
   sondajeIndices: document.querySelectorAll("[data-diesel-sondaje-index]"),
   sondajeBody: document.querySelector(".diesel-sondaje-body"),
@@ -1721,6 +1724,15 @@ function isDieselPlatformMode(toggle) {
   return toggle?.getAttribute("aria-pressed") === "true";
 }
 
+function syncDieselReceiveModeLabel() {
+  if (!dieselRefs.receiveLabel) {
+    return;
+  }
+  dieselRefs.receiveLabel.textContent = isDieselPlatformMode(dieselRefs.receivePlatformToggle)
+    ? "Plataformas"
+    : "Nave/Barcaza Recibe";
+}
+
 function fillDieselSelect(select, options, selectedValue, excludeValue = "") {
   if (!select) {
     return;
@@ -1869,14 +1881,20 @@ function addDieselDispatchOnEnter(event) {
 }
 
 function getDieselModuleStates() {
-  return Array.from(document.querySelectorAll(".diesel-module")).reduce((states, module) => {
-    const key = module.dataset.module;
-    const toggle = module.querySelector('.switch input');
-    if (key) {
-      states[key] = toggle ? Boolean(toggle.checked) : true;
-    }
-    return states;
-  }, {});
+  const sondajes = getDieselSondajeEntriesSnapshot();
+  return {
+    despacho: dieselDispatches.length > 0,
+    consumo: toNumber(dieselRefs.consumption?.value) > 0,
+    recarga: toNumber(dieselRefs.recharge?.value) > 0 || Boolean(dieselRefs.rechargeVoucher?.value.trim()),
+    sondaje: sondajes.some((entry) =>
+      entry.document
+      || Math.abs(toNumber(entry.returnVolume)) > 0
+      || Math.abs(toNumber(entry.difference)) > 0
+      || Math.abs(toNumber(entry.consumption)) > 0
+    ),
+    tripulacion: Boolean(dieselRefs.captain?.value.trim() || dieselRefs.driver?.value.trim()),
+    observaciones: true
+  };
 }
 
 function hasDieselMovement(record) {
@@ -4154,13 +4172,10 @@ function clearDieselForm() {
   document.querySelectorAll('input[name="dieselShift"]').forEach((input) => {
     input.checked = false;
   });
-  document.querySelectorAll(".diesel-module .switch input").forEach((input) => {
-    input.checked = false;
-    updateModuleState(input.closest(".diesel-module"));
-  });
   dieselDispatches = [];
   loadDieselSondajeEntry(0);
   updateSondageInputs();
+  selectDieselModule("despacho");
   renderDieselRows();
   updateDieselSummary();
 }
@@ -4207,46 +4222,22 @@ function resetDieselInitialState() {
   clearDieselForm();
 }
 
-function updateModuleState(module) {
-  const toggle = module.querySelector('.switch input');
-  const state = module.querySelector(".module-state");
-  if (!toggle || !state) {
-    return;
-  }
-  const isActive = Boolean(toggle?.checked);
-  module.classList.toggle("is-blocked", !isActive);
-  state.textContent = isActive ? "Activo" : "Bloqueado";
-  module.setAttribute("aria-pressed", String(isActive));
-  if (module.dataset.module === "sondaje" && dieselRefs.sondajeBody) {
-    dieselRefs.sondajeBody.hidden = !isActive;
-  }
-  updateDieselSummary();
-}
-
-function toggleDieselModule(module) {
-  if (!module || module.classList.contains("is-always-active")) {
+function selectDieselModule(moduleKey) {
+  if (!moduleKey) {
     return;
   }
 
-  const toggle = module.querySelector('.switch input');
-  if (!toggle) {
-    return;
-  }
+  dieselRefs.moduleNavButtons?.forEach((button) => {
+    const isSelected = button.dataset.targetModule === moduleKey;
+    button.classList.toggle("is-selected", isSelected);
+    button.setAttribute("aria-pressed", String(isSelected));
+  });
 
-  toggle.checked = !toggle.checked;
-  updateModuleState(module);
-}
-
-function shouldToggleDieselModule(event, module) {
-  if (module.classList.contains("is-blocked")) {
-    return true;
-  }
-
-  if (event.target.closest(".diesel-module-head")) {
-    return true;
-  }
-
-  return false;
+  dieselRefs.modulePanels?.forEach((panel) => {
+    const isSelected = panel.dataset.module === moduleKey;
+    panel.classList.toggle("is-selected", isSelected);
+    panel.hidden = !isSelected;
+  });
 }
 
 function updateSondageInputs(changedControl = null) {
@@ -4273,34 +4264,9 @@ function bootDiesel() {
   populateDieselShips();
   populateDieselConsultFilters();
   resetDieselInitialState();
-
-  document.querySelectorAll(".diesel-module").forEach((module) => {
-    const toggle = module.querySelector('.switch input');
-    if (!module.classList.contains("is-always-active")) {
-      module.setAttribute("role", "button");
-      module.setAttribute("tabindex", "0");
-      module.setAttribute("aria-label", `Activar o desactivar ${module.dataset.module || "modulo"}`);
-    }
-    updateModuleState(module);
-    toggle?.addEventListener("change", () => updateModuleState(module));
-    module.addEventListener("click", (event) => {
-      if (event.target.closest("input, select, textarea, button, table, a")) {
-        return;
-      }
-      if (shouldToggleDieselModule(event, module)) {
-        toggleDieselModule(module);
-      }
-    });
-    module.addEventListener("keydown", (event) => {
-      if (event.target.closest("input, select, textarea, button, table, a")) {
-        return;
-      }
-      if (event.key !== "Enter" && event.key !== " ") {
-        return;
-      }
-      event.preventDefault();
-      toggleDieselModule(module);
-    });
+  selectDieselModule("despacho");
+  dieselRefs.moduleNavButtons?.forEach((button) => {
+    button.addEventListener("click", () => selectDieselModule(button.dataset.targetModule || "despacho"));
   });
 
   dieselRefs.origin?.addEventListener("change", () => {
@@ -4313,6 +4279,7 @@ function bootDiesel() {
     button?.addEventListener("click", () => {
       const pressed = button.getAttribute("aria-pressed") === "true";
       button.setAttribute("aria-pressed", String(!pressed));
+      syncDieselReceiveModeLabel();
       populateDieselShips();
       renderDieselRows();
       updateDieselSummary();
@@ -4438,6 +4405,8 @@ function bootDiesel() {
   if (dieselRefs.consultDate) {
     dieselRefs.consultDate.value = getTodayValue();
   }
+
+  syncDieselReceiveModeLabel();
   renderDieselConsult();
   syncDieselInitialStockDisplay();
 

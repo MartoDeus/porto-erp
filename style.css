@@ -3720,6 +3720,101 @@ button {
   margin-bottom: 5px;
 }
 
+.diesel-workspace {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr) 220px;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.diesel-module-nav {
+  display: grid;
+  gap: 10px;
+  padding: 10px;
+  align-content: start;
+  height: 100%;
+}
+
+.diesel-nav-button {
+  min-height: 74px;
+  padding: 14px 16px;
+  color: #4f7f79;
+  background: #e4f7f1;
+  border: 1px solid #cdebe1;
+  border-radius: 8px;
+  font-size: 0.98rem;
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.diesel-nav-button.is-selected {
+  color: #ffffff;
+  background: #4d8d84;
+  border-color: #4d8d84;
+  box-shadow: 0 8px 18px rgba(77, 141, 132, 0.2);
+}
+
+.diesel-stage {
+  display: grid;
+  min-height: 408px;
+  padding: 12px 14px;
+  height: 100%;
+}
+
+.diesel-stage-panel {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  min-height: 100%;
+}
+
+.diesel-stage-panel[hidden] {
+  display: none !important;
+}
+
+.diesel-stage-fields {
+  display: grid;
+  gap: 14px;
+}
+
+.diesel-stage-fields--single {
+  max-width: 360px;
+}
+
+.diesel-stage .diesel-module-head,
+.diesel-observations .diesel-module-head {
+  margin: 0;
+  padding: 0 0 8px;
+  background: transparent;
+  border: 0;
+  border-bottom: 3px solid #5c9188;
+  border-radius: 0;
+  cursor: default;
+}
+
+.diesel-stage .diesel-module-head h3,
+.diesel-observations .diesel-module-head h3 {
+  color: #4f7f79;
+  font-size: 0.98rem;
+  font-weight: 800;
+}
+
+.diesel-stage .diesel-module,
+.diesel-observations {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.diesel-right-stack {
+  display: grid;
+  gap: 10px;
+}
+
 .diesel-layout {
   display: grid;
   grid-template-columns: minmax(250px, 290px) minmax(0, 1fr);
@@ -3913,6 +4008,7 @@ button {
   display: grid;
   gap: 10px;
   padding-top: 10px;
+  align-content: start;
 }
 
 .diesel-sondaje-body[hidden] {
@@ -3930,10 +4026,23 @@ button {
 
 .diesel-sondaje-select-label {
   margin-bottom: 2px;
+  max-width: 380px;
 }
 
 .diesel-sondaje-select-label select {
   width: 100%;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid #d9e1eb;
+  border-radius: 6px;
+  color: #1f2c44;
+  background: #ffffff;
+  font: inherit;
+  box-shadow: none;
+}
+
+.diesel-sondaje-body label:not(.diesel-sondaje-select-label) {
+  max-width: 380px;
 }
 
 .diesel-sondaje-body label > span {
@@ -4091,11 +4200,56 @@ button {
   position: relative;
   grid-column: 1 / -1;
   width: 100%;
-  min-height: 126px;
+  min-height: 120px;
   gap: 8px;
-  padding: 12px 18px;
+  padding: 10px 12px 12px;
   margin-top: 0;
   overflow: hidden;
+}
+
+.diesel-observations textarea {
+  min-height: 78px;
+  resize: vertical;
+}
+
+.diesel-workspace .diesel-dispatch {
+  width: 100%;
+  min-height: 100%;
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+
+.diesel-workspace .diesel-entry-form {
+  grid-template-columns: minmax(180px, 1.5fr) 72px minmax(130px, 0.9fr) minmax(136px, 0.95fr) 40px;
+  gap: 10px;
+}
+
+.diesel-workspace .diesel-table-wrap {
+  max-height: 250px;
+}
+
+.diesel-workspace .diesel-summary {
+  min-height: 336px;
+}
+
+.diesel-workspace .diesel-summary dl {
+  gap: 7px;
+  font-size: 0.84rem;
+}
+
+.diesel-workspace .diesel-actions-card {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.diesel-workspace .diesel-actions-card .outline-action,
+.diesel-workspace .diesel-actions-card .green-action {
+  min-height: 42px;
+  justify-content: center;
+}
+
+.diesel-stat-grid {
+  display: none;
 }
 
 .consulta-action {

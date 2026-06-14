@@ -572,21 +572,54 @@
             </div>
           </section>
 
-          <section class="diesel-layout">
-            <div class="diesel-left-stack">
-              <article class="panel-card diesel-module" data-module="recarga">
-                <div class="diesel-module-head"><h3>Recarga</h3><span class="module-state">Activo</span><label class="switch"><input type="checkbox"><b></b></label></div>
-                <label>Volumen (gal)<input id="dieselRecharge" type="number" min="0"></label>
-                <label>N° Vale Recarga<input id="dieselRechargeVoucher" type="text"></label>
+          <section class="diesel-workspace">
+            <aside class="panel-card diesel-module-nav" aria-label="Módulos de diesel">
+              <button class="diesel-nav-button is-selected" type="button" data-target-module="despacho">Despacho</button>
+              <button class="diesel-nav-button" type="button" data-target-module="consumo">Consumo</button>
+              <button class="diesel-nav-button" type="button" data-target-module="recarga">Recarga</button>
+              <button class="diesel-nav-button" type="button" data-target-module="sondaje">Acta de sondaje</button>
+              <button class="diesel-nav-button" type="button" data-target-module="tripulacion">Tripulación</button>
+            </aside>
+
+            <section class="panel-card diesel-stage">
+              <article class="diesel-stage-panel diesel-module diesel-dispatch is-selected" data-module="despacho">
+                <div class="diesel-module-head"><h3>Despacho</h3></div>
+                <div class="diesel-entry-form">
+                  <label><span id="dieselReceiveLabel">Nave/Barcaza Recibe</span><select id="dieselReceiveSelect"></select></label>
+                  <button class="list-toggle diesel-platform-toggle" type="button" id="dieselReceivePlatformToggle" aria-pressed="false">
+                    <i data-lucide="layers"></i><span>Plataformas</span>
+                  </button>
+                  <label>Cantidad (gal)<input id="dieselDispatchQty" type="number" min="1"></label>
+                  <label>N° Vale<input id="dieselDispatchVoucher" type="text"></label>
+                  <button class="add-square" type="button" id="addDieselDispatch"><i data-lucide="plus"></i></button>
+                </div>
+                <div class="passenger-table-wrap diesel-table-wrap">
+                  <table class="passenger-table diesel-table">
+                    <thead>
+                      <tr><th>Nave/Barcaza recibe</th><th>Cantidad (gal)</th><th>N° Vale</th><th>Tipo</th><th>Acción</th></tr>
+                    </thead>
+                    <tbody id="dieselDispatchRows"></tbody>
+                  </table>
+                </div>
               </article>
 
-              <article class="panel-card diesel-module" data-module="consumo">
-                <div class="diesel-module-head"><h3>Consumo</h3><span class="module-state">Activo</span><label class="switch"><input type="checkbox"><b></b></label></div>
-                <label>Volumen (gal)<input id="dieselConsumption" type="number" min="0"></label>
+              <article class="diesel-stage-panel diesel-module" data-module="consumo" hidden>
+                <div class="diesel-module-head"><h3>Consumo</h3></div>
+                <div class="diesel-stage-fields diesel-stage-fields--single">
+                  <label>Volumen (gal)<input id="dieselConsumption" type="number" min="0"></label>
+                </div>
               </article>
 
-              <article class="panel-card diesel-module diesel-sondaje-module" data-module="sondaje">
-                <div class="diesel-module-head"><h3>Acta de Sondaje</h3><span class="module-state">Activo</span><label class="switch"><input type="checkbox"><b></b></label></div>
+              <article class="diesel-stage-panel diesel-module" data-module="recarga" hidden>
+                <div class="diesel-module-head"><h3>Recarga</h3></div>
+                <div class="diesel-stage-fields diesel-stage-fields--single">
+                  <label>Volumen (gal)<input id="dieselRecharge" type="number" min="0"></label>
+                  <label>N° Vale Recarga<input id="dieselRechargeVoucher" type="text"></label>
+                </div>
+              </article>
+
+              <article class="diesel-stage-panel diesel-module diesel-sondaje-module" data-module="sondaje" hidden>
+                <div class="diesel-module-head"><h3>Acta de sondaje</h3></div>
                 <div class="diesel-sondaje-body">
                   <label class="diesel-sondaje-select-label">
                     <select id="dieselSondajeSelect">
@@ -604,63 +637,41 @@
                 </div>
               </article>
 
-              <article class="panel-card diesel-module" data-module="tripulacion">
-                <div class="diesel-module-head"><h3>Tripulación</h3><span class="module-state">Activo</span><label class="switch"><input type="checkbox"><b></b></label></div>
-                <label>Capitán<input id="dieselCaptain" type="text"></label>
-                <label>Motorista<input id="dieselDriver" type="text"></label>
-              </article>
-            </div>
-
-            <div class="diesel-main-stack">
-              <article class="panel-card diesel-module diesel-dispatch" data-module="despacho">
-                <div class="diesel-module-head"><h3>Despacho</h3><span class="module-state">Activo</span><label class="switch"><input type="checkbox"><b></b></label></div>
-                <div class="diesel-entry-form">
-                  <label>Nave/Barcaza Recibe<select id="dieselReceiveSelect"></select></label>
-                  <button class="list-toggle diesel-platform-toggle" type="button" id="dieselReceivePlatformToggle" aria-pressed="false">
-                    <i data-lucide="layers"></i><span>Plta.</span>
-                  </button>
-                  <label>Cantidad (gal)<input id="dieselDispatchQty" type="number" min="1" placeholder="Cantidad"></label>
-                <label>N° Vale<input id="dieselDispatchVoucher" type="text" placeholder="N° Vale"></label>
-                  <button class="add-square" type="button" id="addDieselDispatch"><i data-lucide="plus"></i></button>
-                </div>
-                <div class="passenger-table-wrap diesel-table-wrap">
-                  <table class="passenger-table diesel-table">
-                    <thead>
-                      <tr><th>Nave/Barcaza recibe</th><th>Cantidad (gal)</th><th>N° Vale</th><th>Tipo</th><th>Acción</th></tr>
-                    </thead>
-                    <tbody id="dieselDispatchRows"></tbody>
-                  </table>
+              <article class="diesel-stage-panel diesel-module" data-module="tripulacion" hidden>
+                <div class="diesel-module-head"><h3>Tripulación</h3></div>
+                <div class="diesel-stage-fields diesel-stage-fields--single">
+                  <label>Capitán<input id="dieselCaptain" type="text"></label>
+                  <label>Motorista<input id="dieselDriver" type="text"></label>
                 </div>
               </article>
+            </section>
 
-              <div class="diesel-right-stack">
-                <article class="side-card diesel-summary">
-                  <h3>Resumen <i data-lucide="fuel"></i></h3>
-                  <dl>
-                    <div><dt>Nave:</dt><dd id="dieselSummaryVessel">TALARA</dd></div>
-                    <div><dt>Stock Inicial (gal):</dt><dd id="dieselSummaryInitial">0</dd></div>
-                    <div><dt>Recarga (gal):</dt><dd id="dieselSummaryRecharge">0</dd></div>
-                    <div><dt>Total Despachado (gal):</dt><dd id="dieselSummaryDispatched">0</dd></div>
-                    <div><dt>Total Transferido (gal):</dt><dd id="dieselSummaryTransferred">0</dd></div>
-                    <div><dt>Consumo (gal):</dt><dd id="dieselSummaryConsumption">0</dd></div>
-                    <div><dt>Sondaje (gal):</dt><dd class="positive" id="dieselSummaryDifference">0</dd></div>
-                    <div class="final-stock"><dt>Stock Final (gal):</dt><dd id="dieselSummaryFinal">0</dd></div>
-                  </dl>
-                </article>
+            <div class="diesel-right-stack">
+              <article class="side-card diesel-summary">
+                <h3>Resumen <i data-lucide="fuel"></i></h3>
+                <dl>
+                  <div><dt>Nave:</dt><dd id="dieselSummaryVessel">TALARA</dd></div>
+                  <div><dt>Stock Inicial (gal):</dt><dd id="dieselSummaryInitial">0</dd></div>
+                  <div><dt>Recarga (gal):</dt><dd id="dieselSummaryRecharge">0</dd></div>
+                  <div><dt>Total Despachado (gal):</dt><dd id="dieselSummaryDispatched">0</dd></div>
+                  <div><dt>Total Transferido (gal):</dt><dd id="dieselSummaryTransferred">0</dd></div>
+                  <div><dt>Consumo (gal):</dt><dd id="dieselSummaryConsumption">0</dd></div>
+                  <div><dt>Sondaje (gal):</dt><dd class="positive" id="dieselSummaryDifference">0</dd></div>
+                  <div class="final-stock"><dt>Stock Final (gal):</dt><dd id="dieselSummaryFinal">0</dd></div>
+                </dl>
+              </article>
 
-                <div class="diesel-actions-card">
-                  <button class="outline-action" type="button" id="clearDieselButton"><i data-lucide="eraser"></i>Limpiar</button>
-                  <button class="green-action" type="button" id="saveDieselButton"><i data-lucide="save"></i>Guardar</button>
-                </div>
+              <div class="diesel-actions-card">
+                <button class="outline-action" type="button" id="clearDieselButton"><i data-lucide="eraser"></i>Limpiar</button>
+                <button class="green-action" type="button" id="saveDieselButton"><i data-lucide="save"></i>Guardar</button>
               </div>
-
-              <section class="diesel-observations panel-card diesel-module is-always-active" data-module="observaciones">
-                <div class="diesel-module-head"><h3>Observaciones</h3><span class="module-state">Siempre activo</span></div>
-                <textarea id="dieselObservation" maxlength="500"></textarea>
-                <small><span id="dieselObservationCount">0</span> / 500</small>
-              </section>
-
             </div>
+
+            <section class="diesel-observations panel-card diesel-module is-always-active" data-module="observaciones">
+              <div class="diesel-module-head"><h3>Observaciones</h3></div>
+              <textarea id="dieselObservation" maxlength="500"></textarea>
+              <small><span id="dieselObservationCount">0</span> / 500</small>
+            </section>
           </section>
 
           <section class="passenger-stat-grid diesel-stat-grid">
