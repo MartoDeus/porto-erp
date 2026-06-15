@@ -3158,6 +3158,7 @@ function getDieselExportUnitDateKey(unitId, fecha) {
 }
 
 function getDieselSondajeExportData(kardexRows) {
+  const differences = [0, 0, 0, 0, 0];
   const consumptions = [0, 0, 0, 0, 0];
   const documents = [new Set(), new Set(), new Set(), new Set(), new Set()];
 
@@ -3165,10 +3166,19 @@ function getDieselSondajeExportData(kardexRows) {
     const cabecera = row?.cabecera && typeof row.cabecera === "object" ? row.cabecera : {};
     const entries = Array.isArray(cabecera.sondajes) && cabecera.sondajes.length
       ? cabecera.sondajes
-      : [{ index: 1, document: row?.acta_sondaje || "", consumption: 0 }];
+      : [{
+          index: 1,
+          document: row?.acta_sondaje || "",
+          returnVolume: toNumber(row?.sondaje_reingreso),
+          difference: toNumber(row?.sondaje_diferencia),
+          consumption: 0
+        }];
 
     entries.forEach((entry, rawIndex) => {
       const index = Math.max(0, Math.min(4, Number(entry?.index || rawIndex + 1) - 1));
+      const returnVolume = toNumber(entry?.returnVolume);
+      const difference = toNumber(entry?.difference);
+      differences[index] += returnVolume !== 0 ? returnVolume : difference;
       consumptions[index] += toNumber(entry?.consumption);
       const document = String(entry?.document || "").trim();
       if (document) {
@@ -3179,6 +3189,8 @@ function getDieselSondajeExportData(kardexRows) {
 
   const documentValues = documents.map((items) => [...items].join(" / "));
   return {
+    differences,
+    totalDifference: differences.reduce((sum, value) => sum + toNumber(value), 0),
     consumptions,
     totalConsumption: consumptions.reduce((sum, value) => sum + value, 0),
     documents: documentValues
@@ -3294,17 +3306,21 @@ function buildDieselExportRow(record, overrides = {}) {
   const consumptionTotal = overrides.consumptionTotal ?? (consumptionDay + consumptionNight);
   const transferred = overrides.transferred ?? toNumber(record.cantidad_transferida);
   const dispatched = overrides.dispatched ?? toNumber(record.cantidad_despachada);
-  const overrideSondajeConsumptions = overrides.sondajeConsumptions || [];
-  const legacySondajeValues = [
+  const overrideSondajeDifferences = overrides.sondajeDifferences || [];
+  const legacySondajeDifferences = [
     toNumber(record.sondaje_ini),
     toNumber(record.sondaje_fin),
     0,
     0,
     0
   ];
+  const hasOverrideDifferenceData = overrideSondajeDifferences.some((value) => Math.abs(toNumber(value)) > 0);
+  const sondajeDifferences = hasOverrideDifferenceData ? overrideSondajeDifferences : legacySondajeDifferences;
+  const overrideSondajeConsumptions = overrides.sondajeConsumptions || [];
   const hasOverrideSondajeData = overrideSondajeConsumptions.some((value) => Math.abs(toNumber(value)) > 0);
-  const sondajeConsumptions = hasOverrideSondajeData ? overrideSondajeConsumptions : legacySondajeValues;
+  const sondajeConsumptions = hasOverrideSondajeData ? overrideSondajeConsumptions : [0, 0, 0, 0, 0];
   const sondajeDocuments = overrides.sondajeDocuments || [];
+  const totalSondajeDifference = overrides.totalSondajeDifference ?? sondajeDifferences.reduce((sum, value) => sum + toNumber(value), 0);
   const totalSondajeConsumption = overrides.totalSondajeConsumption ?? sondajeConsumptions.reduce((sum, value) => sum + toNumber(value), 0);
 
   return [
@@ -3331,6 +3347,12 @@ function buildDieselExportRow(record, overrides = {}) {
     overrides.dispatchedNight ?? getExcelNumberOrBlank(record.canti_despachada_noche),
     dispatched || "",
     overrides.dispatchDetail ?? normalizeDieselDisplayName(record.detalle_despacho || ""),
+    getExcelNumberOrBlank(sondajeDifferences[0]),
+    getExcelNumberOrBlank(sondajeDifferences[1]),
+    getExcelNumberOrBlank(sondajeDifferences[2]),
+    getExcelNumberOrBlank(sondajeDifferences[3]),
+    getExcelNumberOrBlank(sondajeDifferences[4]),
+    getExcelNumberOrBlank(totalSondajeDifference),
     getExcelNumberOrBlank(sondajeConsumptions[0]),
     getExcelNumberOrBlank(sondajeConsumptions[1]),
     getExcelNumberOrBlank(sondajeConsumptions[2]),
@@ -3379,7 +3401,7 @@ function buildDieselExportSplitRows(record, receivedMovements, outgoingGroups, s
     const transferred = toNumber(transferredDay) + toNumber(transferredNight);
     const dispatched = toNumber(dispatchedDay) + toNumber(dispatchedNight);
     const recharge = isLastOverall ? toNumber(record.total_recarga) : 0;
-    const finalStock = runningStock + received + recharge + toNumber(record.sondaje_ini) + toNumber(record.sondaje_fin)
+    const finalStock = runningStock + received + recharge + toNumber(sondajeData.totalDifference)
       - consumptionDay - consumptionNight - transferred - dispatched;
     const currentInitialStock = runningStock;
     runningStock = finalStock;
@@ -3402,6 +3424,8 @@ function buildDieselExportSplitRows(record, receivedMovements, outgoingGroups, s
       dispatchedNight,
       dispatched,
       dispatchDetail: isLastOverall ? buildDieselExportDetailText(outgoingGroups?.despacho || [], "destino") : "",
+      sondajeDifferences: isLastOverall ? (sondajeData.differences || []) : [],
+      totalSondajeDifference: isLastOverall ? toNumber(sondajeData.totalDifference) : 0,
       sondajeConsumptions: isLastOverall ? (sondajeData.consumptions || []) : [],
       totalSondajeConsumption: isLastOverall ? toNumber(sondajeData.totalConsumption) : 0,
       sondajeDocuments: isLastOverall ? (sondajeData.documents || []) : [],
@@ -3530,6 +3554,27 @@ function prepareDieselDailyReportAbastecedorRows(sheet, rowCount) {
   }
 }
 
+function applyDieselDailyReportAbastecedorLines(sheet, startRow, rowCount) {
+  const endRow = startRow + Math.max(rowCount, 0) - 1;
+  if (endRow < startRow) {
+    return;
+  }
+
+  const templateBorders = {
+    origin: cloneExcelStyle(sheet.getCell(39, 4).border),
+    destination: cloneExcelStyle(sheet.getCell(39, 7).border),
+    quantity: cloneExcelStyle(sheet.getCell(39, 10).border),
+    voucher: cloneExcelStyle(sheet.getCell(39, 11).border)
+  };
+
+  for (let rowNumber = startRow; rowNumber <= endRow; rowNumber += 1) {
+    sheet.getCell(rowNumber, 4).border = cloneExcelStyle(templateBorders.origin);
+    sheet.getCell(rowNumber, 7).border = cloneExcelStyle(templateBorders.destination);
+    sheet.getCell(rowNumber, 10).border = cloneExcelStyle(templateBorders.quantity);
+    sheet.getCell(rowNumber, 11).border = cloneExcelStyle(templateBorders.voucher);
+  }
+}
+
 function getDieselDailyReportOriginOrder(movement) {
   const origin = normalizeDieselName(getDieselMovementVesselName(movement, "origin"));
   const order = {
@@ -3565,6 +3610,7 @@ function fillDieselDailyReportAbastecedores(sheet, movements) {
   );
 
   prepareDieselDailyReportAbastecedorRows(sheet, rows.length);
+  applyDieselDailyReportAbastecedorLines(sheet, startRow, rows.length);
 
   rows.forEach((movement, index) => {
     const rowNumber = startRow + index;
@@ -3661,7 +3707,6 @@ async function downloadDieselDailyReportExcel() {
       ["ORO", 27],
       ["ROGUE", 28],
       ["MR_BOB", 29],
-      ["JADE_IMI", 30],
       ["LJ_KELLEY", 32]
     ]);
 
@@ -4006,6 +4051,8 @@ async function exportDieselConsultExcel() {
       "CONSUMO DIA", "CONSUMO NOCHE", "TOTAL CONSUMO",
       "CANT. TRANSFERIDA DIA", "CANT. TRANSFERIDA NOCHE", "TOTAL CANT. TRANSFERIDA", "DETALLE TRANSFERENCIA",
       "CANT. DESPACHADA DIA", "CANT. DESPACHADA NOCHE", "TOTAL CANT. DESPACHADA", "DETALLE DESPACHO",
+      "DIFERENCIA POR SONDAJE 1", "DIFERENCIA POR SONDAJE 2", "DIFERENCIA POR SONDAJE 3", "DIFERENCIA POR SONDAJE 4", "DIFERENCIA POR SONDAJE 5",
+      "TOTAL DIFERENCIA SONDAJES",
       "CONSUMO SONDAJE 1", "CONSUMO SONDAJE 2", "CONSUMO SONDAJE 3", "CONSUMO SONDAJE 4", "CONSUMO SONDAJE 5",
       "TOTAL CONSUMO SONDAJES", "N ACTA SONDAJE 1", "N ACTA SONDAJE 2", "N ACTA SONDAJE 3", "N ACTA SONDAJE 4", "N ACTA SONDAJE 5",
       "STOCK FINAL", "N VALE ",
@@ -4034,6 +4081,8 @@ async function exportDieselConsultExcel() {
         || normalizeDieselDisplayName(record.detalle_transferencia || ""),
       dispatchDetail: buildDieselExportDetailText(outgoingGroups.despacho, "destino")
         || normalizeDieselDisplayName(record.detalle_despacho || ""),
+      sondajeDifferences: sondajeData.differences,
+      totalSondajeDifference: sondajeData.totalDifference,
       sondajeConsumptions: sondajeData.consumptions,
       totalSondajeConsumption: sondajeData.totalConsumption,
       sondajeDocuments: sondajeData.documents,
@@ -4047,14 +4096,15 @@ async function exportDieselConsultExcel() {
   });
   const columnWidths = [
     10.25, 8.625, 8.375, 18.75, 8.75, 11, 21, 9, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-    13, 21, 9.625, 13, 13, 21, 11, 11, 11, 11, 11, 14, 12, 12, 12, 12, 12, 9, 10.75,
+    13, 21, 9.625, 13, 13, 21, 11, 11, 11, 11, 11, 14, 11, 11, 11, 11, 11, 14, 12, 12, 12, 12, 12, 14, 9, 10.75,
     19.25, 22.25, 22.375, 25.375, 12.375
   ];
   const headerFills = [
     "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA",
     "FFD7E4BD", "FFCCC1DA", "FFCCC1DA", "FFDCE6F2", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFDCE6F2",
     "FFCCC1DA", "FFCCC1DA", "FFDCE6F2", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFDCE6F2",
-    "FFFFE5CC", "FFFFE5CC", "FFFFE5CC", "FFFFE5CC", "FFFFE5CC", "FFFFE5CC", "FFDCE6F2",
+    "FFFFE5CC", "FFFFE5CC", "FFFFE5CC", "FFFFE5CC", "FFFFE5CC", "FFDCE6F2",
+    "FFFFE5CC", "FFFFE5CC", "FFFFE5CC", "FFFFE5CC", "FFFFE5CC", "FFDCE6F2",
     "FFFFF2E2", "FFFFF2E2", "FFFFF2E2", "FFFFF2E2", "FFFFF2E2",
     "FFD7E4BD", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA"
   ];
@@ -4093,12 +4143,18 @@ async function exportDieselConsultExcel() {
     27: "FFFFE5CC",
     28: "FFFFE5CC",
     29: "FFDCE6F2",
-    30: "FFFFF2E2",
-    31: "FFFFF2E2",
-    32: "FFFFF2E2",
-    33: "FFFFF2E2",
-    34: "FFFFF2E2",
-    35: "FFD7E4BD"
+    30: "FFFFE5CC",
+    31: "FFFFE5CC",
+    32: "FFFFE5CC",
+    33: "FFFFE5CC",
+    34: "FFFFE5CC",
+    35: "FFDCE6F2",
+    36: "FFFFF2E2",
+    37: "FFFFF2E2",
+    38: "FFFFF2E2",
+    39: "FFFFF2E2",
+    40: "FFFFF2E2",
+    41: "FFD7E4BD"
   };
   for (let rowIndex = 2; rowIndex <= sheet.rowCount; rowIndex += 1) {
     Object.entries(bodyColumnFills).forEach(([columnNumber, fillColor]) => {
@@ -4117,6 +4173,8 @@ async function exportDieselConsultExcel() {
 
   for (let rowIndex = 2; rowIndex <= sheet.rowCount; rowIndex += 1) {
     sheet.getCell(rowIndex, 1).numFmt = "dd/mm/yyyy";
+    sheet.getCell(rowIndex, 29).value = { formula: `SUM(X${rowIndex}:AB${rowIndex})` };
+    sheet.getCell(rowIndex, 35).value = { formula: `SUM(AD${rowIndex}:AH${rowIndex})` };
     sheet.getCell(rowIndex, 19).alignment = { ...cellStyle.alignment, horizontal: "left" };
     sheet.getCell(rowIndex, 23).alignment = { ...cellStyle.alignment, horizontal: "left" };
   }
