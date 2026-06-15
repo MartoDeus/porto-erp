@@ -4085,14 +4085,20 @@ button {
 
 .diesel-entry-form {
   display: grid;
-  grid-template-columns: minmax(150px, 1.25fr) 85px minmax(110px, 0.75fr) minmax(100px, 0.65fr) 40px;
-  gap: 12px;
+  grid-template-columns: minmax(0, 1.08fr) 124px minmax(0, 0.62fr) minmax(0, 0.62fr) 40px;
+  gap: 16px;
   align-items: end;
+}
+
+.diesel-entry-form > * {
+  min-width: 0;
 }
 
 .diesel-entry-form .diesel-platform-toggle {
   min-height: 30px;
-  min-width: 85px;
+  min-width: 0;
+  width: 100%;
+  justify-self: stretch;
   padding: 0 8px;
   gap: 4px;
   font-size: 0.78rem;
