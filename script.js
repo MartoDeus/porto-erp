@@ -1616,7 +1616,7 @@ function getDieselTotals() {
   const transferred = activeDispatches
     .filter((entry) => isDieselTransfer(origin, entry.vessel))
     .reduce((sum, entry) => sum + entry.quantity, 0);
-  const finalStock = initialStock + recharge - dispatched - transferred + consumption + sondage;
+  const finalStock = initialStock + recharge - dispatched - transferred - consumption + sondage;
 
   return {
     initialStock,
@@ -1788,7 +1788,7 @@ function renderDieselRows() {
       <td>${entry.vessel}</td>
       <td>${formatNumber(entry.quantity)}</td>
       <td>${entry.voucher || "-"}</td>
-      <td><span class="type-pill">${transfer ? "Trans." : "Desp."}</span></td>
+      <td><span class="type-pill">${transfer ? "Transferencia" : "Despacho"}</span></td>
       <td>
         <button class="delete-row" type="button" data-id="${entry.id}" aria-label="Eliminar despacho">
           <i data-lucide="trash-2"></i>

@@ -4085,14 +4085,15 @@ button {
 
 .diesel-entry-form {
   display: grid;
-  grid-template-columns: minmax(150px, 1.25fr) 74px minmax(110px, 0.75fr) minmax(100px, 0.65fr) 40px;
+  grid-template-columns: minmax(150px, 1.25fr) 85px minmax(110px, 0.75fr) minmax(100px, 0.65fr) 40px;
   gap: 12px;
   align-items: end;
 }
 
 .diesel-entry-form .diesel-platform-toggle {
   min-height: 30px;
-  padding: 0 6px;
+  min-width: 85px;
+  padding: 0 8px;
   gap: 4px;
   font-size: 0.78rem;
 }
@@ -4132,12 +4133,13 @@ button {
   display: inline-flex;
   align-items: center;
   min-height: 26px;
-  padding: 0 9px;
+  padding: 0 10px;
   border-radius: 999px;
   color: var(--teal-dark);
   background: #ddf5ee;
   font-size: 0.78rem;
   font-weight: 800;
+  white-space: nowrap;
 }
 
 .diesel-summary {

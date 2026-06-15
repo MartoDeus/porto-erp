@@ -267,6 +267,29 @@ def build_rows_and_movements() -> tuple[list[KardexRow], list[dict]]:
 
         rows.extend([carga_diurno, carga_nocturno, consumo_diurno, consumo_nocturno])
 
+        for kardex in (consumo_diurno, consumo_nocturno):
+            if kardex.total_consumo:
+                created_at = timestamp_for(date_text, kardex.turno, len(movements))
+                movements.append(
+                    {
+                        "id": str(uuid.uuid4()),
+                        "kardex_id": kardex.id,
+                        "fecha": date_text,
+                        "turno": kardex.turno,
+                        "tipo": "consumo",
+                        "origen": kardex.unit_name,
+                        "destino": kardex.unit_name,
+                        "cantidad": kardex.total_consumo,
+                        "n_vale": "",
+                        "detalle": {
+                            "origen": "lobitos_import_20260614",
+                            "origen_texto": kardex.unit_name,
+                            "archivo": "data lobitos express y carga.xlsx",
+                        },
+                        "created_at": created_at,
+                    }
+                )
+
         for kardex, dispatches in ((carga_diurno, day_dispatches), (carga_nocturno, night_dispatches)):
             kardex.total_despacho = sum(
                 item["amount"] for item in dispatches if item["destino"] not in DISPATCHERS

@@ -135,6 +135,7 @@ class GroupData:
 def build_groups(df: pd.DataFrame) -> tuple[dict[tuple[str, str, str], GroupData], dict[tuple[str, str], list[dict]]]:
     groups: dict[tuple[str, str, str], GroupData] = {}
     special_by_day_unit: dict[tuple[str, str], list[dict]] = defaultdict(list)
+    last_turno_by_day_unit: dict[tuple[str, str], str] = {}
     vale_col = df.columns[14]
 
     for idx, row in df.iterrows():
@@ -147,6 +148,10 @@ def build_groups(df: pd.DataFrame) -> tuple[dict[tuple[str, str, str], GroupData
         received_from = normalize_received_from(row["RECIBIDO DE"])
         amount = to_number(row["CANT. RECIBIDA"])
         vale = "" if is_blank(row[vale_col]) else str(row[vale_col]).strip()
+        raw_turno = shift_code(row["GUARDIA"])
+        if raw_turno:
+            last_turno_by_day_unit[(date_text, unit_name)] = raw_turno
+        turno = raw_turno or last_turno_by_day_unit.get((date_text, unit_name))
 
         if received_from in SPECIAL_SONDAJE_LABELS:
             if unit_name and unit_name not in EXCLUDED_UNITS and amount != 0:
@@ -156,6 +161,7 @@ def build_groups(df: pd.DataFrame) -> tuple[dict[tuple[str, str, str], GroupData
                         "amount": amount,
                         "vale": vale,
                         "label": received_from,
+                        "turno": turno,
                     }
                 )
             continue
@@ -163,7 +169,6 @@ def build_groups(df: pd.DataFrame) -> tuple[dict[tuple[str, str, str], GroupData
         if unit_name in EXCLUDED_UNITS:
             continue
 
-        turno = shift_code(row["GUARDIA"])
         if not turno:
             continue
 
@@ -200,9 +205,19 @@ def build_groups(df: pd.DataFrame) -> tuple[dict[tuple[str, str, str], GroupData
             )
 
     for (date_text, unit_name), items in special_by_day_unit.items():
-        target = groups.get((date_text, unit_name, "diurno")) or groups.get((date_text, unit_name, "nocturno"))
-        if target:
-            target.sondajes = items
+        grouped_items: dict[str, list[dict]] = defaultdict(list)
+        for item in items:
+            grouped_items[item.get("turno") or "diurno"].append(item)
+        assigned = False
+        for turno, turno_items in grouped_items.items():
+            target = groups.get((date_text, unit_name, turno))
+            if target:
+                target.sondajes.extend(turno_items)
+                assigned = True
+        if not assigned:
+            target = groups.get((date_text, unit_name, "diurno")) or groups.get((date_text, unit_name, "nocturno"))
+            if target:
+                target.sondajes.extend(items)
 
     return groups, special_by_day_unit
 
@@ -211,6 +226,28 @@ def build_movements(groups: dict[tuple[str, str, str], GroupData]) -> list[dict]
     movements: list[dict] = []
 
     for key, group in groups.items():
+        if group.consumo != 0:
+            created_at = timestamp_for(group.date_text, group.turno, len(movements))
+            movements.append(
+                {
+                    "id": str(uuid.uuid4()),
+                    "kardex_id": group.id,
+                    "fecha": group.date_text,
+                    "turno": group.turno,
+                    "tipo": "consumo",
+                    "origen": group.unit_name,
+                    "destino": group.unit_name,
+                    "nave_origen_id": group.unit_name,
+                    "nave_destino_id": group.unit_name,
+                    "cantidad": group.consumo,
+                    "detalle": {
+                        "origen_texto": group.unit_name,
+                        "archivo": "KARDEX FUEL ACTUALIZADO JUNIO.xlsx",
+                    },
+                    "n_vale": "",
+                    "created_at": created_at,
+                }
+            )
         for entry in group.received_entries:
             created_at = timestamp_for(group.date_text, group.turno, len(movements))
             recipient_detail = {

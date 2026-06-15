@@ -21,7 +21,7 @@ insert into public.diesel_kardex (
   modulos_estado, cabecera, observaciones, tiene_movimiento, estado, created_by, updated_by,
   total_recibido, recibido_de, capitan_turno, motorista_turno, acta_sondaje, n_vale_recarga, n_vale_despacho, created_at, updated_at
 ) values (
-  '09ebc58e-d0be-4d0d-86ea-50fac4369944',
+  'e068fb2e-9e98-4983-bb91-108196f63d3d',
   date '2026-06-08',
   public.resolve_unidad_id('LOBITOS EXPRESS CARGA'),
   'diurno',
@@ -59,7 +59,7 @@ insert into public.diesel_kardex (
   modulos_estado, cabecera, observaciones, tiene_movimiento, estado, created_by, updated_by,
   total_recibido, recibido_de, capitan_turno, motorista_turno, acta_sondaje, n_vale_recarga, n_vale_despacho, created_at, updated_at
 ) values (
-  '4f1f02a5-a6bd-4d76-ac3b-9931769d0dfc',
+  '7df5d4e7-47d9-4b66-b011-5df1797e8a38',
   date '2026-06-08',
   public.resolve_unidad_id('LOBITOS EXPRESS CARGA'),
   'nocturno',
@@ -97,7 +97,7 @@ insert into public.diesel_kardex (
   modulos_estado, cabecera, observaciones, tiene_movimiento, estado, created_by, updated_by,
   total_recibido, recibido_de, capitan_turno, motorista_turno, acta_sondaje, n_vale_recarga, n_vale_despacho, created_at, updated_at
 ) values (
-  'fe1e34e1-4966-46fe-a1db-1802cc16c47f',
+  '48d02f52-3dcb-4046-bcc1-62319bb1e749',
   date '2026-06-08',
   public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
   'diurno',
@@ -135,7 +135,7 @@ insert into public.diesel_kardex (
   modulos_estado, cabecera, observaciones, tiene_movimiento, estado, created_by, updated_by,
   total_recibido, recibido_de, capitan_turno, motorista_turno, acta_sondaje, n_vale_recarga, n_vale_despacho, created_at, updated_at
 ) values (
-  '49e82cea-c785-4488-bf5a-46f4938c3b50',
+  '7849b074-1b07-4acc-bbcb-fedbc66c9c79',
   date '2026-06-08',
   public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
   'nocturno',
@@ -173,7 +173,7 @@ insert into public.diesel_kardex (
   modulos_estado, cabecera, observaciones, tiene_movimiento, estado, created_by, updated_by,
   total_recibido, recibido_de, capitan_turno, motorista_turno, acta_sondaje, n_vale_recarga, n_vale_despacho, created_at, updated_at
 ) values (
-  'e3114a02-318b-4fb6-a637-edd9a06aa548',
+  '47c40d09-95d2-49d5-9e9b-dc19d52ad35e',
   date '2026-06-09',
   public.resolve_unidad_id('LOBITOS EXPRESS CARGA'),
   'diurno',
@@ -211,7 +211,7 @@ insert into public.diesel_kardex (
   modulos_estado, cabecera, observaciones, tiene_movimiento, estado, created_by, updated_by,
   total_recibido, recibido_de, capitan_turno, motorista_turno, acta_sondaje, n_vale_recarga, n_vale_despacho, created_at, updated_at
 ) values (
-  '26577df5-dd56-41f0-89fd-2f25349ee8e9',
+  'c78c1cc5-d251-4024-915a-d518fe114979',
   date '2026-06-09',
   public.resolve_unidad_id('LOBITOS EXPRESS CARGA'),
   'nocturno',
@@ -249,7 +249,7 @@ insert into public.diesel_kardex (
   modulos_estado, cabecera, observaciones, tiene_movimiento, estado, created_by, updated_by,
   total_recibido, recibido_de, capitan_turno, motorista_turno, acta_sondaje, n_vale_recarga, n_vale_despacho, created_at, updated_at
 ) values (
-  'f956095e-9de8-4d1d-bd9b-b7b433f2d22c',
+  '3d4836bb-3d23-47e3-b1c1-352f5e11cef7',
   date '2026-06-09',
   public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
   'diurno',
@@ -287,7 +287,7 @@ insert into public.diesel_kardex (
   modulos_estado, cabecera, observaciones, tiene_movimiento, estado, created_by, updated_by,
   total_recibido, recibido_de, capitan_turno, motorista_turno, acta_sondaje, n_vale_recarga, n_vale_despacho, created_at, updated_at
 ) values (
-  'e83fd446-6296-470a-ba14-eacf4fd4e454',
+  '9216def1-5aff-4496-9726-dd5daa19fd16',
   date '2026-06-09',
   public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
   'nocturno',
@@ -325,7 +325,7 @@ insert into public.diesel_kardex (
   modulos_estado, cabecera, observaciones, tiene_movimiento, estado, created_by, updated_by,
   total_recibido, recibido_de, capitan_turno, motorista_turno, acta_sondaje, n_vale_recarga, n_vale_despacho, created_at, updated_at
 ) values (
-  'ce9ac1ce-507f-436e-a59f-6d7240200957',
+  '996d3e9c-d492-4006-91c3-81fa11426895',
   date '2026-06-10',
   public.resolve_unidad_id('LOBITOS EXPRESS CARGA'),
   'diurno',
@@ -363,7 +363,7 @@ insert into public.diesel_kardex (
   modulos_estado, cabecera, observaciones, tiene_movimiento, estado, created_by, updated_by,
   total_recibido, recibido_de, capitan_turno, motorista_turno, acta_sondaje, n_vale_recarga, n_vale_despacho, created_at, updated_at
 ) values (
-  '929df47c-444b-4f67-81d8-afd296dff007',
+  '91e84dcc-062c-4a4d-8e9f-7486080b361d',
   date '2026-06-10',
   public.resolve_unidad_id('LOBITOS EXPRESS CARGA'),
   'nocturno',
@@ -401,7 +401,7 @@ insert into public.diesel_kardex (
   modulos_estado, cabecera, observaciones, tiene_movimiento, estado, created_by, updated_by,
   total_recibido, recibido_de, capitan_turno, motorista_turno, acta_sondaje, n_vale_recarga, n_vale_despacho, created_at, updated_at
 ) values (
-  'a252fb02-3382-4b4c-ac23-5121bef38a01',
+  'ed6c3028-a363-4aee-b0c5-7148465b0443',
   date '2026-06-10',
   public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
   'diurno',
@@ -439,7 +439,7 @@ insert into public.diesel_kardex (
   modulos_estado, cabecera, observaciones, tiene_movimiento, estado, created_by, updated_by,
   total_recibido, recibido_de, capitan_turno, motorista_turno, acta_sondaje, n_vale_recarga, n_vale_despacho, created_at, updated_at
 ) values (
-  '8be3693c-44d9-4861-8137-3f48ac09878e',
+  'cc3c25c3-801c-4dc1-ba30-5df6ba32f629',
   date '2026-06-10',
   public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
   'nocturno',
@@ -477,7 +477,7 @@ insert into public.diesel_kardex (
   modulos_estado, cabecera, observaciones, tiene_movimiento, estado, created_by, updated_by,
   total_recibido, recibido_de, capitan_turno, motorista_turno, acta_sondaje, n_vale_recarga, n_vale_despacho, created_at, updated_at
 ) values (
-  '9c66d567-bc91-4dae-a6d5-3051138d2057',
+  '051ae06b-68f5-49a2-ab2d-4d1b41518d78',
   date '2026-06-11',
   public.resolve_unidad_id('LOBITOS EXPRESS CARGA'),
   'diurno',
@@ -515,7 +515,7 @@ insert into public.diesel_kardex (
   modulos_estado, cabecera, observaciones, tiene_movimiento, estado, created_by, updated_by,
   total_recibido, recibido_de, capitan_turno, motorista_turno, acta_sondaje, n_vale_recarga, n_vale_despacho, created_at, updated_at
 ) values (
-  '070fc51b-e285-44db-b449-2fa62d1f9fe5',
+  'fcc3780c-5ee3-4a03-aade-3ecf259b0cd2',
   date '2026-06-11',
   public.resolve_unidad_id('LOBITOS EXPRESS CARGA'),
   'nocturno',
@@ -553,7 +553,7 @@ insert into public.diesel_kardex (
   modulos_estado, cabecera, observaciones, tiene_movimiento, estado, created_by, updated_by,
   total_recibido, recibido_de, capitan_turno, motorista_turno, acta_sondaje, n_vale_recarga, n_vale_despacho, created_at, updated_at
 ) values (
-  '0aa1ff13-dd91-4ea7-b2db-203b16006053',
+  '70576195-c223-4d33-944e-c38420962ed8',
   date '2026-06-11',
   public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
   'diurno',
@@ -591,7 +591,7 @@ insert into public.diesel_kardex (
   modulos_estado, cabecera, observaciones, tiene_movimiento, estado, created_by, updated_by,
   total_recibido, recibido_de, capitan_turno, motorista_turno, acta_sondaje, n_vale_recarga, n_vale_despacho, created_at, updated_at
 ) values (
-  '353ff7bc-fbb8-492a-bff8-10dc66179ea8',
+  '58a86894-8790-4d8a-9dbd-5a94344a90c7',
   date '2026-06-11',
   public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
   'nocturno',
@@ -629,7 +629,7 @@ insert into public.diesel_kardex (
   modulos_estado, cabecera, observaciones, tiene_movimiento, estado, created_by, updated_by,
   total_recibido, recibido_de, capitan_turno, motorista_turno, acta_sondaje, n_vale_recarga, n_vale_despacho, created_at, updated_at
 ) values (
-  'fdf416a4-f37b-40dc-a5dd-f959d591569c',
+  '954a9738-442e-4794-bec0-3ca2f7f76a45',
   date '2026-06-12',
   public.resolve_unidad_id('LOBITOS EXPRESS CARGA'),
   'diurno',
@@ -667,7 +667,7 @@ insert into public.diesel_kardex (
   modulos_estado, cabecera, observaciones, tiene_movimiento, estado, created_by, updated_by,
   total_recibido, recibido_de, capitan_turno, motorista_turno, acta_sondaje, n_vale_recarga, n_vale_despacho, created_at, updated_at
 ) values (
-  'bcaed09b-a390-4b13-a756-1af80c6cb585',
+  '928aae7c-2562-4211-9c95-09d4cd3abb6b',
   date '2026-06-12',
   public.resolve_unidad_id('LOBITOS EXPRESS CARGA'),
   'nocturno',
@@ -705,7 +705,7 @@ insert into public.diesel_kardex (
   modulos_estado, cabecera, observaciones, tiene_movimiento, estado, created_by, updated_by,
   total_recibido, recibido_de, capitan_turno, motorista_turno, acta_sondaje, n_vale_recarga, n_vale_despacho, created_at, updated_at
 ) values (
-  '9eb87778-2af7-4114-a7f2-3c748c87ee91',
+  '1a7740a9-a1b1-4b60-b104-6d69295f74e4',
   date '2026-06-12',
   public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
   'diurno',
@@ -743,7 +743,7 @@ insert into public.diesel_kardex (
   modulos_estado, cabecera, observaciones, tiene_movimiento, estado, created_by, updated_by,
   total_recibido, recibido_de, capitan_turno, motorista_turno, acta_sondaje, n_vale_recarga, n_vale_despacho, created_at, updated_at
 ) values (
-  'ec7f5faa-3761-43be-a64c-70c24f149b59',
+  '6b4e45b8-a4cf-42a7-a3f5-0805baf60d2c',
   date '2026-06-12',
   public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
   'nocturno',
@@ -781,7 +781,7 @@ insert into public.diesel_kardex (
   modulos_estado, cabecera, observaciones, tiene_movimiento, estado, created_by, updated_by,
   total_recibido, recibido_de, capitan_turno, motorista_turno, acta_sondaje, n_vale_recarga, n_vale_despacho, created_at, updated_at
 ) values (
-  'd30c32d7-3916-4010-b8c9-d5489c2a7f73',
+  'ca19db0e-8d15-46b5-af30-6cb963e433ef',
   date '2026-06-13',
   public.resolve_unidad_id('LOBITOS EXPRESS CARGA'),
   'diurno',
@@ -819,7 +819,7 @@ insert into public.diesel_kardex (
   modulos_estado, cabecera, observaciones, tiene_movimiento, estado, created_by, updated_by,
   total_recibido, recibido_de, capitan_turno, motorista_turno, acta_sondaje, n_vale_recarga, n_vale_despacho, created_at, updated_at
 ) values (
-  '06d6e014-c17a-4077-b9cf-56fc44658820',
+  'c1ff03be-aebf-427a-85e2-36d251c21b71',
   date '2026-06-13',
   public.resolve_unidad_id('LOBITOS EXPRESS CARGA'),
   'nocturno',
@@ -857,7 +857,7 @@ insert into public.diesel_kardex (
   modulos_estado, cabecera, observaciones, tiene_movimiento, estado, created_by, updated_by,
   total_recibido, recibido_de, capitan_turno, motorista_turno, acta_sondaje, n_vale_recarga, n_vale_despacho, created_at, updated_at
 ) values (
-  '7541e1b3-c123-4e0c-83f1-d0b8e292f653',
+  'ae5a0cf6-d8bc-4511-8b17-617afa60ecc0',
   date '2026-06-13',
   public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
   'diurno',
@@ -895,7 +895,7 @@ insert into public.diesel_kardex (
   modulos_estado, cabecera, observaciones, tiene_movimiento, estado, created_by, updated_by,
   total_recibido, recibido_de, capitan_turno, motorista_turno, acta_sondaje, n_vale_recarga, n_vale_despacho, created_at, updated_at
 ) values (
-  'db19def0-91a0-4d50-84b5-6008deb0aa0d',
+  '580643da-830f-45b9-a0ab-b0503428f49e',
   date '2026-06-13',
   public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
   'nocturno',
@@ -930,8 +930,48 @@ insert into public.diesel_kardex (
 insert into public.diesel_movimientos (
   id, kardex_id, fecha, turno, tipo, nave_origen_id, nave_destino_id, cantidad, detalle, estado, created_by, created_at, n_vale, updated_by, updated_at
 ) values (
-  '633ee1f0-c156-4399-a08c-c3a881d9f976',
-  '09ebc58e-d0be-4d0d-86ea-50fac4369944',
+  'ac3b9d89-f571-4ce3-83a6-627246ee4a7d',
+  '48d02f52-3dcb-4046-bcc1-62319bb1e749',
+  date '2026-06-08',
+  'diurno',
+  'consumo',
+  public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
+  public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
+  48.0,
+  '{"origen": "lobitos_import_20260614", "origen_texto": "LOBITOS EXPRESS CONSUMO", "archivo": "data lobitos express y carga.xlsx"}'::jsonb,
+  'vigente',
+  '1fc59be2-4ba7-40b6-9659-767e0b6311df',
+  '2026-06-08 08:00:00-05'::timestamptz,
+  NULL,
+  '1fc59be2-4ba7-40b6-9659-767e0b6311df',
+  '2026-06-08 08:00:00-05'::timestamptz
+);
+
+insert into public.diesel_movimientos (
+  id, kardex_id, fecha, turno, tipo, nave_origen_id, nave_destino_id, cantidad, detalle, estado, created_by, created_at, n_vale, updated_by, updated_at
+) values (
+  '3b3a53f2-eca7-4fb6-9332-51b39d3b0e9d',
+  '7849b074-1b07-4acc-bbcb-fedbc66c9c79',
+  date '2026-06-08',
+  'nocturno',
+  'consumo',
+  public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
+  public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
+  48.0,
+  '{"origen": "lobitos_import_20260614", "origen_texto": "LOBITOS EXPRESS CONSUMO", "archivo": "data lobitos express y carga.xlsx"}'::jsonb,
+  'vigente',
+  '1fc59be2-4ba7-40b6-9659-767e0b6311df',
+  '2026-06-08 20:01:00-05'::timestamptz,
+  NULL,
+  '1fc59be2-4ba7-40b6-9659-767e0b6311df',
+  '2026-06-08 20:01:00-05'::timestamptz
+);
+
+insert into public.diesel_movimientos (
+  id, kardex_id, fecha, turno, tipo, nave_origen_id, nave_destino_id, cantidad, detalle, estado, created_by, created_at, n_vale, updated_by, updated_at
+) values (
+  'beabf9f7-e09e-426b-8174-586b6d30d3b2',
+  'e068fb2e-9e98-4983-bb91-108196f63d3d',
   date '2026-06-08',
   'diurno',
   'transferencia',
@@ -941,17 +981,17 @@ insert into public.diesel_movimientos (
   '{"origen": "lobitos_import_20260614", "destino_texto": "PARIÑAS", "n_vale": "5797", "archivo": "data lobitos express y carga.xlsx"}'::jsonb,
   'vigente',
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-08 08:00:00-05'::timestamptz,
+  '2026-06-08 08:02:00-05'::timestamptz,
   '5797',
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-08 08:00:00-05'::timestamptz
+  '2026-06-08 08:02:00-05'::timestamptz
 );
 
 insert into public.diesel_movimientos (
   id, kardex_id, fecha, turno, tipo, nave_origen_id, nave_destino_id, cantidad, detalle, estado, created_by, created_at, n_vale, updated_by, updated_at
 ) values (
-  '79756f10-d778-45d1-b321-d60e96dc9ecd',
-  '4f1f02a5-a6bd-4d76-ac3b-9931769d0dfc',
+  '4b065b0a-10b4-4997-9dee-f731afdb5a01',
+  '7df5d4e7-47d9-4b66-b011-5df1797e8a38',
   date '2026-06-08',
   'nocturno',
   'transferencia',
@@ -961,17 +1001,57 @@ insert into public.diesel_movimientos (
   '{"origen": "lobitos_import_20260614", "destino_texto": "PARIÑAS", "n_vale": "5798", "archivo": "data lobitos express y carga.xlsx"}'::jsonb,
   'vigente',
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-08 20:01:00-05'::timestamptz,
+  '2026-06-08 20:03:00-05'::timestamptz,
   '5798',
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-08 20:01:00-05'::timestamptz
+  '2026-06-08 20:03:00-05'::timestamptz
 );
 
 insert into public.diesel_movimientos (
   id, kardex_id, fecha, turno, tipo, nave_origen_id, nave_destino_id, cantidad, detalle, estado, created_by, created_at, n_vale, updated_by, updated_at
 ) values (
-  '79dfbeef-0802-4baa-9651-05693fc631cc',
-  '26577df5-dd56-41f0-89fd-2f25349ee8e9',
+  '3e4a2e2b-4d90-4d03-888c-30a0d1b469f5',
+  '3d4836bb-3d23-47e3-b1c1-352f5e11cef7',
+  date '2026-06-09',
+  'diurno',
+  'consumo',
+  public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
+  public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
+  48.0,
+  '{"origen": "lobitos_import_20260614", "origen_texto": "LOBITOS EXPRESS CONSUMO", "archivo": "data lobitos express y carga.xlsx"}'::jsonb,
+  'vigente',
+  '1fc59be2-4ba7-40b6-9659-767e0b6311df',
+  '2026-06-09 08:04:00-05'::timestamptz,
+  NULL,
+  '1fc59be2-4ba7-40b6-9659-767e0b6311df',
+  '2026-06-09 08:04:00-05'::timestamptz
+);
+
+insert into public.diesel_movimientos (
+  id, kardex_id, fecha, turno, tipo, nave_origen_id, nave_destino_id, cantidad, detalle, estado, created_by, created_at, n_vale, updated_by, updated_at
+) values (
+  '63c05a82-1a3f-45fb-aa90-5dc8c2fbf3f9',
+  '9216def1-5aff-4496-9726-dd5daa19fd16',
+  date '2026-06-09',
+  'nocturno',
+  'consumo',
+  public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
+  public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
+  48.0,
+  '{"origen": "lobitos_import_20260614", "origen_texto": "LOBITOS EXPRESS CONSUMO", "archivo": "data lobitos express y carga.xlsx"}'::jsonb,
+  'vigente',
+  '1fc59be2-4ba7-40b6-9659-767e0b6311df',
+  '2026-06-09 20:05:00-05'::timestamptz,
+  NULL,
+  '1fc59be2-4ba7-40b6-9659-767e0b6311df',
+  '2026-06-09 20:05:00-05'::timestamptz
+);
+
+insert into public.diesel_movimientos (
+  id, kardex_id, fecha, turno, tipo, nave_origen_id, nave_destino_id, cantidad, detalle, estado, created_by, created_at, n_vale, updated_by, updated_at
+) values (
+  '33a94bb2-b71b-4eab-a494-67968b77da9d',
+  'c78c1cc5-d251-4024-915a-d518fe114979',
   date '2026-06-09',
   'nocturno',
   'transferencia',
@@ -981,17 +1061,17 @@ insert into public.diesel_movimientos (
   '{"origen": "lobitos_import_20260614", "destino_texto": "TALARA", "n_vale": "5800", "archivo": "data lobitos express y carga.xlsx"}'::jsonb,
   'vigente',
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-09 20:02:00-05'::timestamptz,
+  '2026-06-09 20:06:00-05'::timestamptz,
   '5800',
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-09 20:02:00-05'::timestamptz
+  '2026-06-09 20:06:00-05'::timestamptz
 );
 
 insert into public.diesel_movimientos (
   id, kardex_id, fecha, turno, tipo, nave_origen_id, nave_destino_id, cantidad, detalle, estado, created_by, created_at, n_vale, updated_by, updated_at
 ) values (
-  '3c6c809a-20e6-4634-ab0f-a678f6c967e5',
-  '26577df5-dd56-41f0-89fd-2f25349ee8e9',
+  'fce6374a-1ddc-4486-a9a9-324f31e007cb',
+  'c78c1cc5-d251-4024-915a-d518fe114979',
   date '2026-06-09',
   'nocturno',
   'despacho',
@@ -1001,17 +1081,17 @@ insert into public.diesel_movimientos (
   '{"origen": "lobitos_import_20260614", "destino_texto": "OLYMPIC EXPRESS", "n_vale": "5794", "archivo": "data lobitos express y carga.xlsx"}'::jsonb,
   'vigente',
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-09 20:03:00-05'::timestamptz,
+  '2026-06-09 20:07:00-05'::timestamptz,
   '5794',
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-09 20:03:00-05'::timestamptz
+  '2026-06-09 20:07:00-05'::timestamptz
 );
 
 insert into public.diesel_movimientos (
   id, kardex_id, fecha, turno, tipo, nave_origen_id, nave_destino_id, cantidad, detalle, estado, created_by, created_at, n_vale, updated_by, updated_at
 ) values (
-  '2308d3a7-93f1-4e8e-acba-90df82e8fb9f',
-  '26577df5-dd56-41f0-89fd-2f25349ee8e9',
+  '8bd9a458-dd57-4fb8-b239-4da858337cb1',
+  'c78c1cc5-d251-4024-915a-d518fe114979',
   date '2026-06-09',
   'nocturno',
   'despacho',
@@ -1021,17 +1101,57 @@ insert into public.diesel_movimientos (
   '{"origen": "lobitos_import_20260614", "destino_texto": "CABO BLANCO", "n_vale": "5799", "archivo": "data lobitos express y carga.xlsx"}'::jsonb,
   'vigente',
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-09 20:04:00-05'::timestamptz,
+  '2026-06-09 20:08:00-05'::timestamptz,
   '5799',
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-09 20:04:00-05'::timestamptz
+  '2026-06-09 20:08:00-05'::timestamptz
 );
 
 insert into public.diesel_movimientos (
   id, kardex_id, fecha, turno, tipo, nave_origen_id, nave_destino_id, cantidad, detalle, estado, created_by, created_at, n_vale, updated_by, updated_at
 ) values (
-  '9975ad05-1615-492a-8237-cdebb0764f11',
-  'ce9ac1ce-507f-436e-a59f-6d7240200957',
+  '864a5b7c-34ef-4fa3-a98c-f42e6caf160c',
+  'ed6c3028-a363-4aee-b0c5-7148465b0443',
+  date '2026-06-10',
+  'diurno',
+  'consumo',
+  public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
+  public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
+  48.0,
+  '{"origen": "lobitos_import_20260614", "origen_texto": "LOBITOS EXPRESS CONSUMO", "archivo": "data lobitos express y carga.xlsx"}'::jsonb,
+  'vigente',
+  '1fc59be2-4ba7-40b6-9659-767e0b6311df',
+  '2026-06-10 08:09:00-05'::timestamptz,
+  NULL,
+  '1fc59be2-4ba7-40b6-9659-767e0b6311df',
+  '2026-06-10 08:09:00-05'::timestamptz
+);
+
+insert into public.diesel_movimientos (
+  id, kardex_id, fecha, turno, tipo, nave_origen_id, nave_destino_id, cantidad, detalle, estado, created_by, created_at, n_vale, updated_by, updated_at
+) values (
+  'fa5f3398-73f4-48df-b88e-78dbf1a9edcb',
+  'cc3c25c3-801c-4dc1-ba30-5df6ba32f629',
+  date '2026-06-10',
+  'nocturno',
+  'consumo',
+  public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
+  public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
+  48.0,
+  '{"origen": "lobitos_import_20260614", "origen_texto": "LOBITOS EXPRESS CONSUMO", "archivo": "data lobitos express y carga.xlsx"}'::jsonb,
+  'vigente',
+  '1fc59be2-4ba7-40b6-9659-767e0b6311df',
+  '2026-06-10 20:10:00-05'::timestamptz,
+  NULL,
+  '1fc59be2-4ba7-40b6-9659-767e0b6311df',
+  '2026-06-10 20:10:00-05'::timestamptz
+);
+
+insert into public.diesel_movimientos (
+  id, kardex_id, fecha, turno, tipo, nave_origen_id, nave_destino_id, cantidad, detalle, estado, created_by, created_at, n_vale, updated_by, updated_at
+) values (
+  '988fed22-cd04-472e-922a-d43beeb77af9',
+  '996d3e9c-d492-4006-91c3-81fa11426895',
   date '2026-06-10',
   'diurno',
   'despacho',
@@ -1041,17 +1161,17 @@ insert into public.diesel_movimientos (
   '{"origen": "lobitos_import_20260614", "destino_texto": "SHEILA R", "n_vale": "5795", "archivo": "data lobitos express y carga.xlsx"}'::jsonb,
   'vigente',
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-10 08:05:00-05'::timestamptz,
+  '2026-06-10 08:11:00-05'::timestamptz,
   '5795',
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-10 08:05:00-05'::timestamptz
+  '2026-06-10 08:11:00-05'::timestamptz
 );
 
 insert into public.diesel_movimientos (
   id, kardex_id, fecha, turno, tipo, nave_origen_id, nave_destino_id, cantidad, detalle, estado, created_by, created_at, n_vale, updated_by, updated_at
 ) values (
-  '38f6c3d5-dce6-4fcc-8693-040e5459407f',
-  'ce9ac1ce-507f-436e-a59f-6d7240200957',
+  '442834e2-c6ef-4569-a7eb-a318382d06c8',
+  '996d3e9c-d492-4006-91c3-81fa11426895',
   date '2026-06-10',
   'diurno',
   'despacho',
@@ -1061,17 +1181,17 @@ insert into public.diesel_movimientos (
   '{"origen": "lobitos_import_20260614", "destino_texto": "BUCKLEY EXPRESS", "n_vale": "6052", "archivo": "data lobitos express y carga.xlsx"}'::jsonb,
   'vigente',
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-10 08:06:00-05'::timestamptz,
+  '2026-06-10 08:12:00-05'::timestamptz,
   '6052',
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-10 08:06:00-05'::timestamptz
+  '2026-06-10 08:12:00-05'::timestamptz
 );
 
 insert into public.diesel_movimientos (
   id, kardex_id, fecha, turno, tipo, nave_origen_id, nave_destino_id, cantidad, detalle, estado, created_by, created_at, n_vale, updated_by, updated_at
 ) values (
-  'b49b2a48-fbd6-4552-8a80-1d483a761ebc',
-  'ce9ac1ce-507f-436e-a59f-6d7240200957',
+  '0ce714ee-4269-472a-9427-0c96ed0c492a',
+  '996d3e9c-d492-4006-91c3-81fa11426895',
   date '2026-06-10',
   'diurno',
   'despacho',
@@ -1081,17 +1201,17 @@ insert into public.diesel_movimientos (
   '{"origen": "lobitos_import_20260614", "destino_texto": "LOBITOS EXPRESS CONSUMO", "n_vale": "", "archivo": "data lobitos express y carga.xlsx"}'::jsonb,
   'vigente',
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-10 08:07:00-05'::timestamptz,
+  '2026-06-10 08:13:00-05'::timestamptz,
   NULL,
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-10 08:07:00-05'::timestamptz
+  '2026-06-10 08:13:00-05'::timestamptz
 );
 
 insert into public.diesel_movimientos (
   id, kardex_id, fecha, turno, tipo, nave_origen_id, nave_destino_id, cantidad, detalle, estado, created_by, created_at, n_vale, updated_by, updated_at
 ) values (
-  '425f3c0f-ab99-49a8-a115-847b08ce1c00',
-  '929df47c-444b-4f67-81d8-afd296dff007',
+  'e5168466-817e-4d83-98ca-dc22d6bb168d',
+  '91e84dcc-062c-4a4d-8e9f-7486080b361d',
   date '2026-06-10',
   'nocturno',
   'transferencia',
@@ -1101,17 +1221,17 @@ insert into public.diesel_movimientos (
   '{"origen": "lobitos_import_20260614", "destino_texto": "PARIÑAS", "n_vale": "6054", "archivo": "data lobitos express y carga.xlsx"}'::jsonb,
   'vigente',
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-10 20:08:00-05'::timestamptz,
+  '2026-06-10 20:14:00-05'::timestamptz,
   '6054',
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-10 20:08:00-05'::timestamptz
+  '2026-06-10 20:14:00-05'::timestamptz
 );
 
 insert into public.diesel_movimientos (
   id, kardex_id, fecha, turno, tipo, nave_origen_id, nave_destino_id, cantidad, detalle, estado, created_by, created_at, n_vale, updated_by, updated_at
 ) values (
-  'd25663d3-7337-43ef-b518-08b60921e5a6',
-  '929df47c-444b-4f67-81d8-afd296dff007',
+  'b6bcc0b1-34d3-4cd2-93ac-5085b87bc17c',
+  '91e84dcc-062c-4a4d-8e9f-7486080b361d',
   date '2026-06-10',
   'nocturno',
   'despacho',
@@ -1121,17 +1241,17 @@ insert into public.diesel_movimientos (
   '{"origen": "lobitos_import_20260614", "destino_texto": "OLYMPIC EXPRESS", "n_vale": "6053", "archivo": "data lobitos express y carga.xlsx"}'::jsonb,
   'vigente',
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-10 20:09:00-05'::timestamptz,
+  '2026-06-10 20:15:00-05'::timestamptz,
   '6053',
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-10 20:09:00-05'::timestamptz
+  '2026-06-10 20:15:00-05'::timestamptz
 );
 
 insert into public.diesel_movimientos (
   id, kardex_id, fecha, turno, tipo, nave_origen_id, nave_destino_id, cantidad, detalle, estado, created_by, created_at, n_vale, updated_by, updated_at
 ) values (
-  'b70f593a-fe7b-43a2-aa74-ae0a4b79f22c',
-  'a252fb02-3382-4b4c-ac23-5121bef38a01',
+  '143ec5b5-afd6-4791-b2a5-c61eb622a339',
+  'ed6c3028-a363-4aee-b0c5-7148465b0443',
   date '2026-06-10',
   'diurno',
   'recibido',
@@ -1141,17 +1261,57 @@ insert into public.diesel_movimientos (
   '{"origen": "lobitos_import_20260614", "origen_texto": "LOBITOS EXPRESS CARGA", "archivo": "data lobitos express y carga.xlsx"}'::jsonb,
   'vigente',
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-10 08:10:00-05'::timestamptz,
+  '2026-06-10 08:16:00-05'::timestamptz,
   NULL,
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-10 08:10:00-05'::timestamptz
+  '2026-06-10 08:16:00-05'::timestamptz
 );
 
 insert into public.diesel_movimientos (
   id, kardex_id, fecha, turno, tipo, nave_origen_id, nave_destino_id, cantidad, detalle, estado, created_by, created_at, n_vale, updated_by, updated_at
 ) values (
-  'c72f29ed-401c-4240-b261-27c506a08d1d',
-  '9c66d567-bc91-4dae-a6d5-3051138d2057',
+  'f3538c6d-c1dd-4bd1-be23-0e04485826f3',
+  '70576195-c223-4d33-944e-c38420962ed8',
+  date '2026-06-11',
+  'diurno',
+  'consumo',
+  public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
+  public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
+  48.0,
+  '{"origen": "lobitos_import_20260614", "origen_texto": "LOBITOS EXPRESS CONSUMO", "archivo": "data lobitos express y carga.xlsx"}'::jsonb,
+  'vigente',
+  '1fc59be2-4ba7-40b6-9659-767e0b6311df',
+  '2026-06-11 08:17:00-05'::timestamptz,
+  NULL,
+  '1fc59be2-4ba7-40b6-9659-767e0b6311df',
+  '2026-06-11 08:17:00-05'::timestamptz
+);
+
+insert into public.diesel_movimientos (
+  id, kardex_id, fecha, turno, tipo, nave_origen_id, nave_destino_id, cantidad, detalle, estado, created_by, created_at, n_vale, updated_by, updated_at
+) values (
+  'dd6750c5-3f24-4129-80ec-0716210ed4ba',
+  '58a86894-8790-4d8a-9dbd-5a94344a90c7',
+  date '2026-06-11',
+  'nocturno',
+  'consumo',
+  public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
+  public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
+  48.0,
+  '{"origen": "lobitos_import_20260614", "origen_texto": "LOBITOS EXPRESS CONSUMO", "archivo": "data lobitos express y carga.xlsx"}'::jsonb,
+  'vigente',
+  '1fc59be2-4ba7-40b6-9659-767e0b6311df',
+  '2026-06-11 20:18:00-05'::timestamptz,
+  NULL,
+  '1fc59be2-4ba7-40b6-9659-767e0b6311df',
+  '2026-06-11 20:18:00-05'::timestamptz
+);
+
+insert into public.diesel_movimientos (
+  id, kardex_id, fecha, turno, tipo, nave_origen_id, nave_destino_id, cantidad, detalle, estado, created_by, created_at, n_vale, updated_by, updated_at
+) values (
+  '6325dd5e-d0c5-4ee8-980f-ce415b17c189',
+  '051ae06b-68f5-49a2-ab2d-4d1b41518d78',
   date '2026-06-11',
   'diurno',
   'despacho',
@@ -1161,17 +1321,17 @@ insert into public.diesel_movimientos (
   '{"origen": "lobitos_import_20260614", "destino_texto": "LJ KELLEY", "n_vale": "6055", "archivo": "data lobitos express y carga.xlsx"}'::jsonb,
   'vigente',
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-11 08:11:00-05'::timestamptz,
+  '2026-06-11 08:19:00-05'::timestamptz,
   '6055',
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-11 08:11:00-05'::timestamptz
+  '2026-06-11 08:19:00-05'::timestamptz
 );
 
 insert into public.diesel_movimientos (
   id, kardex_id, fecha, turno, tipo, nave_origen_id, nave_destino_id, cantidad, detalle, estado, created_by, created_at, n_vale, updated_by, updated_at
 ) values (
-  '933124c9-b8ec-4f7c-a2da-0455be894771',
-  '070fc51b-e285-44db-b449-2fa62d1f9fe5',
+  'd620b41d-ed3a-4219-828a-ca72a0397983',
+  'fcc3780c-5ee3-4a03-aade-3ecf259b0cd2',
   date '2026-06-11',
   'nocturno',
   'despacho',
@@ -1181,17 +1341,17 @@ insert into public.diesel_movimientos (
   '{"origen": "lobitos_import_20260614", "destino_texto": "CABO BLANCO", "n_vale": "6056", "archivo": "data lobitos express y carga.xlsx"}'::jsonb,
   'vigente',
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-11 20:12:00-05'::timestamptz,
+  '2026-06-11 20:20:00-05'::timestamptz,
   '6056',
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-11 20:12:00-05'::timestamptz
+  '2026-06-11 20:20:00-05'::timestamptz
 );
 
 insert into public.diesel_movimientos (
   id, kardex_id, fecha, turno, tipo, nave_origen_id, nave_destino_id, cantidad, detalle, estado, created_by, created_at, n_vale, updated_by, updated_at
 ) values (
-  '3ea66c1c-8fac-4742-83ce-a88ff81147ba',
-  '9c66d567-bc91-4dae-a6d5-3051138d2057',
+  '43a0328c-d082-42cf-ab67-279e02e078ac',
+  '051ae06b-68f5-49a2-ab2d-4d1b41518d78',
   date '2026-06-11',
   'diurno',
   'recibido',
@@ -1201,17 +1361,57 @@ insert into public.diesel_movimientos (
   '{"origen": "lobitos_import_20260614", "origen_texto": "TALARA + PARIÑAS", "archivo": "data lobitos express y carga.xlsx"}'::jsonb,
   'vigente',
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-11 08:13:00-05'::timestamptz,
+  '2026-06-11 08:21:00-05'::timestamptz,
   NULL,
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-11 08:13:00-05'::timestamptz
+  '2026-06-11 08:21:00-05'::timestamptz
 );
 
 insert into public.diesel_movimientos (
   id, kardex_id, fecha, turno, tipo, nave_origen_id, nave_destino_id, cantidad, detalle, estado, created_by, created_at, n_vale, updated_by, updated_at
 ) values (
-  '1900ccc0-bf12-4df5-9478-f3df4ec116c0',
-  'fdf416a4-f37b-40dc-a5dd-f959d591569c',
+  'd5d44113-af19-4694-9e14-36677dd8216f',
+  '1a7740a9-a1b1-4b60-b104-6d69295f74e4',
+  date '2026-06-12',
+  'diurno',
+  'consumo',
+  public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
+  public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
+  48.0,
+  '{"origen": "lobitos_import_20260614", "origen_texto": "LOBITOS EXPRESS CONSUMO", "archivo": "data lobitos express y carga.xlsx"}'::jsonb,
+  'vigente',
+  '1fc59be2-4ba7-40b6-9659-767e0b6311df',
+  '2026-06-12 08:22:00-05'::timestamptz,
+  NULL,
+  '1fc59be2-4ba7-40b6-9659-767e0b6311df',
+  '2026-06-12 08:22:00-05'::timestamptz
+);
+
+insert into public.diesel_movimientos (
+  id, kardex_id, fecha, turno, tipo, nave_origen_id, nave_destino_id, cantidad, detalle, estado, created_by, created_at, n_vale, updated_by, updated_at
+) values (
+  '5a743e29-3bb9-4c38-915c-141ebf80d323',
+  '6b4e45b8-a4cf-42a7-a3f5-0805baf60d2c',
+  date '2026-06-12',
+  'nocturno',
+  'consumo',
+  public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
+  public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
+  82.0,
+  '{"origen": "lobitos_import_20260614", "origen_texto": "LOBITOS EXPRESS CONSUMO", "archivo": "data lobitos express y carga.xlsx"}'::jsonb,
+  'vigente',
+  '1fc59be2-4ba7-40b6-9659-767e0b6311df',
+  '2026-06-12 20:23:00-05'::timestamptz,
+  NULL,
+  '1fc59be2-4ba7-40b6-9659-767e0b6311df',
+  '2026-06-12 20:23:00-05'::timestamptz
+);
+
+insert into public.diesel_movimientos (
+  id, kardex_id, fecha, turno, tipo, nave_origen_id, nave_destino_id, cantidad, detalle, estado, created_by, created_at, n_vale, updated_by, updated_at
+) values (
+  '84dcbd23-f90a-4f15-9468-291bc26ff433',
+  '954a9738-442e-4794-bec0-3ca2f7f76a45',
   date '2026-06-12',
   'diurno',
   'despacho',
@@ -1221,17 +1421,17 @@ insert into public.diesel_movimientos (
   '{"origen": "lobitos_import_20260614", "destino_texto": "SHEILA R", "n_vale": "6057", "archivo": "data lobitos express y carga.xlsx"}'::jsonb,
   'vigente',
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-12 08:14:00-05'::timestamptz,
+  '2026-06-12 08:24:00-05'::timestamptz,
   '6057',
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-12 08:14:00-05'::timestamptz
+  '2026-06-12 08:24:00-05'::timestamptz
 );
 
 insert into public.diesel_movimientos (
   id, kardex_id, fecha, turno, tipo, nave_origen_id, nave_destino_id, cantidad, detalle, estado, created_by, created_at, n_vale, updated_by, updated_at
 ) values (
-  '6d1387f2-6384-4d1f-8db4-d292fc72b6d4',
-  'fdf416a4-f37b-40dc-a5dd-f959d591569c',
+  'cfa17094-d7ef-4145-b527-f58d310beeee',
+  '954a9738-442e-4794-bec0-3ca2f7f76a45',
   date '2026-06-12',
   'diurno',
   'despacho',
@@ -1241,17 +1441,17 @@ insert into public.diesel_movimientos (
   '{"origen": "lobitos_import_20260614", "destino_texto": "LJ KELLEY", "n_vale": "6059", "archivo": "data lobitos express y carga.xlsx"}'::jsonb,
   'vigente',
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-12 08:15:00-05'::timestamptz,
+  '2026-06-12 08:25:00-05'::timestamptz,
   '6059',
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-12 08:15:00-05'::timestamptz
+  '2026-06-12 08:25:00-05'::timestamptz
 );
 
 insert into public.diesel_movimientos (
   id, kardex_id, fecha, turno, tipo, nave_origen_id, nave_destino_id, cantidad, detalle, estado, created_by, created_at, n_vale, updated_by, updated_at
 ) values (
-  '0dad2b78-4e8b-4095-9869-548f79bb6544',
-  'fdf416a4-f37b-40dc-a5dd-f959d591569c',
+  '047eaafe-5a13-447e-94f0-5087c5346b66',
+  '954a9738-442e-4794-bec0-3ca2f7f76a45',
   date '2026-06-12',
   'diurno',
   'despacho',
@@ -1261,17 +1461,17 @@ insert into public.diesel_movimientos (
   '{"origen": "lobitos_import_20260614", "destino_texto": "LOBITOS EXPRESS CONSUMO", "n_vale": "", "archivo": "data lobitos express y carga.xlsx"}'::jsonb,
   'vigente',
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-12 08:16:00-05'::timestamptz,
+  '2026-06-12 08:26:00-05'::timestamptz,
   NULL,
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-12 08:16:00-05'::timestamptz
+  '2026-06-12 08:26:00-05'::timestamptz
 );
 
 insert into public.diesel_movimientos (
   id, kardex_id, fecha, turno, tipo, nave_origen_id, nave_destino_id, cantidad, detalle, estado, created_by, created_at, n_vale, updated_by, updated_at
 ) values (
-  'fa97a734-2d93-41e8-ba6b-0000f2b685cf',
-  'fdf416a4-f37b-40dc-a5dd-f959d591569c',
+  '3a051b3e-6349-4ce5-9720-4fef294deb93',
+  '954a9738-442e-4794-bec0-3ca2f7f76a45',
   date '2026-06-12',
   'diurno',
   'recibido',
@@ -1281,17 +1481,17 @@ insert into public.diesel_movimientos (
   '{"origen": "lobitos_import_20260614", "origen_texto": "TALARA", "archivo": "data lobitos express y carga.xlsx"}'::jsonb,
   'vigente',
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-12 08:17:00-05'::timestamptz,
+  '2026-06-12 08:27:00-05'::timestamptz,
   NULL,
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-12 08:17:00-05'::timestamptz
+  '2026-06-12 08:27:00-05'::timestamptz
 );
 
 insert into public.diesel_movimientos (
   id, kardex_id, fecha, turno, tipo, nave_origen_id, nave_destino_id, cantidad, detalle, estado, created_by, created_at, n_vale, updated_by, updated_at
 ) values (
-  '49db3cd8-7f94-46a9-8da7-4fe56f4beca1',
-  '9eb87778-2af7-4114-a7f2-3c748c87ee91',
+  '56c3af2a-dc4d-428d-97a8-621091afad8a',
+  '1a7740a9-a1b1-4b60-b104-6d69295f74e4',
   date '2026-06-12',
   'diurno',
   'recibido',
@@ -1301,17 +1501,57 @@ insert into public.diesel_movimientos (
   '{"origen": "lobitos_import_20260614", "origen_texto": "LOBITOS EXPRESS CARGA", "archivo": "data lobitos express y carga.xlsx"}'::jsonb,
   'vigente',
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-12 08:18:00-05'::timestamptz,
+  '2026-06-12 08:28:00-05'::timestamptz,
   NULL,
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-12 08:18:00-05'::timestamptz
+  '2026-06-12 08:28:00-05'::timestamptz
 );
 
 insert into public.diesel_movimientos (
   id, kardex_id, fecha, turno, tipo, nave_origen_id, nave_destino_id, cantidad, detalle, estado, created_by, created_at, n_vale, updated_by, updated_at
 ) values (
-  '35de2de3-5422-4598-b94f-dbea540cbaed',
-  'd30c32d7-3916-4010-b8c9-d5489c2a7f73',
+  '15f410c1-40cc-4969-8c37-5fbeb7e46f72',
+  'ae5a0cf6-d8bc-4511-8b17-617afa60ecc0',
+  date '2026-06-13',
+  'diurno',
+  'consumo',
+  public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
+  public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
+  286.0,
+  '{"origen": "lobitos_import_20260614", "origen_texto": "LOBITOS EXPRESS CONSUMO", "archivo": "data lobitos express y carga.xlsx"}'::jsonb,
+  'vigente',
+  '1fc59be2-4ba7-40b6-9659-767e0b6311df',
+  '2026-06-13 08:29:00-05'::timestamptz,
+  NULL,
+  '1fc59be2-4ba7-40b6-9659-767e0b6311df',
+  '2026-06-13 08:29:00-05'::timestamptz
+);
+
+insert into public.diesel_movimientos (
+  id, kardex_id, fecha, turno, tipo, nave_origen_id, nave_destino_id, cantidad, detalle, estado, created_by, created_at, n_vale, updated_by, updated_at
+) values (
+  '5be87355-8bdc-4030-99e9-b58f1f33b352',
+  '580643da-830f-45b9-a0ab-b0503428f49e',
+  date '2026-06-13',
+  'nocturno',
+  'consumo',
+  public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
+  public.resolve_unidad_id('LOBITOS EXPRESS CONSUMO'),
+  152.0,
+  '{"origen": "lobitos_import_20260614", "origen_texto": "LOBITOS EXPRESS CONSUMO", "archivo": "data lobitos express y carga.xlsx"}'::jsonb,
+  'vigente',
+  '1fc59be2-4ba7-40b6-9659-767e0b6311df',
+  '2026-06-13 20:30:00-05'::timestamptz,
+  NULL,
+  '1fc59be2-4ba7-40b6-9659-767e0b6311df',
+  '2026-06-13 20:30:00-05'::timestamptz
+);
+
+insert into public.diesel_movimientos (
+  id, kardex_id, fecha, turno, tipo, nave_origen_id, nave_destino_id, cantidad, detalle, estado, created_by, created_at, n_vale, updated_by, updated_at
+) values (
+  'aa06b137-8b32-4969-b578-24c61c90703b',
+  'ca19db0e-8d15-46b5-af30-6cb963e433ef',
   date '2026-06-13',
   'diurno',
   'despacho',
@@ -1321,17 +1561,17 @@ insert into public.diesel_movimientos (
   '{"origen": "lobitos_import_20260614", "destino_texto": "LOBITOS EXPRESS CONSUMO", "n_vale": "", "archivo": "data lobitos express y carga.xlsx"}'::jsonb,
   'vigente',
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-13 08:19:00-05'::timestamptz,
+  '2026-06-13 08:31:00-05'::timestamptz,
   NULL,
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-13 08:19:00-05'::timestamptz
+  '2026-06-13 08:31:00-05'::timestamptz
 );
 
 insert into public.diesel_movimientos (
   id, kardex_id, fecha, turno, tipo, nave_origen_id, nave_destino_id, cantidad, detalle, estado, created_by, created_at, n_vale, updated_by, updated_at
 ) values (
-  '7cf96468-7e63-4117-8ec4-068106220110',
-  '7541e1b3-c123-4e0c-83f1-d0b8e292f653',
+  '83cbcd42-a92b-4b1a-b758-f8fc13cab424',
+  'ae5a0cf6-d8bc-4511-8b17-617afa60ecc0',
   date '2026-06-13',
   'diurno',
   'recibido',
@@ -1341,10 +1581,10 @@ insert into public.diesel_movimientos (
   '{"origen": "lobitos_import_20260614", "origen_texto": "LOBITOS EXPRESS CARGA", "archivo": "data lobitos express y carga.xlsx"}'::jsonb,
   'vigente',
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-13 08:20:00-05'::timestamptz,
+  '2026-06-13 08:32:00-05'::timestamptz,
   NULL,
   '1fc59be2-4ba7-40b6-9659-767e0b6311df',
-  '2026-06-13 08:20:00-05'::timestamptz
+  '2026-06-13 08:32:00-05'::timestamptz
 );
 
 select public.recalcular_diesel_historial(public.resolve_unidad_id('LOBITOS EXPRESS CARGA'), date '2026-06-08', 'diurno');
