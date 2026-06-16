@@ -4146,15 +4146,27 @@ async function exportDieselConsultExcel() {
     13, 21, 9.625, 13, 13, 21, 11, 11, 11, 11, 11, 14, 11, 11, 11, 11, 11, 14, 12, 12, 12, 12, 12, 14, 9, 10.75,
     19.25, 22.25, 22.375, 25.375, 12.375
   ];
-  const headerFills = [
-    "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA",
-    "FFD7E4BD", "FFCCC1DA", "FFCCC1DA", "FFDCE6F2", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFDCE6F2",
-    "FFCCC1DA", "FFCCC1DA", "FFDCE6F2", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFDCE6F2",
-    "FFFFE5CC", "FFFFE5CC", "FFFFE5CC", "FFFFE5CC", "FFFFE5CC", "FFDCE6F2",
-    "FFFFE5CC", "FFFFE5CC", "FFFFE5CC", "FFFFE5CC", "FFFFE5CC", "FFDCE6F2",
-    "FFFFF2E2", "FFFFF2E2", "FFFFF2E2", "FFFFF2E2", "FFFFF2E2",
-    "FFD7E4BD", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA", "FFCCC1DA"
-  ];
+  const kardexFillColors = {
+    purple: "FFCCC1DA",
+    green: "FFD7E4BD",
+    blue: "FFDCE6F2",
+    peach: "FFFFE5CC",
+    beige: "FFFFF2E2"
+  };
+  const getKardexHeaderFill = (header) => {
+    if (header === "STOCK INICIAL" || header === "STOCK FINAL") return kardexFillColors.green;
+    if (header.startsWith("DIFERENCIA POR SONDAJE") || header.startsWith("CONSUMO SONDAJE")) return kardexFillColors.peach;
+    if (header.startsWith("N ACTA SONDAJE")) return kardexFillColors.beige;
+    if (header.startsWith("TOTAL ")) return kardexFillColors.blue;
+    return kardexFillColors.purple;
+  };
+  const getKardexBodyFill = (header) => {
+    if (header === "STOCK INICIAL" || header === "STOCK FINAL") return kardexFillColors.green;
+    if (header.startsWith("DIFERENCIA POR SONDAJE") || header.startsWith("CONSUMO SONDAJE")) return kardexFillColors.peach;
+    if (header.startsWith("N ACTA SONDAJE")) return kardexFillColors.beige;
+    if (header.startsWith("TOTAL ")) return kardexFillColors.blue;
+    return null;
+  };
   const thinBorder = { style: "thin", color: { argb: "FF808080" } };
   const cellStyle = {
     font: { name: "Calibri", size: 10, color: { argb: "FF000000" } },
@@ -4178,31 +4190,11 @@ async function exportDieselConsultExcel() {
     });
   });
 
-  const bodyColumnFills = {
-    8: "FFD7E4BD",
-    11: "FFDCE6F2",
-    15: "FFDCE6F2",
-    18: "FFDCE6F2",
-    22: "FFDCE6F2",
-    24: "FFFFE5CC",
-    25: "FFFFE5CC",
-    26: "FFFFE5CC",
-    27: "FFFFE5CC",
-    28: "FFFFE5CC",
-    29: "FFDCE6F2",
-    30: "FFFFE5CC",
-    31: "FFFFE5CC",
-    32: "FFFFE5CC",
-    33: "FFFFE5CC",
-    34: "FFFFE5CC",
-    35: "FFDCE6F2",
-    36: "FFFFF2E2",
-    37: "FFFFF2E2",
-    38: "FFFFF2E2",
-    39: "FFFFF2E2",
-    40: "FFFFF2E2",
-    41: "FFD7E4BD"
-  };
+  const bodyColumnFills = rows[0].reduce((fills, header, index) => {
+    const fillColor = getKardexBodyFill(header);
+    if (fillColor) fills[index + 1] = fillColor;
+    return fills;
+  }, {});
   for (let rowIndex = 2; rowIndex <= sheet.rowCount; rowIndex += 1) {
     Object.entries(bodyColumnFills).forEach(([columnNumber, fillColor]) => {
       sheet.getCell(rowIndex, Number(columnNumber)).fill = {
@@ -4215,7 +4207,7 @@ async function exportDieselConsultExcel() {
 
   const headerRow = sheet.getRow(1);
   headerRow.eachCell((cell, columnNumber) => {
-    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: headerFills[columnNumber - 1] } };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: getKardexHeaderFill(rows[0][columnNumber - 1]) } };
   });
 
   for (let rowIndex = 2; rowIndex <= sheet.rowCount; rowIndex += 1) {
