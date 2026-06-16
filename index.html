@@ -156,6 +156,7 @@
         <a class="nav-item" href="#" data-page="mapa"><i class="nav-icon" data-lucide="map"></i>Mapa</a>
         <a class="nav-item" href="#" data-page="naves"><i class="nav-icon" data-lucide="ship"></i>Naves</a>
         <a class="nav-item" href="#" data-page="rutas"><i class="nav-icon" data-lucide="route"></i>Rutas</a>
+        <a class="nav-item" href="#" data-page="alm-ai"><i class="nav-icon" data-lucide="bot"></i>ALM AI</a>
 
         <p class="nav-section">Equipo</p>
         <a class="nav-item" href="#" data-page="cumpleanos"><i class="nav-icon" data-lucide="gift"></i>Cumpleaños</a>
@@ -1109,6 +1110,104 @@
         </section>
         <section class="page-view placeholder-view" data-view="rutas" hidden>
           <article class="panel-card placeholder-card"><i data-lucide="route"></i><h1>Rutas</h1><p>Pantalla preparada para rutas y recorridos.</p></article>
+        </section>
+        <section class="page-view alm-ai-view" data-view="alm-ai" hidden>
+          <section class="alm-ai-main">
+            <div class="alm-ai-hero">
+              <div class="alm-ai-avatar"><i data-lucide="bot"></i></div>
+              <div>
+                <h1>Hola, soy ALM AI</h1>
+                <p>Tu asistente inteligente para consultas de operaciones marítimas.</p>
+                <span>Pregúntame sobre diesel, pasajeros, bitácora, naves, cargas y más.</span>
+              </div>
+            </div>
+
+            <div class="alm-ai-chips" aria-label="Preguntas rápidas">
+              <button type="button" data-ai-question="Consumo de diésel hoy"><i data-lucide="droplet"></i>Consumo de diésel hoy</button>
+              <button type="button" data-ai-question="Stock actual de diésel"><i data-lucide="database"></i>Stock actual de diésel</button>
+              <button type="button" data-ai-question="Pasajeros del día"><i data-lucide="users"></i>Pasajeros del día</button>
+              <button type="button" data-ai-question="Bitácora de hoy"><i data-lucide="book-open-text"></i>Bitácora de hoy</button>
+              <button type="button" data-ai-question="Naves operativas"><i data-lucide="ship"></i>Naves operativas</button>
+              <button type="button" data-ai-question="Reporte mensual"><i data-lucide="bar-chart-3"></i>Reporte mensual</button>
+            </div>
+
+            <section class="alm-ai-chat" id="almAiChat" aria-label="Conversación con ALM AI">
+              <article class="alm-ai-message user">
+                <div class="alm-ai-message-meta"><span>Tú</span><time>10:30 a.m.</time></div>
+                <div class="alm-ai-bubble">¿Cuánto diesel consumió la nave TALARA esta semana?</div>
+              </article>
+              <article class="alm-ai-message ai">
+                <div class="alm-ai-mini-avatar"><i data-lucide="bot"></i></div>
+                <div>
+                  <div class="alm-ai-message-meta"><span>ALM AI</span><time>10:30 a.m.</time></div>
+                  <div class="alm-ai-bubble">
+                    <p>La nave <strong>TALARA</strong> consumió <strong>4,320 gal</strong> esta semana.</p>
+                    <ul>
+                      <li>Turno diurno: 2,340 gal</li>
+                      <li>Turno nocturno: 1,980 gal</li>
+                    </ul>
+                    <div class="alm-ai-answer-grid">
+                      <span><small>Total consumido</small><strong>4,320 gal</strong></span>
+                      <span><small>Periodo</small><strong>19/05/2026 - 25/05/2026</strong></span>
+                      <span><small>Fuente</small><strong>Módulo Diesel</strong></span>
+                    </div>
+                  </div>
+                </div>
+              </article>
+              <article class="alm-ai-message user">
+                <div class="alm-ai-message-meta"><span>Tú</span><time>10:32 a.m.</time></div>
+                <div class="alm-ai-bubble">¿Qué nave consumió más diesel en mayo?</div>
+              </article>
+              <article class="alm-ai-message ai">
+                <div class="alm-ai-mini-avatar"><i data-lucide="bot"></i></div>
+                <div>
+                  <div class="alm-ai-message-meta"><span>ALM AI</span><time>10:32 a.m.</time></div>
+                  <div class="alm-ai-bubble">
+                    <p>Estas son las 5 naves con mayor consumo de diesel en mayo 2026.</p>
+                    <ol class="alm-ai-ranking">
+                      <li><span>PARIÑAS</span><meter min="0" max="5203" value="5203"></meter><strong>5,203 gal</strong></li>
+                      <li><span>TALARA</span><meter min="0" max="5203" value="2903"></meter><strong>2,903 gal</strong></li>
+                      <li><span>MR BOB</span><meter min="0" max="5203" value="1842"></meter><strong>1,842 gal</strong></li>
+                      <li><span>SHEILA R</span><meter min="0" max="5203" value="1721"></meter><strong>1,721 gal</strong></li>
+                      <li><span>LOBITOS EXPRESS</span><meter min="0" max="5203" value="1480"></meter><strong>1,480 gal</strong></li>
+                    </ol>
+                  </div>
+                </div>
+              </article>
+            </section>
+
+            <form class="alm-ai-composer" id="almAiForm">
+              <input id="almAiInput" type="text" autocomplete="off" placeholder="Escribe tu consulta sobre operaciones marítimas...">
+              <button id="almAiSubmit" type="submit" aria-label="Enviar consulta"><i data-lucide="send"></i></button>
+            </form>
+            <p class="alm-ai-disclaimer">ALM AI puede cometer errores. Verifica la información importante.</p>
+          </section>
+
+          <aside class="alm-ai-side">
+            <section class="panel-card alm-ai-side-card">
+              <h2><i data-lucide="history"></i>Historial de consultas</h2>
+              <div id="almAiHistory">
+                <p>Hoy</p>
+                <button type="button">Consumo de TALARA esta semana<span>10:32 a.m.</span></button>
+                <button type="button">Naves con mayor consumo en mayo<span>10:32 a.m.</span></button>
+                <button type="button">Stock actual de diesel<span>09:15 a.m.</span></button>
+                <button type="button">Pasajeros del día de hoy<span>08:45 a.m.</span></button>
+                <p>Ayer</p>
+                <button type="button">Reporte mensual de diesel<span>05:20 p.m.</span></button>
+              </div>
+            </section>
+            <section class="panel-card alm-ai-side-card">
+              <h2><i data-lucide="layers-3"></i>Módulos disponibles</h2>
+              <ul class="alm-ai-modules">
+                <li><i data-lucide="fuel"></i><span><strong>Diesel</strong>Consultas sobre consumo, recargas y stock</span></li>
+                <li><i data-lucide="users"></i><span><strong>Pasajeros</strong>Consultas sobre traslados y pasajeros</span></li>
+                <li><i data-lucide="book-open-text"></i><span><strong>Bitácora</strong>Consultas sobre actividades</span></li>
+                <li><i data-lucide="ship"></i><span><strong>Naves</strong>Información y estado de las naves</span></li>
+                <li><i data-lucide="container"></i><span><strong>Cargas</strong>Consultas sobre cargas y operaciones</span></li>
+                <li><i data-lucide="file-chart-column"></i><span><strong>Reportes</strong>Generación de reportes y estadísticas</span></li>
+              </ul>
+            </section>
+          </aside>
         </section>
         <section class="page-view placeholder-view" data-view="reportes" hidden>
           <article class="panel-card placeholder-card"><i data-lucide="file-chart-column"></i><h1>Reportes</h1><p>Pantalla preparada para reportes generales.</p></article>

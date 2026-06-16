@@ -1,6 +1,7 @@
 ﻿const SESSION_KEY = "portoErp.session";
 const REMEMBER_KEY = "portoErp.rememberedUser";
 const DIESEL_KARDEX_KEY = "portoErp.dieselKardex";
+const ALM_AI_HISTORY_KEY = "portoErp.almAiHistory";
 const SUPABASE_URL = "https://hkkgyjkwkezsomjmwnen.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_RjChk1_7hpPnWrqdkJiT5g__tKanqgX";
 const INTERNAL_AUTH_DOMAIN = "alm.local";
@@ -36,6 +37,14 @@ const profileMenuRole = document.querySelector("#profileMenuRole");
 const profileInitials = document.querySelector("#profileInitials");
 const profileMenuInitials = document.querySelector("#profileMenuInitials");
 const dashboardGreeting = document.querySelector("#dashboardGreeting");
+const almAiRefs = {
+  chat: document.querySelector("#almAiChat"),
+  form: document.querySelector("#almAiForm"),
+  input: document.querySelector("#almAiInput"),
+  submit: document.querySelector("#almAiSubmit"),
+  history: document.querySelector("#almAiHistory"),
+  chips: document.querySelectorAll("[data-ai-question]")
+};
 
 let sidebarScrollbarHideTimeout = null;
 
@@ -820,6 +829,7 @@ function setPage(pageName) {
       mapa: "Mapa",
       naves: "Naves",
       rutas: "Rutas",
+      "alm-ai": "ALM AI – Asistente Inteligente",
       cumpleanos: "Cumpleaños",
       reportes: "Reportes",
       historial: "Historial",
@@ -4592,6 +4602,173 @@ togglePasswordButton.addEventListener("click", () => {
 recoverButton.addEventListener("click", () => {
     setMessage("Recuperación pendiente: luego la conectaremos con tu flujo real de usuarios.", "success");
 });
+
+function getAlmAiTimeLabel() {
+  return new Intl.DateTimeFormat("es-PE", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true
+  }).format(new Date()).toLowerCase();
+}
+
+function scrollAlmAiChatToBottom() {
+  if (almAiRefs.chat) {
+    almAiRefs.chat.scrollTop = almAiRefs.chat.scrollHeight;
+  }
+}
+
+function getAlmAiHistory() {
+  try {
+    return JSON.parse(localStorage.getItem(ALM_AI_HISTORY_KEY) || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function saveAlmAiHistory(history) {
+  localStorage.setItem(ALM_AI_HISTORY_KEY, JSON.stringify(history.slice(0, 12)));
+}
+
+function renderAlmAiHistory() {
+  if (!almAiRefs.history) return;
+  const history = getAlmAiHistory();
+  if (!history.length) {
+    return;
+  }
+  almAiRefs.history.innerHTML = `
+    <p>Hoy</p>
+    ${history.map((item) => `
+      <button type="button" data-ai-history-question="${escapeHtml(item.question)}">
+        ${escapeHtml(item.question)}
+        <span>${escapeHtml(item.time)}</span>
+      </button>
+    `).join("")}
+  `;
+  renderIcons();
+}
+
+function addAlmAiHistoryItem(question) {
+  const history = getAlmAiHistory().filter((item) => item.question !== question);
+  history.unshift({
+    question,
+    time: getAlmAiTimeLabel()
+  });
+  saveAlmAiHistory(history);
+  renderAlmAiHistory();
+}
+
+function setAlmAiLoading(isLoading) {
+  almAiRefs.submit?.toggleAttribute("disabled", isLoading);
+  almAiRefs.input?.toggleAttribute("disabled", isLoading);
+  almAiRefs.chips.forEach((chip) => chip.toggleAttribute("disabled", isLoading));
+}
+
+function appendAlmAiMessage(type, text, options = {}) {
+  if (!almAiRefs.chat) return;
+
+  const article = document.createElement("article");
+  article.className = `alm-ai-message ${type}`;
+  if (options.loading) {
+    article.classList.add("loading");
+    article.dataset.loading = "true";
+  }
+  const time = getAlmAiTimeLabel();
+
+  if (type === "user") {
+    article.innerHTML = `
+      <div class="alm-ai-message-meta"><span>Tú</span><time>${time}</time></div>
+      <div class="alm-ai-bubble">${escapeHtml(text)}</div>
+    `;
+  } else {
+    article.innerHTML = `
+      <div class="alm-ai-mini-avatar"><i data-lucide="bot"></i></div>
+      <div>
+        <div class="alm-ai-message-meta"><span>ALM AI</span><time>${time}</time></div>
+        <div class="alm-ai-bubble">
+          <p>${escapeHtml(text)}</p>
+        </div>
+      </div>
+    `;
+  }
+
+  almAiRefs.chat.appendChild(article);
+  renderIcons();
+  scrollAlmAiChatToBottom();
+}
+
+function updateAlmAiLoadingMessage(text) {
+  const loadingMessage = almAiRefs.chat?.querySelector("[data-loading='true'] .alm-ai-bubble p");
+  if (loadingMessage) {
+    loadingMessage.textContent = text;
+  }
+}
+
+function removeAlmAiLoadingMessage() {
+  almAiRefs.chat?.querySelector("[data-loading='true']")?.remove();
+}
+
+async function invokeAlmAiChat(question) {
+  const session = getSession();
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/alm-ai-chat`, {
+    method: "POST",
+    headers: {
+      apikey: SUPABASE_PUBLISHABLE_KEY,
+      "Content-Type": "application/json",
+      ...(session?.accessToken ? { Authorization: `Bearer ${session.accessToken}` } : {})
+    },
+    body: JSON.stringify({
+      message: question,
+      history: getAlmAiHistory().map((item) => ({ role: "user", content: item.question }))
+    })
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload?.answer || payload?.message || "No se pudo consultar ALM AI.");
+  }
+  return payload;
+}
+
+async function submitAlmAiQuestion(question) {
+  if (!question) return;
+  if (almAiRefs.submit?.disabled) return;
+
+  appendAlmAiMessage("user", question);
+  addAlmAiHistoryItem(question);
+  if (almAiRefs.input) {
+    almAiRefs.input.value = "";
+  }
+  appendAlmAiMessage("ai", "ALM AI está pensando...", { loading: true });
+  setAlmAiLoading(true);
+
+  try {
+    const payload = await invokeAlmAiChat(question);
+    removeAlmAiLoadingMessage();
+    appendAlmAiMessage("ai", payload.answer || "No pude generar una respuesta.");
+  } catch (error) {
+    updateAlmAiLoadingMessage(error.message || "No pude procesar la consulta.");
+  } finally {
+    setAlmAiLoading(false);
+    almAiRefs.input?.focus();
+  }
+}
+
+function handleAlmAiSubmit(event) {
+  event.preventDefault();
+  submitAlmAiQuestion(almAiRefs.input?.value.trim());
+}
+
+almAiRefs.form?.addEventListener("submit", handleAlmAiSubmit);
+almAiRefs.chips.forEach((chip) => {
+  chip.addEventListener("click", () => {
+    submitAlmAiQuestion(chip.dataset.aiQuestion || "");
+  });
+});
+almAiRefs.history?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-ai-history-question]");
+  if (!button) return;
+  submitAlmAiQuestion(button.dataset.aiHistoryQuestion || "");
+});
+renderAlmAiHistory();
 
 logoutButton.addEventListener("click", showLogin);
 
