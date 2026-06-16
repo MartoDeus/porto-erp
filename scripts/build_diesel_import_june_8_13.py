@@ -152,6 +152,8 @@ def build_groups(df: pd.DataFrame) -> tuple[dict[tuple[str, str, str], GroupData
         if raw_turno:
             last_turno_by_day_unit[(date_text, unit_name)] = raw_turno
         turno = raw_turno or last_turno_by_day_unit.get((date_text, unit_name))
+        if not turno and received_from and received_from not in SPECIAL_SONDAJE_LABELS:
+            turno = last_turno_by_day_unit.get((date_text, normalize_name(received_from)))
 
         if received_from in SPECIAL_SONDAJE_LABELS:
             if unit_name and unit_name not in EXCLUDED_UNITS and amount != 0:
