@@ -1653,13 +1653,21 @@ function resetDieselSondajeEntries() {
 }
 
 function hasDieselSondajeData(entry) {
-  return Boolean(String(entry?.document || "").trim())
-    || String(entry?.returnVolume ?? "").trim() !== ""
-    || String(entry?.difference ?? "").trim() !== ""
-    || String(entry?.consumption ?? "").trim() !== ""
-    || Math.abs(toNumber(entry?.returnVolume)) > 0
-    || Math.abs(toNumber(entry?.difference)) > 0
-    || Math.abs(toNumber(entry?.consumption)) > 0;
+  if (!entry) {
+    return false;
+  }
+
+  const hasExplicitInput = Boolean(entry.hasReturnInput || entry.hasDifferenceInput || entry.hasConsumptionInput);
+  const hasTypedString = [entry.returnVolume, entry.difference, entry.consumption].some((value) =>
+    typeof value === "string" && value.trim() !== ""
+  );
+
+  return Boolean(String(entry.document || "").trim())
+    || hasExplicitInput
+    || hasTypedString
+    || Math.abs(toNumber(entry.returnVolume)) > 0
+    || Math.abs(toNumber(entry.difference)) > 0
+    || Math.abs(toNumber(entry.consumption)) > 0;
 }
 
 function getAvailableDieselSondajeIndices() {
