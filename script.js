@@ -1472,8 +1472,8 @@ function collectUsedDieselSondajeIndices(rows) {
   return used;
 }
 
-function getLocalUsedDieselSondajeIndices(date, ship, shift) {
-  if (!date || !ship || !shift) {
+function getLocalUsedDieselSondajeIndices(date, ship) {
+  if (!date || !ship) {
     return new Set();
   }
 
@@ -1481,7 +1481,6 @@ function getLocalUsedDieselSondajeIndices(date, ship, shift) {
     .filter((record) =>
       record.date === date
       && normalizeDieselName(record.ship) === normalizeDieselName(ship)
-      && record.shift === shift
     )
     .map((record) => ({
       cabecera: { sondajes: record.sondajes || [] },
@@ -1493,17 +1492,16 @@ function getLocalUsedDieselSondajeIndices(date, ship, shift) {
   return collectUsedDieselSondajeIndices(rows);
 }
 
-async function fetchUsedDieselSondajeIndices(date, ship, shift) {
+async function fetchUsedDieselSondajeIndices(date, ship) {
   const session = getSession();
 
-  if (!date || !ship || !shift || !session?.accessToken) {
+  if (!date || !ship || !session?.accessToken) {
     return new Set();
   }
 
   const query = new URLSearchParams({
     select: "id,acta_sondaje,sondaje_reingreso,sondaje_diferencia,cabecera,unidad:unidades!diesel_kardex_unidad_id_fkey(nombre)",
     fecha: `eq.${date}`,
-    turno: `eq.${shift}`,
     estado: "eq.vigente"
   });
 
@@ -1523,15 +1521,14 @@ async function fetchUsedDieselSondajeIndices(date, ship, shift) {
 async function refreshDieselSondajeAvailability() {
   const date = dieselRefs.date?.value || "";
   const ship = dieselRefs.origin?.value || "";
-  const shift = getCheckedValue("dieselShift");
   const requestId = ++dieselSondajeAvailabilityRequest;
-  const localUsed = getLocalUsedDieselSondajeIndices(date, ship, shift);
+  const localUsed = getLocalUsedDieselSondajeIndices(date, ship);
 
   unavailableDieselSondajeIndices = new Set(localUsed);
   renderDieselSondajeOptions();
 
   try {
-    const remoteUsed = await fetchUsedDieselSondajeIndices(date, ship, shift);
+    const remoteUsed = await fetchUsedDieselSondajeIndices(date, ship);
 
     if (requestId !== dieselSondajeAvailabilityRequest) {
       return;
@@ -1793,7 +1790,7 @@ function getDieselSondajeEntriesSnapshot() {
     index: index + 1,
     document: String(entry?.document || "").trim(),
     returnVolume: toNumber(entry?.returnVolume),
-    difference: toNumber(entry?.difference),
+    difference: String(entry?.difference ?? "").trim() === "" ? 0 : -Math.abs(toNumber(entry?.difference)),
     consumption: toNumber(entry?.consumption),
     hasReturnInput: String(entry?.returnVolume ?? "").trim() !== "",
     hasDifferenceInput: String(entry?.difference ?? "").trim() !== "",
