@@ -370,6 +370,9 @@ let passengerEntries = [];
 let dieselDispatches = [];
 let dieselSondajeEntries = [];
 let activeDieselSondajeIndex = 0;
+const DIESEL_SONDAJE_SLOTS = [1, 2, 3, 4, 5];
+let unavailableDieselSondajeIndices = new Set();
+let dieselSondajeAvailabilityRequest = 0;
 let showAllDieselConsultItems = false;
 let dieselConsultCache = { key: "", rows: [] };
 let dieselEditDraft = null;
@@ -1438,6 +1441,110 @@ function setDieselKardex(records) {
   localStorage.setItem(DIESEL_KARDEX_KEY, JSON.stringify(records));
 }
 
+function collectUsedDieselSondajeIndices(rows) {
+  const used = new Set();
+
+  (rows || []).forEach((row) => {
+    const cabecera = row?.cabecera && typeof row.cabecera === "object" ? row.cabecera : {};
+    const sondajes = Array.isArray(row?.sondajes)
+      ? row.sondajes
+      : Array.isArray(cabecera.sondajes)
+        ? cabecera.sondajes
+        : [];
+
+    sondajes.forEach((entry, index) => {
+      const slot = Number(entry?.index || index + 1);
+      if (slot >= 1 && slot <= 5 && hasDieselSondajeData(entry)) {
+        used.add(slot);
+      }
+    });
+
+    if (
+      sondajes.length === 0
+      && (String(row?.acta_sondaje || "").trim()
+        || Math.abs(toNumber(row?.sondaje_reingreso)) > 0
+        || Math.abs(toNumber(row?.sondaje_diferencia)) > 0)
+    ) {
+      used.add(1);
+    }
+  });
+
+  return used;
+}
+
+function getLocalUsedDieselSondajeIndices(date, ship, shift) {
+  if (!date || !ship || !shift) {
+    return new Set();
+  }
+
+  const rows = getDieselKardex()
+    .filter((record) =>
+      record.date === date
+      && normalizeDieselName(record.ship) === normalizeDieselName(ship)
+      && record.shift === shift
+    )
+    .map((record) => ({
+      cabecera: { sondajes: record.sondajes || [] },
+      acta_sondaje: record.document,
+      sondaje_reingreso: record.returnVolume,
+      sondaje_diferencia: record.difference
+    }));
+
+  return collectUsedDieselSondajeIndices(rows);
+}
+
+async function fetchUsedDieselSondajeIndices(date, ship, shift) {
+  const session = getSession();
+
+  if (!date || !ship || !shift || !session?.accessToken) {
+    return new Set();
+  }
+
+  const query = new URLSearchParams({
+    select: "id,acta_sondaje,sondaje_reingreso,sondaje_diferencia,cabecera,unidad:unidades!diesel_kardex_unidad_id_fkey(nombre)",
+    fecha: `eq.${date}`,
+    turno: `eq.${shift}`,
+    estado: "eq.vigente"
+  });
+
+  const rows = await supabaseRequest(`/rest/v1/diesel_kardex?${query}`, {
+    headers: {
+      Authorization: `Bearer ${session.accessToken}`
+    }
+  });
+
+  const matchingRows = (rows || []).filter((row) =>
+    normalizeDieselName(row?.unidad?.nombre) === normalizeDieselName(ship)
+  );
+
+  return collectUsedDieselSondajeIndices(matchingRows);
+}
+
+async function refreshDieselSondajeAvailability() {
+  const date = dieselRefs.date?.value || "";
+  const ship = dieselRefs.origin?.value || "";
+  const shift = getCheckedValue("dieselShift");
+  const requestId = ++dieselSondajeAvailabilityRequest;
+  const localUsed = getLocalUsedDieselSondajeIndices(date, ship, shift);
+
+  unavailableDieselSondajeIndices = new Set(localUsed);
+  renderDieselSondajeOptions();
+
+  try {
+    const remoteUsed = await fetchUsedDieselSondajeIndices(date, ship, shift);
+
+    if (requestId !== dieselSondajeAvailabilityRequest) {
+      return;
+    }
+
+    unavailableDieselSondajeIndices = new Set([...localUsed, ...remoteUsed]);
+    renderDieselSondajeOptions();
+    updateSondageInputs();
+  } catch (error) {
+    console.warn("No se pudo validar la disponibilidad de actas de sondaje.", error);
+  }
+}
+
 function getDieselInitialStock(ship) {
   return dieselInitialStockCache.get(normalizeDieselName(ship)) || 0;
 }
@@ -1545,7 +1652,78 @@ function resetDieselSondajeEntries() {
   activeDieselSondajeIndex = 0;
 }
 
+function hasDieselSondajeData(entry) {
+  return Boolean(String(entry?.document || "").trim())
+    || String(entry?.returnVolume ?? "").trim() !== ""
+    || String(entry?.difference ?? "").trim() !== ""
+    || String(entry?.consumption ?? "").trim() !== ""
+    || Math.abs(toNumber(entry?.returnVolume)) > 0
+    || Math.abs(toNumber(entry?.difference)) > 0
+    || Math.abs(toNumber(entry?.consumption)) > 0;
+}
+
+function getAvailableDieselSondajeIndices() {
+  return DIESEL_SONDAJE_SLOTS.filter((index) => !unavailableDieselSondajeIndices.has(index));
+}
+
+function setDieselSondajeFieldsDisabled(disabled) {
+  [
+    dieselRefs.document,
+    dieselRefs.returnVolume,
+    dieselRefs.difference,
+    dieselRefs.sondajeConsumption
+  ].forEach((control) => {
+    if (control) {
+      control.disabled = disabled;
+    }
+  });
+}
+
+function renderDieselSondajeOptions() {
+  if (!dieselRefs.sondajeSelect) {
+    return;
+  }
+
+  const currentSlot = Number(dieselRefs.sondajeSelect.value || activeDieselSondajeIndex + 1 || 1);
+  const availableSlots = getAvailableDieselSondajeIndices();
+  dieselRefs.sondajeSelect.innerHTML = "";
+
+  if (availableSlots.length === 0) {
+    const option = document.createElement("option");
+    option.value = "";
+    option.textContent = "Sin sondajes disponibles";
+    dieselRefs.sondajeSelect.appendChild(option);
+    dieselRefs.sondajeSelect.disabled = true;
+    setDieselSondajeFieldsDisabled(true);
+    syncDieselSondajeLabels(0);
+    dieselRefs.document.value = "";
+    dieselRefs.returnVolume.value = "";
+    dieselRefs.difference.value = "";
+    if (dieselRefs.sondajeConsumption) {
+      dieselRefs.sondajeConsumption.value = "";
+    }
+    return;
+  }
+
+  availableSlots.forEach((slot) => {
+    const option = document.createElement("option");
+    option.value = String(slot);
+    option.textContent = `Sondaje ${slot}`;
+    dieselRefs.sondajeSelect.appendChild(option);
+  });
+
+  dieselRefs.sondajeSelect.disabled = false;
+  setDieselSondajeFieldsDisabled(false);
+
+  const nextSlot = availableSlots.includes(currentSlot) ? currentSlot : availableSlots[0];
+  loadDieselSondajeEntry(nextSlot - 1);
+}
+
 function saveCurrentDieselSondajeEntry() {
+  if (activeDieselSondajeIndex < 0) {
+    return;
+  }
+
   dieselSondajeEntries[activeDieselSondajeIndex] = {
     document: dieselRefs.document?.value || "",
     returnVolume: dieselRefs.returnVolume?.value || "",
@@ -1562,6 +1740,18 @@ function syncDieselSondajeLabels(index) {
 }
 
 function loadDieselSondajeEntry(index) {
+  const availableSlots = getAvailableDieselSondajeIndices();
+  const requestedSlot = index + 1;
+
+  if (availableSlots.length === 0) {
+    activeDieselSondajeIndex = -1;
+    return;
+  }
+
+  if (!availableSlots.includes(requestedSlot)) {
+    index = availableSlots[0] - 1;
+  }
+
   const entry = dieselSondajeEntries[index] || createEmptyDieselSondajeEntry();
   activeDieselSondajeIndex = index;
 
@@ -1580,6 +1770,10 @@ function loadDieselSondajeEntry(index) {
 
 function handleDieselSondajeSelectChange() {
   saveCurrentDieselSondajeEntry();
+  if (!dieselRefs.sondajeSelect?.value) {
+    return;
+  }
+
   const nextIndex = Math.max(0, Number(dieselRefs.sondajeSelect?.value || 1) - 1);
   loadDieselSondajeEntry(nextIndex);
   updateSondageInputs();
@@ -2075,6 +2269,7 @@ async function saveDieselRecord() {
     renderDieselConsult();
 
     clearDieselFormAfterSave();
+    refreshDieselSondajeAvailability();
     showSuccessToast("Se guardó con éxito", "El registro de diésel se ha guardado correctamente.");
   } catch (error) {
     alert(error.message || "No se pudo guardar el registro diesel.");
@@ -4258,6 +4453,7 @@ async function exportDieselConsultExcel() {
 
 function clearDieselForm() {
   resetDieselSondajeEntries();
+  unavailableDieselSondajeIndices = new Set();
   dieselRefs.date.value = "";
   dieselRefs.origin.selectedIndex = -1;
   dieselRefs.receive.selectedIndex = -1;
@@ -4280,6 +4476,7 @@ function clearDieselForm() {
     input.checked = false;
   });
   dieselDispatches = [];
+  renderDieselSondajeOptions();
   loadDieselSondajeEntry(0);
   updateSondageInputs();
   selectDieselModule("despacho");
@@ -4315,6 +4512,7 @@ function clearDieselFormAfterSave() {
   dieselRefs.observation.value = "";
   dieselRefs.observationCount.textContent = "0";
   dieselDispatches = [];
+  renderDieselSondajeOptions();
   loadDieselSondajeEntry(0);
   updateSondageInputs();
   renderDieselRows();
@@ -4353,6 +4551,12 @@ function updateSondageInputs(changedControl = null) {
   const hasReturn = Math.abs(returnValue) > 0;
   const hasDifference = Math.abs(differenceValue) > 0;
 
+  if (dieselRefs.sondajeSelect?.disabled && !dieselRefs.sondajeSelect.value) {
+    setDieselSondajeFieldsDisabled(true);
+    updateDieselSummary();
+    return;
+  }
+
   if (changedControl === dieselRefs.returnVolume && hasReturn) {
     dieselRefs.difference.value = "";
   }
@@ -4383,6 +4587,7 @@ function bootDiesel() {
     renderDieselRows();
     updateDieselSummary();
     syncDieselInitialStockDisplay();
+    refreshDieselSondajeAvailability();
   });
   [dieselRefs.receivePlatformToggle].forEach((button) => {
     button?.addEventListener("click", () => {
@@ -4425,7 +4630,10 @@ function bootDiesel() {
   });
 
   document.querySelectorAll('input[name="dieselShift"]').forEach((input) => {
-    input.addEventListener("change", updateDieselSaveState);
+    input.addEventListener("change", () => {
+      updateDieselSaveState();
+      refreshDieselSondajeAvailability();
+    });
   });
 
   dieselRefs.date?.addEventListener("change", () => {
@@ -4434,6 +4642,7 @@ function bootDiesel() {
     }
     renderDieselConsult();
     syncDieselInitialStockDisplay();
+    refreshDieselSondajeAvailability();
   });
   dieselRefs.prevDay?.addEventListener("click", () => {
     dieselRefs.date.value = shiftDateValue(dieselRefs.date.value, -1);
@@ -4516,6 +4725,7 @@ function bootDiesel() {
   }
 
   syncDieselReceiveModeLabel();
+  refreshDieselSondajeAvailability();
   renderDieselConsult();
   syncDieselInitialStockDisplay();
 
