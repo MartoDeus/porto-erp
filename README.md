@@ -139,6 +139,88 @@ fecha + unidad + turno
 
 Cada registro debe guardarse aunque no tenga movimiento.
 
+## Logica de barcazas que despachan a plataformas
+
+En el kardex de diesel puede ocurrir que una barcaza entregue combustible a una plataforma u otra unidad operativa que no aparece como una nave principal de consumo diario.
+
+Ejemplo real:
+
+```txt
+ROGUE entrega 3 gal a LO10
+ROGUE entrega 3 gal a LO4
+```
+
+En el Excel estas entregas pueden aparecer como filas separadas de las plataformas:
+
+```txt
+NAVE: LO10
+CANTIDAD RECIBIDA: 3
+RECIBIDO DE: ROGUE
+
+NAVE: LO4
+CANTIDAD RECIBIDA: 3
+RECIBIDO DE: ROGUE
+```
+
+Aunque visualmente esas filas estan escritas desde el punto de vista de la plataforma que recibe, para el kardex tambien significan una salida de combustible desde la barcaza que entrega.
+
+Por eso la interpretacion correcta es doble:
+
+1. La plataforma recibe combustible.
+2. La barcaza descuenta ese combustible como despacho.
+
+Formula para la barcaza:
+
+```txt
+stock final =
+stock inicial
++ cantidad recibida
+- consumo
+- despacho a plataformas
++/- sondaje
+```
+
+Ejemplo con ROGUE:
+
+```txt
+Turno A / Diurno
+Stock inicial: 1748
+Recibe de TALARA: 500
+Consumo: 39
+Stock final: 2209
+
+Turno B / Nocturno
+Stock inicial: 2209
+Consumo: 43
+Entrega a LO10: 3
+Entrega a LO4: 3
+Despacho total a plataformas: 6
+Stock final: 2160
+```
+
+La diferencia entre `2209 - 43 = 2166` y el stock final real `2160` se explica por las dos entregas a plataforma:
+
+```txt
+2166 - 6 = 2160
+```
+
+Regla de importacion:
+
+- Si una fila indica que una plataforma recibio combustible de una barcaza, se debe crear o reconocer el movimiento de salida de esa barcaza.
+- Ese movimiento debe alimentar `diesel_movimientos`.
+- El total debe reflejarse en el registro de la barcaza dentro de `diesel_kardex`.
+- No se debe tratar como error de stock si la diferencia esta explicada por entregas a plataformas.
+- La consulta diaria debe mostrar el stock final despues de considerar consumo, recibidos, despachos, transferencias y sondaje.
+
+Esta logica es importante para barcazas como:
+
+- `ORO`
+- `ROGUE`
+- `MR BOB`
+- `ELIZABETH`
+
+Tambien aplica a cualquier otra unidad que entregue combustible a plataformas, floteles o unidades auxiliares.
+
 ## Exportaciones Diesel previstas
 
 La web debe permitir que el usuario descargue dos archivos cuando lo decida:
