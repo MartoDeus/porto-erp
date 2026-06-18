@@ -182,6 +182,11 @@ const dieselRefs = {
   editTransferred: document.querySelector("#dieselEditTransferred"),
   editSondageReturn: document.querySelector("#dieselEditSondageReturn"),
   editDispatchRows: document.querySelector("#dieselEditDispatchRows"),
+  editDispatchVessel: document.querySelector("#dieselEditDispatchVessel"),
+  editDispatchAmount: document.querySelector("#dieselEditDispatchAmount"),
+  editDispatchNewVoucher: document.querySelector("#dieselEditDispatchNewVoucher"),
+  editDispatchAdd: document.querySelector("#dieselEditDispatchAdd"),
+  editDispatchVesselOptions: document.querySelector("#dieselEditDispatchVesselOptions"),
   editDispatchVoucher: document.querySelector("#dieselEditDispatchVoucher"),
   editSondageVoucher: document.querySelector("#dieselEditSondageVoucher"),
   editRechargeVoucher: document.querySelector("#dieselEditRechargeVoucher"),
@@ -2548,6 +2553,94 @@ function setDieselInputValue(input, value) {
   input.value = value === null || value === undefined ? "" : value;
 }
 
+function populateDieselEditDispatchVesselOptions(originShip = "") {
+  if (!dieselRefs.editDispatchVesselOptions) {
+    return;
+  }
+
+  const options = dieselShips
+    .map((ship) => normalizeDieselDisplayName(ship))
+    .filter((ship, index, list) => ship && list.indexOf(ship) === index && ship !== originShip)
+    .sort((left, right) => left.localeCompare(right, "es"));
+
+  dieselRefs.editDispatchVesselOptions.innerHTML = options
+    .map((ship) => `<option value="${escapeHtml(ship)}"></option>`)
+    .join("");
+}
+
+function clearDieselEditDispatchCreator() {
+  setDieselInputValue(dieselRefs.editDispatchVessel, "");
+  setDieselInputValue(dieselRefs.editDispatchAmount, "");
+  setDieselInputValue(dieselRefs.editDispatchNewVoucher, "");
+}
+
+function getDieselEditCurrentDetail() {
+  if (!dieselEditDraft?.row || !dieselEditDraft?.turnDetails) {
+    return null;
+  }
+
+  const shiftKey = getDieselEditShiftValue(dieselEditDraft.currentShift || "A");
+  if (!dieselEditDraft.turnDetails[shiftKey]) {
+    dieselEditDraft.turnDetails[shiftKey] = createEmptyDieselEditShiftDetail(dieselEditDraft.row, shiftKey);
+  }
+
+  return dieselEditDraft.turnDetails[shiftKey];
+}
+
+function addDieselEditDispatchRow() {
+  const detail = getDieselEditCurrentDetail();
+  if (!detail || !dieselEditDraft?.row) {
+    return;
+  }
+
+  const vessel = normalizeDieselDisplayName(getDieselEditText(dieselRefs.editDispatchVessel));
+  const amount = getDieselEditNumber(dieselRefs.editDispatchAmount);
+  const voucher = getDieselEditText(dieselRefs.editDispatchNewVoucher);
+
+  if (!vessel) {
+    dieselRefs.editDispatchVessel?.focus();
+    return;
+  }
+
+  if (vessel === normalizeDieselDisplayName(dieselEditDraft.row.ship || "")) {
+    window.alert("La nave destino debe ser distinta a la nave origen.");
+    dieselRefs.editDispatchVessel?.focus();
+    return;
+  }
+
+  if (amount <= 0) {
+    dieselRefs.editDispatchAmount?.focus();
+    return;
+  }
+
+  if (!voucher) {
+    dieselRefs.editDispatchNewVoucher?.focus();
+    return;
+  }
+
+  detail.dispatchRows = Array.isArray(detail.dispatchRows) ? detail.dispatchRows : [];
+  detail.dispatchRows.push({
+    id: `new-${crypto.randomUUID()}`,
+    vessel,
+    amount,
+    voucher,
+    type: isDieselTransfer(dieselEditDraft.row.ship, vessel) ? "Transferencia" : "Despacho"
+  });
+
+  clearDieselEditDispatchCreator();
+  renderDieselEditDispatchRows(dieselEditDraft.row, dieselEditDraft.currentShift);
+  renderIcons();
+}
+
+function addDieselEditDispatchRowOnEnter(event) {
+  if (event.key !== "Enter") {
+    return;
+  }
+
+  event.preventDefault();
+  addDieselEditDispatchRow();
+}
+
 function createEmptyDieselEditShiftDetail(row, shiftKey = "A") {
   const fallbackCrew = shiftKey === "B" ? row?.nightCrew : row?.dayCrew;
   return {
@@ -2988,6 +3081,8 @@ function openDieselEditModal(row, context = {}) {
   if (dieselRefs.editDateLabel) {
     dieselRefs.editDateLabel.textContent = dateLabel;
   }
+  populateDieselEditDispatchVesselOptions(normalizeDieselDisplayName(row.ship || ""));
+  clearDieselEditDispatchCreator();
   setupDieselEditableCards();
   applyDieselEditShift(shiftValue);
   dieselRefs.editModal.hidden = false;
@@ -3013,6 +3108,7 @@ function closeDieselEditModal() {
   }
 
   dieselEditDraft = null;
+  clearDieselEditDispatchCreator();
   dieselRefs.editModal.hidden = true;
   document.body.classList.remove("modal-open");
 }
@@ -3778,7 +3874,8 @@ function prepareDieselDailyReportAbastecedorRows(sheet, rowCount) {
   const templateEndRow = 54;
   const normalizedRowCount = Math.max(rowCount, 0);
   const endRow = startRow + normalizedRowCount - 1;
-  const baseStyles = [4, 7, 10, 11].reduce((styles, columnNumber) => {
+  const styledColumns = [4, 5, 6, 7, 8, 9, 10, 11];
+  const baseStyles = styledColumns.reduce((styles, columnNumber) => {
     styles[columnNumber] = cloneExcelStyle(sheet.getCell(39, columnNumber).style);
     return styles;
   }, {});
@@ -3792,7 +3889,7 @@ function prepareDieselDailyReportAbastecedorRows(sheet, rowCount) {
     safeMergeCells(sheet, `D${rowNumber}:F${rowNumber}`);
     safeMergeCells(sheet, `G${rowNumber}:I${rowNumber}`);
     sheet.getRow(rowNumber).height = 15;
-    [4, 7, 10, 11].forEach((columnNumber) => {
+    styledColumns.forEach((columnNumber) => {
       const cell = sheet.getCell(rowNumber, columnNumber);
       cell.value = null;
       cell.style = cloneExcelStyle(baseStyles[columnNumber]);
@@ -3812,18 +3909,15 @@ function applyDieselDailyReportAbastecedorLines(sheet, startRow, rowCount) {
     return;
   }
 
-  const templateBorders = {
-    origin: cloneExcelStyle(sheet.getCell(39, 4).border),
-    destination: cloneExcelStyle(sheet.getCell(39, 7).border),
-    quantity: cloneExcelStyle(sheet.getCell(39, 10).border),
-    voucher: cloneExcelStyle(sheet.getCell(39, 11).border)
-  };
+  const templateBorders = [4, 5, 6, 7, 8, 9, 10, 11].reduce((borders, columnNumber) => {
+    borders[columnNumber] = cloneExcelStyle(sheet.getCell(39, columnNumber).border);
+    return borders;
+  }, {});
 
   for (let rowNumber = startRow; rowNumber <= endRow; rowNumber += 1) {
-    sheet.getCell(rowNumber, 4).border = cloneExcelStyle(templateBorders.origin);
-    sheet.getCell(rowNumber, 7).border = cloneExcelStyle(templateBorders.destination);
-    sheet.getCell(rowNumber, 10).border = cloneExcelStyle(templateBorders.quantity);
-    sheet.getCell(rowNumber, 11).border = cloneExcelStyle(templateBorders.voucher);
+    for (let columnNumber = 4; columnNumber <= 11; columnNumber += 1) {
+      sheet.getCell(rowNumber, columnNumber).border = cloneExcelStyle(templateBorders[columnNumber]);
+    }
   }
 }
 
@@ -4704,6 +4798,10 @@ function bootDiesel() {
   });
   dieselRefs.editModal?.querySelectorAll('[data-close-modal="diesel-edit"]').forEach((element) => {
     element.addEventListener("click", closeDieselEditModal);
+  });
+  dieselRefs.editDispatchAdd?.addEventListener("click", addDieselEditDispatchRow);
+  [dieselRefs.editDispatchVessel, dieselRefs.editDispatchAmount, dieselRefs.editDispatchNewVoucher].forEach((control) => {
+    control?.addEventListener("keydown", addDieselEditDispatchRowOnEnter);
   });
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && dieselRefs.editModal && !dieselRefs.editModal.hidden) {

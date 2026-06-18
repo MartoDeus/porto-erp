@@ -1323,6 +1323,15 @@
           <article class="diesel-edit-card diesel-edit-dispatch-card">
             <h3>Despacho / Transferencia</h3>
             <div class="diesel-edit-dispatch-table">
+              <div class="diesel-edit-dispatch-create">
+                <input id="dieselEditDispatchVessel" type="text" list="dieselEditDispatchVesselOptions" placeholder="Nave recibe" aria-label="Nueva nave recibe">
+                <datalist id="dieselEditDispatchVesselOptions"></datalist>
+                <input id="dieselEditDispatchAmount" type="number" min="0" step="0.001" placeholder="Cantidad" aria-label="Nueva cantidad">
+                <input id="dieselEditDispatchNewVoucher" type="text" placeholder="N° Vale" aria-label="Nuevo número de vale">
+                <button class="diesel-edit-dispatch-add" type="button" id="dieselEditDispatchAdd" aria-label="Agregar despacho o transferencia">
+                  <i data-lucide="plus"></i>
+                </button>
+              </div>
               <div class="diesel-edit-dispatch-head">
                 <span>Nave Recibe</span>
                 <span>Cantidad</span>

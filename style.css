@@ -6221,6 +6221,46 @@ button {
   gap: 6px;
 }
 
+.diesel-edit-dispatch-create {
+  display: grid;
+  grid-template-columns: 1.3fr 0.8fr 0.8fr 42px;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.diesel-edit-dispatch-create input {
+  width: 100%;
+  min-width: 0;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid #cfe0f0;
+  border-radius: 11px;
+  background: #ffffff;
+  color: #10233f;
+  font-size: 0.96rem;
+  font-weight: 700;
+}
+
+.diesel-edit-dispatch-add {
+  width: 42px;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #049764;
+  border-radius: 12px;
+  background: #049764;
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(4, 151, 100, 0.18);
+}
+
+.diesel-edit-dispatch-add svg {
+  width: 18px;
+  height: 18px;
+}
+
 .diesel-edit-dispatch-head,
 .diesel-edit-dispatch-row {
   display: grid;
