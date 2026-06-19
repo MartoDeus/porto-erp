@@ -4110,6 +4110,51 @@ button {
   max-width: 360px;
 }
 
+.diesel-derived-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 38px;
+  gap: 10px;
+  align-items: end;
+}
+
+.diesel-derived-field label {
+  min-width: 0;
+}
+
+.diesel-inline-edit-button {
+  width: 38px;
+  height: 34px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+  color: #0f766e;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.diesel-inline-edit-button:hover,
+.diesel-inline-edit-button[aria-pressed="true"] {
+  border-color: #0f766e;
+  background: #ecfdf5;
+}
+
+.diesel-inline-edit-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.diesel-module input[readonly].is-derived {
+  background: #f8fafc;
+  color: #334155;
+  cursor: default;
+}
+
+.diesel-module input.is-manual {
+  background: #fff;
+}
+
 .diesel-stage .diesel-module-head,
 .diesel-observations .diesel-module-head {
   margin: 0;

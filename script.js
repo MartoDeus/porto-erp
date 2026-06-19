@@ -126,6 +126,7 @@ const dieselRefs = {
   recharge: document.querySelector("#dieselRecharge"),
   rechargeVoucher: document.querySelector("#dieselRechargeVoucher"),
   consumption: document.querySelector("#dieselConsumption"),
+  consumptionEdit: document.querySelector("#dieselConsumptionEdit"),
   returnVolume: document.querySelector("#dieselReturn"),
   difference: document.querySelector("#dieselDifference"),
   sondajeConsumption: document.querySelector("#dieselSondajeConsumption"),
@@ -378,6 +379,8 @@ let activeDieselSondajeIndex = 0;
 const DIESEL_SONDAJE_SLOTS = [1, 2, 3, 4, 5];
 let unavailableDieselSondajeIndices = new Set();
 let dieselSondajeAvailabilityRequest = 0;
+let dieselSavedSondajeConsumptionBySlot = new Map();
+let dieselConsumptionManualOverride = false;
 let showAllDieselConsultItems = false;
 let dieselConsultCache = { key: "", rows: [] };
 let dieselEditDraft = null;
@@ -1497,11 +1500,58 @@ function getLocalUsedDieselSondajeIndices(date, ship) {
   return collectUsedDieselSondajeIndices(rows);
 }
 
-async function fetchUsedDieselSondajeIndices(date, ship) {
+function collectDieselSondajeConsumptionBySlot(rows) {
+  const totals = new Map();
+
+  (rows || []).forEach((row) => {
+    const cabecera = row?.cabecera && typeof row.cabecera === "object" ? row.cabecera : {};
+    const sondajes = Array.isArray(row?.sondajes)
+      ? row.sondajes
+      : Array.isArray(cabecera.sondajes)
+        ? cabecera.sondajes
+        : [];
+
+    sondajes.forEach((entry, fallbackIndex) => {
+      const slot = Number(entry?.index || fallbackIndex + 1);
+      if (!DIESEL_SONDAJE_SLOTS.includes(slot)) {
+        return;
+      }
+
+      const hasConsumptionInput = Boolean(entry?.hasConsumptionInput)
+        || String(entry?.consumption ?? "").trim() !== "";
+      if (!hasConsumptionInput && toNumber(entry?.consumption) === 0) {
+        return;
+      }
+
+      totals.set(slot, (totals.get(slot) || 0) + toNumber(entry?.consumption));
+    });
+  });
+
+  return totals;
+}
+
+function getLocalDieselSondajeConsumptionBySlot(date, ship) {
+  if (!date || !ship) {
+    return new Map();
+  }
+
+  const rows = getDieselKardex()
+    .filter((record) =>
+      record.date === date
+      && normalizeDieselName(record.ship) === normalizeDieselName(ship)
+    )
+    .map((record) => ({
+      cabecera: { sondajes: record.sondajes || [] }
+    }));
+
+  return collectDieselSondajeConsumptionBySlot(rows);
+}
+
+async function fetchDieselSondajeState(date, ship) {
   const session = getSession();
 
   if (!date || !ship || !session?.accessToken) {
-    return new Set();
+    return { used: new Set(), consumptionBySlot: new Map() };
   }
 
   const query = new URLSearchParams({
@@ -1520,7 +1570,69 @@ async function fetchUsedDieselSondajeIndices(date, ship) {
     normalizeDieselName(row?.unidad?.nombre) === normalizeDieselName(ship)
   );
 
-  return collectUsedDieselSondajeIndices(matchingRows);
+  return {
+    used: collectUsedDieselSondajeIndices(matchingRows),
+    consumptionBySlot: collectDieselSondajeConsumptionBySlot(matchingRows)
+  };
+}
+
+function getCurrentDieselSondajeConsumptionBySlot() {
+  const totals = new Map();
+  getDieselSondajeEntriesSnapshot().forEach((entry) => {
+    if (!DIESEL_SONDAJE_SLOTS.includes(entry.index)) {
+      return;
+    }
+
+    if (!entry.hasConsumptionInput && toNumber(entry.consumption) === 0) {
+      return;
+    }
+
+    totals.set(entry.index, toNumber(entry.consumption));
+  });
+
+  return totals;
+}
+
+function formatDieselInputNumber(value) {
+  const numericValue = toNumber(value);
+  return Number.isInteger(numericValue) ? String(numericValue) : String(Number(numericValue.toFixed(2)));
+}
+
+function getDieselSondajeConsumptionTotal() {
+  const totals = new Map(dieselSavedSondajeConsumptionBySlot);
+  getCurrentDieselSondajeConsumptionBySlot().forEach((value, slot) => {
+    totals.set(slot, value);
+  });
+
+  return [...totals.values()].reduce((sum, value) => sum + toNumber(value), 0);
+}
+
+function setDieselConsumptionEditable(editable) {
+  if (!dieselRefs.consumption) {
+    return;
+  }
+
+  dieselRefs.consumption.readOnly = !editable;
+  dieselRefs.consumption.classList.toggle("is-derived", !editable);
+  dieselRefs.consumption.classList.toggle("is-manual", editable);
+  dieselRefs.consumptionEdit?.setAttribute("aria-pressed", String(editable));
+}
+
+function syncDieselConsumptionFromSondajes() {
+  const total = getDieselSondajeConsumptionTotal();
+
+  if (dieselRefs.consumption && !dieselConsumptionManualOverride) {
+    dieselRefs.consumption.value = total ? formatDieselInputNumber(total) : "";
+  }
+
+  updateDieselSummary();
+  updateDieselSaveState();
+}
+
+function resetDieselConsumptionOverride() {
+  dieselConsumptionManualOverride = false;
+  setDieselConsumptionEditable(false);
+  syncDieselConsumptionFromSondajes();
 }
 
 async function refreshDieselSondajeAvailability() {
@@ -1528,20 +1640,25 @@ async function refreshDieselSondajeAvailability() {
   const ship = dieselRefs.origin?.value || "";
   const requestId = ++dieselSondajeAvailabilityRequest;
   const localUsed = getLocalUsedDieselSondajeIndices(date, ship);
+  const localConsumption = getLocalDieselSondajeConsumptionBySlot(date, ship);
 
   unavailableDieselSondajeIndices = new Set(localUsed);
+  dieselSavedSondajeConsumptionBySlot = new Map(localConsumption);
   renderDieselSondajeOptions();
+  syncDieselConsumptionFromSondajes();
 
   try {
-    const remoteUsed = await fetchUsedDieselSondajeIndices(date, ship);
+    const remoteState = await fetchDieselSondajeState(date, ship);
 
     if (requestId !== dieselSondajeAvailabilityRequest) {
       return;
     }
 
-    unavailableDieselSondajeIndices = new Set([...localUsed, ...remoteUsed]);
+    unavailableDieselSondajeIndices = new Set([...localUsed, ...remoteState.used]);
+    dieselSavedSondajeConsumptionBySlot = new Map(remoteState.consumptionBySlot);
     renderDieselSondajeOptions();
     updateSondageInputs();
+    syncDieselConsumptionFromSondajes();
   } catch (error) {
     console.warn("No se pudo validar la disponibilidad de actas de sondaje.", error);
   }
@@ -4553,6 +4670,9 @@ async function exportDieselConsultExcel() {
 function clearDieselForm() {
   resetDieselSondajeEntries();
   unavailableDieselSondajeIndices = new Set();
+  dieselSavedSondajeConsumptionBySlot = new Map();
+  dieselConsumptionManualOverride = false;
+  setDieselConsumptionEditable(false);
   dieselRefs.date.value = "";
   dieselRefs.origin.selectedIndex = -1;
   dieselRefs.receive.selectedIndex = -1;
@@ -4594,6 +4714,8 @@ function syncDieselInitialStockDisplay() {
 
 function clearDieselFormAfterSave() {
   resetDieselSondajeEntries();
+  dieselConsumptionManualOverride = false;
+  setDieselConsumptionEditable(false);
   dieselRefs.receive.selectedIndex = -1;
   dieselRefs.captain.value = "";
   dieselRefs.driver.value = "";
@@ -4669,7 +4791,7 @@ function updateSondageInputs(changedControl = null) {
   dieselRefs.difference.classList.toggle("negative", differenceValue < 0);
   dieselRefs.returnVolume.classList.toggle("positive-field", returnValue > 0);
   saveCurrentDieselSondajeEntry();
-  updateDieselSummary();
+  syncDieselConsumptionFromSondajes();
 }
 
 function bootDiesel() {
@@ -4684,7 +4806,7 @@ function bootDiesel() {
   dieselRefs.origin?.addEventListener("change", () => {
     populateDieselShips();
     renderDieselRows();
-    updateDieselSummary();
+    resetDieselConsumptionOverride();
     syncDieselInitialStockDisplay();
     refreshDieselSondajeAvailability();
   });
@@ -4706,6 +4828,19 @@ function bootDiesel() {
   dieselRefs.clear?.addEventListener("click", clearDieselForm);
   dieselRefs.save?.addEventListener("click", saveDieselRecord);
   dieselRefs.sondajeSelect?.addEventListener("change", handleDieselSondajeSelectChange);
+  dieselRefs.consumptionEdit?.addEventListener("click", () => {
+    dieselConsumptionManualOverride = !dieselConsumptionManualOverride;
+    setDieselConsumptionEditable(dieselConsumptionManualOverride);
+
+    if (!dieselConsumptionManualOverride) {
+      syncDieselConsumptionFromSondajes();
+      return;
+    }
+
+    dieselRefs.consumption?.focus();
+    updateDieselSummary();
+    updateDieselSaveState();
+  });
 
   [
     dieselRefs.date,
@@ -4740,6 +4875,7 @@ function bootDiesel() {
       dieselRefs.consultDate.value = dieselRefs.date.value;
     }
     renderDieselConsult();
+    resetDieselConsumptionOverride();
     syncDieselInitialStockDisplay();
     refreshDieselSondajeAvailability();
   });
@@ -4818,11 +4954,18 @@ function bootDiesel() {
   });
 
   [dieselRefs.document, dieselRefs.sondajeConsumption].forEach((control) => {
-    control?.addEventListener("input", saveCurrentDieselSondajeEntry);
-    control?.addEventListener("change", saveCurrentDieselSondajeEntry);
+    control?.addEventListener("input", () => {
+      saveCurrentDieselSondajeEntry();
+      syncDieselConsumptionFromSondajes();
+    });
+    control?.addEventListener("change", () => {
+      saveCurrentDieselSondajeEntry();
+      syncDieselConsumptionFromSondajes();
+    });
   });
 
   updateSondageInputs();
+  resetDieselConsumptionOverride();
   if (dieselRefs.consultDate) {
     dieselRefs.consultDate.value = getTodayValue();
   }

@@ -607,7 +607,12 @@
               <article class="diesel-stage-panel diesel-module" data-module="consumo" hidden>
                 <div class="diesel-module-head"><h3>Consumo</h3></div>
                 <div class="diesel-stage-fields diesel-stage-fields--single">
-                  <label>Volumen (gal)<input id="dieselConsumption" type="number" min="0"></label>
+                  <div class="diesel-derived-field">
+                    <label>Volumen (gal)<input id="dieselConsumption" type="number" min="0" readonly></label>
+                    <button class="diesel-inline-edit-button" type="button" id="dieselConsumptionEdit" aria-label="Editar consumo calculado" aria-pressed="false">
+                      <i data-lucide="square-pen"></i>
+                    </button>
+                  </div>
                 </div>
               </article>
 
