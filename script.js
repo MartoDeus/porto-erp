@@ -120,6 +120,8 @@ const dieselRefs = {
   sondajeSelect: document.querySelector("#dieselSondajeSelect"),
   sondajeIndices: document.querySelectorAll("[data-diesel-sondaje-index]"),
   sondajeBody: document.querySelector(".diesel-sondaje-body"),
+  sondajeStartTime: document.querySelector("#dieselSondajeStartTime"),
+  sondajeEndTime: document.querySelector("#dieselSondajeEndTime"),
   captain: document.querySelector("#dieselCaptain"),
   driver: document.querySelector("#dieselDriver"),
   document: document.querySelector("#dieselDocument"),
@@ -1759,6 +1761,8 @@ function ensureDieselDaySkeleton(date) {
 
 function createEmptyDieselSondajeEntry() {
   return {
+    startTime: "",
+    endTime: "",
     document: "",
     returnVolume: "",
     difference: "",
@@ -1782,6 +1786,8 @@ function hasDieselSondajeData(entry) {
   );
 
   return Boolean(String(entry.document || "").trim())
+    || Boolean(String(entry.startTime || "").trim())
+    || Boolean(String(entry.endTime || "").trim())
     || hasExplicitInput
     || hasTypedString
     || Math.abs(toNumber(entry.returnVolume)) > 0
@@ -1796,6 +1802,8 @@ function getAvailableDieselSondajeIndices() {
 function setDieselSondajeFieldsDisabled(disabled) {
   [
     dieselRefs.document,
+    dieselRefs.sondajeStartTime,
+    dieselRefs.sondajeEndTime,
     dieselRefs.returnVolume,
     dieselRefs.difference,
     dieselRefs.sondajeConsumption
@@ -1823,6 +1831,12 @@ function renderDieselSondajeOptions() {
     dieselRefs.sondajeSelect.disabled = true;
     setDieselSondajeFieldsDisabled(true);
     syncDieselSondajeLabels(0);
+    if (dieselRefs.sondajeStartTime) {
+      dieselRefs.sondajeStartTime.value = "";
+    }
+    if (dieselRefs.sondajeEndTime) {
+      dieselRefs.sondajeEndTime.value = "";
+    }
     dieselRefs.document.value = "";
     dieselRefs.returnVolume.value = "";
     dieselRefs.difference.value = "";
@@ -1852,6 +1866,8 @@ function saveCurrentDieselSondajeEntry() {
   }
 
   dieselSondajeEntries[activeDieselSondajeIndex] = {
+    startTime: dieselRefs.sondajeStartTime?.value || "",
+    endTime: dieselRefs.sondajeEndTime?.value || "",
     document: dieselRefs.document?.value || "",
     returnVolume: dieselRefs.returnVolume?.value || "",
     difference: dieselRefs.difference?.value || "",
@@ -1887,6 +1903,12 @@ function loadDieselSondajeEntry(index) {
   }
 
   syncDieselSondajeLabels(index);
+  if (dieselRefs.sondajeStartTime) {
+    dieselRefs.sondajeStartTime.value = entry.startTime || "";
+  }
+  if (dieselRefs.sondajeEndTime) {
+    dieselRefs.sondajeEndTime.value = entry.endTime || "";
+  }
   dieselRefs.document.value = entry.document || "";
   dieselRefs.returnVolume.value = entry.returnVolume ?? "";
   dieselRefs.difference.value = entry.difference ?? "";
@@ -1910,6 +1932,8 @@ function getDieselSondajeEntriesSnapshot() {
   saveCurrentDieselSondajeEntry();
   return dieselSondajeEntries.map((entry, index) => ({
     index: index + 1,
+    startTime: String(entry?.startTime || "").trim(),
+    endTime: String(entry?.endTime || "").trim(),
     document: String(entry?.document || "").trim(),
     returnVolume: toNumber(entry?.returnVolume),
     difference: String(entry?.difference ?? "").trim() === "" ? 0 : -Math.abs(toNumber(entry?.difference)),
@@ -1923,6 +1947,8 @@ function getDieselSondajeEntriesSnapshot() {
 function getPrimaryDieselSondajeEntry(entries) {
   return (entries || []).find((entry) =>
     entry.document
+    || entry.startTime
+    || entry.endTime
     || entry.hasReturnInput
     || entry.hasDifferenceInput
     || entry.hasConsumptionInput
@@ -2221,6 +2247,8 @@ function getDieselModuleStates() {
     recarga: toNumber(dieselRefs.recharge?.value) > 0 || Boolean(dieselRefs.rechargeVoucher?.value.trim()),
     sondaje: sondajes.some((entry) =>
       entry.document
+      || entry.startTime
+      || entry.endTime
       || entry.hasReturnInput
       || entry.hasDifferenceInput
       || entry.hasConsumptionInput
@@ -3598,8 +3626,12 @@ function getDieselSondajeExportData(kardexRows) {
   const documents = ["", "", "", "", ""];
   const differencePresent = [false, false, false, false, false];
   const consumptionPresent = [false, false, false, false, false];
+  const differenceByShift = { DIA: 0, NOCHE: 0 };
+  const consumptionByShift = { DIA: 0, NOCHE: 0 };
+  const actaDetailLines = [];
 
   (kardexRows || []).forEach((row) => {
+    const shiftLabel = getDieselExportShiftLabel(row?.turno);
     const cabecera = row?.cabecera && typeof row.cabecera === "object" ? row.cabecera : {};
     const legacyEntries = Array.isArray(cabecera.sondaje_fuente) && cabecera.sondaje_fuente.length
       ? cabecera.sondaje_fuente.map((entry, rawIndex) => ({
@@ -3644,6 +3676,15 @@ function getDieselSondajeExportData(kardexRows) {
       if (document || hasConsumptionInput || toNumber(entry?.consumption) !== 0) {
         consumptionPresent[index] = true;
       }
+
+      const sondajeValue = returnVolume !== 0 ? returnVolume : difference;
+      const consumptionValue = toNumber(entry?.consumption);
+      differenceByShift[shiftLabel] += sondajeValue;
+      consumptionByShift[shiftLabel] += consumptionValue;
+      if (document || sondajeValue !== 0 || consumptionValue !== 0) {
+        const shiftText = shiftLabel === "NOCHE" ? "Noche" : "Dia";
+        actaDetailLines.push(`Turno: ${shiftText} | Consumo: ${formatDieselExportAmount(consumptionValue)} | Acta:  ${document || "-"}`);
+      }
     });
   });
 
@@ -3654,7 +3695,12 @@ function getDieselSondajeExportData(kardexRows) {
     consumptions,
     totalConsumption: consumptions.reduce((sum, value) => sum + value, 0),
     consumptionPresent,
-    documents
+    documents,
+    differenceDay: differenceByShift.DIA,
+    differenceNight: differenceByShift.NOCHE,
+    consumptionDay: consumptionByShift.DIA,
+    consumptionNight: consumptionByShift.NOCHE,
+    actaDetail: actaDetailLines.join("\n")
   };
 }
 
@@ -3688,11 +3734,14 @@ function getDieselMovementVesselName(movement, direction) {
   return normalizeDieselDisplayName(vessel || "");
 }
 
-function formatDieselMovementDetail(movement, direction = "destino") {
+function formatDieselMovementDetail(movement, direction = "destino", detailType = "") {
   const vessel = getDieselMovementVesselName(movement, direction === "origen" ? "origin" : "destino");
   const amount = formatDieselExportAmount(movement?.cantidad);
   const voucher = String(movement?.n_vale || "-").trim() || "-";
-  return `| ${amount} gl | ${vessel} | vale: ${voucher} |`;
+  if (detailType === "transferencia") {
+    return `Volumen: ${amount} gl | Nave: ${vessel} | vale: ${voucher} |`;
+  }
+  return `Volumen: ${amount} gl | Nave: ${vessel} | Vale: ${voucher}`;
 }
 
 function groupDieselExportMovements(movements) {
@@ -3732,7 +3781,7 @@ function groupDieselExportMovements(movements) {
 function buildDieselExportDetailText(movements, direction = "destino") {
   return (movements || [])
     .filter((movement) => toNumber(movement.cantidad) > 0)
-    .map((movement) => formatDieselMovementDetail(movement, direction))
+    .map((movement) => formatDieselMovementDetail(movement, direction, String(movement?.tipo || "").toLowerCase()))
     .filter(Boolean)
     .join("\n");
 }
@@ -3767,24 +3816,12 @@ function buildDieselExportRow(record, overrides = {}) {
   const consumptionTotal = overrides.consumptionTotal ?? (consumptionDay + consumptionNight);
   const transferred = overrides.transferred ?? toNumber(record.cantidad_transferida);
   const dispatched = overrides.dispatched ?? toNumber(record.cantidad_despachada);
-  const overrideSondajeDifferences = overrides.sondajeDifferences || [];
-  const sondajeDifferencePresent = overrides.sondajeDifferencePresent || [];
-  const legacySondajeDifferences = [
-    toNumber(record.sondaje_ini),
-    toNumber(record.sondaje_fin),
-    0,
-    0,
-    0
-  ];
-  const hasOverrideDifferenceData = overrideSondajeDifferences.some((value) => Math.abs(toNumber(value)) > 0);
-  const sondajeDifferences = hasOverrideDifferenceData ? overrideSondajeDifferences : legacySondajeDifferences;
-  const overrideSondajeConsumptions = overrides.sondajeConsumptions || [];
-  const sondajeConsumptionPresent = overrides.sondajeConsumptionPresent || [];
-  const hasOverrideSondajeData = overrideSondajeConsumptions.some((value) => Math.abs(toNumber(value)) > 0);
-  const sondajeConsumptions = hasOverrideSondajeData ? overrideSondajeConsumptions : [0, 0, 0, 0, 0];
-  const sondajeDocuments = overrides.sondajeDocuments || [];
-  const totalSondajeDifference = overrides.totalSondajeDifference ?? sondajeDifferences.reduce((sum, value) => sum + toNumber(value), 0);
-  const totalSondajeConsumption = overrides.totalSondajeConsumption ?? sondajeConsumptions.reduce((sum, value) => sum + toNumber(value), 0);
+  const sondajeDifferenceDay = overrides.sondajeDifferenceDay ?? toNumber(record.sondaje_ini);
+  const sondajeDifferenceNight = overrides.sondajeDifferenceNight ?? toNumber(record.sondaje_fin);
+  const totalSondajeDifference = overrides.totalSondajeDifference ?? (sondajeDifferenceDay + sondajeDifferenceNight);
+  const sondajeConsumptionDay = overrides.sondajeConsumptionDay ?? 0;
+  const sondajeConsumptionNight = overrides.sondajeConsumptionNight ?? 0;
+  const totalSondajeConsumption = overrides.totalSondajeConsumption ?? (sondajeConsumptionDay + sondajeConsumptionNight);
 
   return [
     meta.dateValue,
@@ -3799,41 +3836,30 @@ function buildDieselExportRow(record, overrides = {}) {
     overrides.receivedNight ?? getExcelNumberOrBlank(record.canti_recibi_noche),
     received || "",
     overrides.receivedFrom ?? normalizeDieselDisplayName(record.recibido_de || ""),
-    consumptionDay || "",
-    consumptionNight || "",
-    consumptionTotal || "",
+    overrides.dispatchedDay ?? getExcelNumberOrBlank(record.canti_despachada_dia),
+    overrides.dispatchedNight ?? getExcelNumberOrBlank(record.canti_despachada_noche),
+    overrides.voucher ?? (record.n_vale_despacho || record.n_vale_recarga || ""),
+    dispatched || "",
+    overrides.dispatchDetail ?? normalizeDieselDisplayName(record.detalle_despacho || ""),
     overrides.transferredDay ?? getExcelNumberOrBlank(record.canti_trans_dia),
     overrides.transferredNight ?? getExcelNumberOrBlank(record.canti_trans_noche),
     transferred || "",
     overrides.transferDetail ?? normalizeDieselDisplayName(record.detalle_transferencia || ""),
-    overrides.dispatchedDay ?? getExcelNumberOrBlank(record.canti_despachada_dia),
-    overrides.dispatchedNight ?? getExcelNumberOrBlank(record.canti_despachada_noche),
-    dispatched || "",
-    overrides.dispatchDetail ?? normalizeDieselDisplayName(record.detalle_despacho || ""),
-    getExcelNumberOrBlank(sondajeDifferences[0], sondajeDifferencePresent[0]),
-    getExcelNumberOrBlank(sondajeDifferences[1], sondajeDifferencePresent[1]),
-    getExcelNumberOrBlank(sondajeDifferences[2], sondajeDifferencePresent[2]),
-    getExcelNumberOrBlank(sondajeDifferences[3], sondajeDifferencePresent[3]),
-    getExcelNumberOrBlank(sondajeDifferences[4], sondajeDifferencePresent[4]),
+    getExcelNumberOrBlank(sondajeDifferenceDay),
+    getExcelNumberOrBlank(sondajeDifferenceNight),
     getExcelNumberOrBlank(totalSondajeDifference),
-    getExcelNumberOrBlank(sondajeConsumptions[0], sondajeConsumptionPresent[0]),
-    getExcelNumberOrBlank(sondajeConsumptions[1], sondajeConsumptionPresent[1]),
-    getExcelNumberOrBlank(sondajeConsumptions[2], sondajeConsumptionPresent[2]),
-    getExcelNumberOrBlank(sondajeConsumptions[3], sondajeConsumptionPresent[3]),
-    getExcelNumberOrBlank(sondajeConsumptions[4], sondajeConsumptionPresent[4]),
+    getExcelNumberOrBlank(sondajeConsumptionDay),
+    getExcelNumberOrBlank(sondajeConsumptionNight),
     getExcelNumberOrBlank(totalSondajeConsumption),
-    sondajeDocuments[0] || record.acta_sondaje || "",
-    sondajeDocuments[1] || "",
-    sondajeDocuments[2] || "",
-    sondajeDocuments[3] || "",
-    sondajeDocuments[4] || "",
+    overrides.sondajeDetail ?? "",
+    consumptionDay || "",
+    consumptionNight || "",
+    consumptionTotal || "",
     overrides.finalStock ?? toNumber(record.stock_final_dia),
-    overrides.voucher ?? (record.n_vale_despacho || record.n_vale_recarga || ""),
     overrides.capitanDia ?? (record.capitan_dia || "-"),
     overrides.motoristaDia ?? (record.motorista_dia || "-"),
     overrides.capitanNoche ?? (record.capitan_noche || "-"),
-    overrides.motoristaNoche ?? (record.motorista_noche || "-"),
-    overrides.usuario ?? (record.registrado_por_dia || record.registrado_por_noche || "PRODUCCION")
+    overrides.motoristaNoche ?? (record.motorista_noche || "-")
   ];
 }
 
@@ -3887,13 +3913,13 @@ function buildDieselExportSplitRows(record, receivedMovements, outgoingGroups, s
       dispatchedNight,
       dispatched,
       dispatchDetail: isLastOverall ? buildDieselExportDetailText(outgoingGroups?.despacho || [], "destino") : "",
-      sondajeDifferences: isLastOverall ? (sondajeData.differences || []) : [],
-      sondajeDifferencePresent: isLastOverall ? (sondajeData.differencePresent || []) : [],
+      sondajeDifferenceDay: isLastOverall ? toNumber(sondajeData.differenceDay) : 0,
+      sondajeDifferenceNight: isLastOverall ? toNumber(sondajeData.differenceNight) : 0,
       totalSondajeDifference: isLastOverall ? toNumber(sondajeData.totalDifference) : 0,
-      sondajeConsumptions: isLastOverall ? (sondajeData.consumptions || []) : [],
-      sondajeConsumptionPresent: isLastOverall ? (sondajeData.consumptionPresent || []) : [],
+      sondajeConsumptionDay: isLastOverall ? toNumber(sondajeData.consumptionDay) : 0,
+      sondajeConsumptionNight: isLastOverall ? toNumber(sondajeData.consumptionNight) : 0,
       totalSondajeConsumption: isLastOverall ? toNumber(sondajeData.totalConsumption) : 0,
-      sondajeDocuments: isLastOverall ? (sondajeData.documents || []) : [],
+      sondajeDetail: isLastOverall ? (sondajeData.actaDetail || "") : "",
       finalStock,
       voucher: movement.n_vale || "",
       capitanDia: isDay ? (record.capitan_dia || "-") : "-",
@@ -4513,16 +4539,13 @@ async function exportDieselConsultExcel() {
   const rows = [
     [
       "FECHA", "AÑO", "MES", "TIPO AGRUPADO", "TIPO", "TURNO", "NAVE", "STOCK INICIAL",
-      "CANT. RECIBIDA DIA", "CANT. RECIBIDA NOCHE", "TOTAL CANT. RECIBIDA", "RECIBIDO DE",
-      "CONSUMO DIA", "CONSUMO NOCHE", "TOTAL CONSUMO",
-      "CANT. TRANSFERIDA DIA", "CANT. TRANSFERIDA NOCHE", "TOTAL CANT. TRANSFERIDA", "DETALLE TRANSFERENCIA",
-      "CANT. DESPACHADA DIA", "CANT. DESPACHADA NOCHE", "TOTAL CANT. DESPACHADA", "DETALLE DESPACHO",
-      "DIFERENCIA POR SONDAJE 1", "DIFERENCIA POR SONDAJE 2", "DIFERENCIA POR SONDAJE 3", "DIFERENCIA POR SONDAJE 4", "DIFERENCIA POR SONDAJE 5",
-      "TOTAL DIFERENCIA SONDAJES",
-      "CONSUMO SONDAJE 1", "CONSUMO SONDAJE 2", "CONSUMO SONDAJE 3", "CONSUMO SONDAJE 4", "CONSUMO SONDAJE 5",
-      "TOTAL CONSUMO SONDAJES", "N ACTA SONDAJE 1", "N ACTA SONDAJE 2", "N ACTA SONDAJE 3", "N ACTA SONDAJE 4", "N ACTA SONDAJE 5",
-      "STOCK FINAL", "N VALE ",
-      "CAPITAN DIURNO", "MOTORISTA DIURNO", "CAPITAN NOCTURNO", "MOTORISTA NOCTURNO", "USUARIO"
+      "CANTIDAD RECIBIDA DIA", "CANTIDAD RECIBIDA NOCHE", "TOTAL CANTIDAD RECIBIDA", "RECIBIDO DE",
+      "CANTIDAD DESPACHADA DIA", "CANTIDAD DESPACHADA NOCHE", "N VALE ", "TOTAL CANTIDAD DESPACHADA", "DETALLE DESPACHO",
+      "CANTIDAD TRANSFERIDA DIA", "CANTIDAD TRANSFERIDA NOCHE", "TOTAL CANTIDAD TRANSFERIDA", "DETALLE TRANSFERENCIA",
+      "DIFERENCIA POR SONDAJE  DIA", "DIFERENCIA POR SONDAJE NOCHE", "TOTAL DIFERENCIA SONDAJES",
+      "CONSUMO SONDAJE DIA", "CONSUMO SONDAJE NOCHE", "TOTAL CONSUMO SONDAJES", "DETALLE ACTA SONDAJE",
+      "CONSUMO DIA", "CONSUMO NOCHE", "TOTAL CONSUMO", "STOCK FINAL",
+      "CAPITAN DIURNO", "MOTORISTA DIURNO", "CAPITAN NOCTURNO", "MOTORISTA NOCTURNO"
     ]
   ];
 
@@ -4547,13 +4570,13 @@ async function exportDieselConsultExcel() {
         || normalizeDieselDisplayName(record.detalle_transferencia || ""),
       dispatchDetail: buildDieselExportDetailText(outgoingGroups.despacho, "destino")
         || normalizeDieselDisplayName(record.detalle_despacho || ""),
-      sondajeDifferences: sondajeData.differences,
-      sondajeDifferencePresent: sondajeData.differencePresent,
+      sondajeDifferenceDay: sondajeData.differenceDay,
+      sondajeDifferenceNight: sondajeData.differenceNight,
       totalSondajeDifference: sondajeData.totalDifference,
-      sondajeConsumptions: sondajeData.consumptions,
-      sondajeConsumptionPresent: sondajeData.consumptionPresent,
+      sondajeConsumptionDay: sondajeData.consumptionDay,
+      sondajeConsumptionNight: sondajeData.consumptionNight,
       totalSondajeConsumption: sondajeData.totalConsumption,
-      sondajeDocuments: sondajeData.documents,
+      sondajeDetail: sondajeData.actaDetail,
       voucher: receivedMovements[0]?.n_vale || record.n_vale_despacho || record.n_vale_recarga || ""
     }));
   });
@@ -4562,30 +4585,33 @@ async function exportDieselConsultExcel() {
   const sheet = workbook.addWorksheet("KARDEX", {
     views: [{ state: "frozen", ySplit: 1 }]
   });
+  sheet.pageSetup = {
+    orientation: "portrait",
+    scale: 90,
+    margins: { left: 0.7, right: 0.7, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3 }
+  };
   const columnWidths = [
-    10.25, 8.625, 8.375, 18.75, 8.75, 11, 21, 9, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-    13, 21, 9.625, 13, 13, 21, 11, 11, 11, 11, 11, 14, 11, 11, 11, 11, 11, 14, 12, 12, 12, 12, 12, 14, 9, 10.75,
-    19.25, 22.25, 22.375, 25.375, 12.375
+    12.285, 8.57, 8.425, 24.57, 8.71, 11, 21, 11.285, 15.855, 18.71, 19.285, 17,
+    19.425, 22.57, 11.425, 19.285, 44.71, 19.425, 22.57, 16.285, 43.71,
+    18.285, 20.57, 22.14, 17.855, 20.57, 19.425, 35, 12.425, 13, 14.14, 14,
+    30.71, 13, 13, 13
   ];
   const kardexFillColors = {
     purple: "FFCCC1DA",
     green: "FFD7E4BD",
     blue: "FFDCE6F2",
-    peach: "FFFFE5CC",
-    beige: "FFFFF2E2"
+    orange: "FFFCD5B4"
   };
   const getKardexHeaderFill = (header) => {
     if (header === "STOCK INICIAL" || header === "STOCK FINAL") return kardexFillColors.green;
-    if (header.startsWith("DIFERENCIA POR SONDAJE") || header.startsWith("CONSUMO SONDAJE")) return kardexFillColors.peach;
-    if (header.startsWith("N ACTA SONDAJE")) return kardexFillColors.beige;
     if (header.startsWith("TOTAL ")) return kardexFillColors.blue;
+    if (header === "RECIBIDO DE" || header.startsWith("DETALLE ")) return kardexFillColors.orange;
     return kardexFillColors.purple;
   };
   const getKardexBodyFill = (header) => {
     if (header === "STOCK INICIAL" || header === "STOCK FINAL") return kardexFillColors.green;
-    if (header.startsWith("DIFERENCIA POR SONDAJE") || header.startsWith("CONSUMO SONDAJE")) return kardexFillColors.peach;
-    if (header.startsWith("N ACTA SONDAJE")) return kardexFillColors.beige;
     if (header.startsWith("TOTAL ")) return kardexFillColors.blue;
+    if (header === "RECIBIDO DE" || header.startsWith("DETALLE ")) return kardexFillColors.orange;
     return null;
   };
   const thinBorder = { style: "thin", color: { argb: "FF808080" } };
@@ -4629,30 +4655,28 @@ async function exportDieselConsultExcel() {
   const headerRow = sheet.getRow(1);
   headerRow.eachCell((cell, columnNumber) => {
     cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: getKardexHeaderFill(rows[0][columnNumber - 1]) } };
+    cell.font = { ...cellStyle.font, bold: true };
   });
 
   for (let rowIndex = 2; rowIndex <= sheet.rowCount; rowIndex += 1) {
     sheet.getCell(rowIndex, 1).numFmt = "dd/mm/yyyy";
-    sheet.getCell(rowIndex, 29).value = { formula: `SUM(X${rowIndex}:AB${rowIndex})` };
-    sheet.getCell(rowIndex, 35).value = { formula: `SUM(AD${rowIndex}:AH${rowIndex})` };
-    sheet.getCell(rowIndex, 19).alignment = { ...cellStyle.alignment, horizontal: "left" };
-    sheet.getCell(rowIndex, 23).alignment = { ...cellStyle.alignment, horizontal: "left" };
+    sheet.getCell(rowIndex, 16).value = { formula: `SUM(M${rowIndex}:N${rowIndex})` };
+    sheet.getCell(rowIndex, 20).value = { formula: `SUM(R${rowIndex}:S${rowIndex})` };
+    sheet.getCell(rowIndex, 24).value = { formula: `SUM(V${rowIndex}:W${rowIndex})` };
+    sheet.getCell(rowIndex, 27).value = { formula: `SUM(Y${rowIndex}:Z${rowIndex})` };
+    sheet.getCell(rowIndex, 31).value = { formula: `SUM(AC${rowIndex}:AD${rowIndex})` };
+    sheet.getCell(rowIndex, 17).alignment = { ...cellStyle.alignment, horizontal: "left" };
+    sheet.getCell(rowIndex, 21).alignment = { ...cellStyle.alignment, horizontal: "left" };
   }
 
-  [19, 23].forEach((columnNumber) => {
-    const column = sheet.getColumn(columnNumber);
-    let maxLineLength = String(rows[0][columnNumber - 1] || "").length;
-
+  [17, 21, 28].forEach((columnNumber) => {
     for (let rowIndex = 2; rowIndex <= sheet.rowCount; rowIndex += 1) {
       const cell = sheet.getCell(rowIndex, columnNumber);
       const lines = String(cell.value || "").split("\n");
-      maxLineLength = Math.max(maxLineLength, ...lines.map((line) => line.length));
       if (lines.length > 1) {
-        sheet.getRow(rowIndex).height = Math.max(sheet.getRow(rowIndex).height || 30, 16 * lines.length + 8);
+        sheet.getRow(rowIndex).height = Math.max(sheet.getRow(rowIndex).height || 30, 12 * lines.length + 2);
       }
     }
-
-    column.width = Math.min(60, Math.max(column.width || 21, maxLineLength + 2));
   });
 
   sheet.autoFilter = {
@@ -4678,6 +4702,12 @@ function clearDieselForm() {
   dieselRefs.receive.selectedIndex = -1;
   dieselRefs.captain.value = "";
   dieselRefs.driver.value = "";
+  if (dieselRefs.sondajeStartTime) {
+    dieselRefs.sondajeStartTime.value = "";
+  }
+  if (dieselRefs.sondajeEndTime) {
+    dieselRefs.sondajeEndTime.value = "";
+  }
   dieselRefs.document.value = "";
   dieselRefs.recharge.value = "";
   dieselRefs.rechargeVoucher.value = "";
@@ -4953,7 +4983,7 @@ function bootDiesel() {
     control?.addEventListener("input", () => updateSondageInputs(control));
   });
 
-  [dieselRefs.document, dieselRefs.sondajeConsumption].forEach((control) => {
+  [dieselRefs.sondajeStartTime, dieselRefs.sondajeEndTime, dieselRefs.document, dieselRefs.sondajeConsumption].forEach((control) => {
     control?.addEventListener("input", () => {
       saveCurrentDieselSondajeEntry();
       syncDieselConsumptionFromSondajes();

@@ -636,10 +636,14 @@
                       <option value="5">Sondaje 5</option>
                     </select>
                   </label>
-                  <label><span>N° Documento <b data-diesel-sondaje-index>1</b></span><input id="dieselDocument" type="text"></label>
-                  <label><span>Reingreso (gal) <b data-diesel-sondaje-index>1</b></span><input id="dieselReturn" type="number" min="0"></label>
-                  <label><span>Diferencia (gal) <b data-diesel-sondaje-index>1</b></span><input id="dieselDifference" type="number" min="0"></label>
-                  <label><span>Consumo <b data-diesel-sondaje-index>1</b></span><input id="dieselSondajeConsumption" type="number" min="0"></label>
+                  <div class="diesel-sondaje-time-row">
+                    <label><span>Hora Inicio Sondaje</span><input id="dieselSondajeStartTime" type="time"></label>
+                    <label><span>Hora Fin Sondaje</span><input id="dieselSondajeEndTime" type="time"></label>
+                  </div>
+                  <label><span><b data-diesel-sondaje-index>1</b>) N° Documento</span><input id="dieselDocument" type="text"></label>
+                  <label><span><b data-diesel-sondaje-index>1</b>) Reingreso (gal)</span><input id="dieselReturn" type="number" min="0"></label>
+                  <label><span><b data-diesel-sondaje-index>1</b>) Diferencia (gal)</span><input id="dieselDifference" type="number" min="0"></label>
+                  <label><span><b data-diesel-sondaje-index>1</b>) Consumo</span><input id="dieselSondajeConsumption" type="number" min="0"></label>
                 </div>
               </article>
 
