@@ -3683,7 +3683,8 @@ function getDieselSondajeExportData(kardexRows) {
       consumptionByShift[shiftLabel] += consumptionValue;
       if (document || sondajeValue !== 0 || consumptionValue !== 0) {
         const shiftText = shiftLabel === "NOCHE" ? "Noche" : "Dia";
-        actaDetailLines.push(`Turno: ${shiftText} | Consumo: ${formatDieselExportAmount(consumptionValue)} | Acta:  ${document || "-"}`);
+        const timeRange = formatDieselSondajeTimeRange(entry?.startTime, entry?.endTime);
+        actaDetailLines.push(`Turno: ${shiftText} | Sondaje: ${formatDieselExportAmount(sondajeValue)} | Consumo: ${formatDieselExportAmount(consumptionValue)} | Tiempo: ${timeRange} | Acta: ${document || "-"}`);
       }
     });
   });
@@ -3725,6 +3726,16 @@ function sortDieselExportMovements(movements) {
 function formatDieselExportAmount(value) {
   const numeric = toNumber(value);
   return Number.isInteger(numeric) ? String(numeric) : String(numeric);
+}
+
+function formatDieselSondajeTimeRange(startTime, endTime) {
+  const start = formatTimeLabel(startTime);
+  const end = formatTimeLabel(endTime);
+  const durationMinutes = getBitacoraDurationMinutes(startTime, endTime);
+  const durationText = durationMinutes === null
+    ? ""
+    : ` - ${formatDieselExportAmount(durationMinutes / 60)} H`;
+  return `${start} a ${end}${durationText}`;
 }
 
 function getDieselMovementVesselName(movement, direction) {
@@ -3813,7 +3824,6 @@ function buildDieselExportRow(record, overrides = {}) {
   const received = overrides.received ?? (toNumber(record.cantidad_recibida) + toNumber(record.total_recarga));
   const consumptionDay = overrides.consumptionDay ?? toNumber(record.consumo_dia);
   const consumptionNight = overrides.consumptionNight ?? toNumber(record.consumo_noche);
-  const consumptionTotal = overrides.consumptionTotal ?? (consumptionDay + consumptionNight);
   const transferred = overrides.transferred ?? toNumber(record.cantidad_transferida);
   const dispatched = overrides.dispatched ?? toNumber(record.cantidad_despachada);
   const sondajeDifferenceDay = overrides.sondajeDifferenceDay ?? toNumber(record.sondaje_ini);
@@ -3822,6 +3832,7 @@ function buildDieselExportRow(record, overrides = {}) {
   const sondajeConsumptionDay = overrides.sondajeConsumptionDay ?? 0;
   const sondajeConsumptionNight = overrides.sondajeConsumptionNight ?? 0;
   const totalSondajeConsumption = overrides.totalSondajeConsumption ?? (sondajeConsumptionDay + sondajeConsumptionNight);
+  const consumptionTotal = overrides.consumptionTotal ?? (consumptionDay + consumptionNight + totalSondajeConsumption);
 
   return [
     meta.dateValue,
@@ -3890,8 +3901,10 @@ function buildDieselExportSplitRows(record, receivedMovements, outgoingGroups, s
     const transferred = toNumber(transferredDay) + toNumber(transferredNight);
     const dispatched = toNumber(dispatchedDay) + toNumber(dispatchedNight);
     const recharge = isLastOverall ? toNumber(record.total_recarga) : 0;
-    const finalStock = runningStock + received + recharge + toNumber(sondajeData.totalDifference)
-      - consumptionDay - consumptionNight - transferred - dispatched;
+    const sondajeDifferenceForRow = isLastOverall ? toNumber(sondajeData.totalDifference) : 0;
+    const sondajeConsumptionForRow = isLastOverall ? toNumber(sondajeData.totalConsumption) : 0;
+    const finalStock = runningStock + received + recharge + sondajeDifferenceForRow
+      - consumptionDay - consumptionNight - sondajeConsumptionForRow - transferred - dispatched;
     const currentInitialStock = runningStock;
     runningStock = finalStock;
 
@@ -3904,7 +3917,7 @@ function buildDieselExportSplitRows(record, receivedMovements, outgoingGroups, s
       receivedFrom: getDieselMovementVesselName(movement, "origin"),
       consumptionDay,
       consumptionNight,
-      consumptionTotal: consumptionDay + consumptionNight,
+      consumptionTotal: consumptionDay + consumptionNight + sondajeConsumptionForRow,
       transferredDay,
       transferredNight,
       transferred,
@@ -4664,7 +4677,7 @@ async function exportDieselConsultExcel() {
     sheet.getCell(rowIndex, 20).value = { formula: `SUM(R${rowIndex}:S${rowIndex})` };
     sheet.getCell(rowIndex, 24).value = { formula: `SUM(V${rowIndex}:W${rowIndex})` };
     sheet.getCell(rowIndex, 27).value = { formula: `SUM(Y${rowIndex}:Z${rowIndex})` };
-    sheet.getCell(rowIndex, 31).value = { formula: `SUM(AC${rowIndex}:AD${rowIndex})` };
+    sheet.getCell(rowIndex, 31).value = { formula: `SUM(AC${rowIndex}:AD${rowIndex})+AA${rowIndex}` };
     sheet.getCell(rowIndex, 17).alignment = { ...cellStyle.alignment, horizontal: "left" };
     sheet.getCell(rowIndex, 21).alignment = { ...cellStyle.alignment, horizontal: "left" };
   }
