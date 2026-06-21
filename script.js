@@ -1361,6 +1361,7 @@ function repairLegacyText(value) {
     .replace(/PARI(?:Ã‘|ï¿½)AS/gi, "PARIÑAS")
     .replace(/PE(?:Ã‘|ï¿½)A/gi, "PEÑA")
     .replace(/PE(?:Ã‘|ï¿½)AS/gi, "PEÑAS")
+    .replace(/N(?:Â|Ã‚|&ordm;|º)\s*/gi, "N° ")
     .replace(/MUELLETE/gi, "MUELLETE")
     .replace(/nAVEGA/g, "NAVEGA");
 }
@@ -3683,7 +3684,10 @@ function getDieselSondajeExportData(kardexRows) {
       consumptionByShift[shiftLabel] += consumptionValue;
       if (document || sondajeValue !== 0 || consumptionValue !== 0) {
         const shiftText = shiftLabel === "NOCHE" ? "Noche" : "Dia";
-        const timeRange = formatDieselSondajeTimeRange(entry?.startTime, entry?.endTime);
+        const timeRange = formatDieselSondajeTimeRange(
+          getDieselSondajeEntryTime(entry, "start"),
+          getDieselSondajeEntryTime(entry, "end")
+        );
         actaDetailLines.push(`Turno: ${shiftText} | Sondaje: ${formatDieselExportAmount(sondajeValue)} | Consumo: ${formatDieselExportAmount(consumptionValue)} | Tiempo: ${timeRange} | Acta: ${document || "-"}`);
       }
     });
@@ -3728,14 +3732,41 @@ function formatDieselExportAmount(value) {
   return Number.isInteger(numeric) ? String(numeric) : String(numeric);
 }
 
+function getDieselSondajeEntryTime(entry, type) {
+  const keys = type === "start"
+    ? ["startTime", "horaInicio", "hora_inicio", "horaInicioSondaje", "hora_inicio_sondaje", "start_time"]
+    : ["endTime", "horaFin", "hora_fin", "horaFinSondaje", "hora_fin_sondaje", "end_time"];
+  for (const key of keys) {
+    const value = String(entry?.[key] || "").trim();
+    if (value) {
+      return value;
+    }
+  }
+  return "";
+}
+
+function formatDieselSondajeDuration(minutes) {
+  const numericMinutes = Number(minutes);
+  if (!Number.isFinite(numericMinutes) || numericMinutes <= 0) {
+    return "0H";
+  }
+  const roundedMinutes = Math.round(numericMinutes);
+  const hours = Math.floor(roundedMinutes / 60);
+  const restMinutes = roundedMinutes % 60;
+  if (hours && restMinutes) {
+    return `${hours}H ${restMinutes}MIN`;
+  }
+  if (hours) {
+    return `${hours}H`;
+  }
+  return `${restMinutes}MIN`;
+}
+
 function formatDieselSondajeTimeRange(startTime, endTime) {
   const start = formatTimeLabel(startTime);
   const end = formatTimeLabel(endTime);
   const durationMinutes = getBitacoraDurationMinutes(startTime, endTime);
-  const durationText = durationMinutes === null
-    ? ""
-    : ` - ${formatDieselExportAmount(durationMinutes / 60)} H`;
-  return `${start} a ${end}${durationText}`;
+  return `${start} a ${end} - ${formatDieselSondajeDuration(durationMinutes)}`;
 }
 
 function getDieselMovementVesselName(movement, direction) {
@@ -4606,7 +4637,7 @@ async function exportDieselConsultExcel() {
   const columnWidths = [
     12.285, 8.57, 8.425, 24.57, 8.71, 11, 21, 11.285, 15.855, 18.71, 19.285, 17,
     19.425, 22.57, 11.425, 19.285, 44.71, 19.425, 22.57, 16.285, 43.71,
-    18.285, 20.57, 22.14, 17.855, 20.57, 19.425, 35, 12.425, 13, 14.14, 14,
+    18.285, 20.57, 22.14, 17.855, 20.57, 19.425, 70, 12.425, 13, 14.14, 14,
     30.71, 13, 13, 13
   ];
   const kardexFillColors = {
@@ -4680,6 +4711,7 @@ async function exportDieselConsultExcel() {
     sheet.getCell(rowIndex, 31).value = { formula: `SUM(AC${rowIndex}:AD${rowIndex})+AA${rowIndex}` };
     sheet.getCell(rowIndex, 17).alignment = { ...cellStyle.alignment, horizontal: "left" };
     sheet.getCell(rowIndex, 21).alignment = { ...cellStyle.alignment, horizontal: "left" };
+    sheet.getCell(rowIndex, 28).alignment = { ...cellStyle.alignment, horizontal: "left" };
   }
 
   [17, 21, 28].forEach((columnNumber) => {
