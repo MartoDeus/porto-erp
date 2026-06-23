@@ -3589,7 +3589,7 @@ async function loadAllDieselMovementsForExport() {
 
   while (true) {
     const query = new URLSearchParams({
-      select: "id,kardex_id,fecha,turno,tipo,cantidad,n_vale,nave_origen_id,nave_destino_id,created_at,nave_origen:unidades!diesel_movimientos_nave_origen_id_fkey(nombre),nave_destino:unidades!diesel_movimientos_nave_destino_id_fkey(nombre)",
+      select: "id,kardex_id,fecha,turno,tipo,cantidad,n_vale,detalle,nave_origen_id,nave_destino_id,created_at,nave_origen:unidades!diesel_movimientos_nave_origen_id_fkey(nombre),nave_destino:unidades!diesel_movimientos_nave_destino_id_fkey(nombre)",
       estado: "eq.vigente",
       order: "fecha.asc,turno.asc,created_at.asc",
       limit: String(pageSize),
@@ -3774,6 +3774,22 @@ function getDieselMovementVesselName(movement, direction) {
     ? movement?.nave_origen?.nombre
     : movement?.nave_destino?.nombre;
   return normalizeDieselDisplayName(vessel || "");
+}
+
+function getDieselDailyReportMovementName(movement, direction) {
+  const vessel = getDieselMovementVesselName(movement, direction);
+  if (vessel) {
+    return vessel;
+  }
+
+  const detailName = direction === "origin"
+    ? movement?.detalle?.origen
+    : movement?.detalle?.destino;
+  const normalized = normalizeDieselDisplayName(detailName || "");
+  if (normalizeDieselName(normalized).includes("AMARRADERO")) {
+    return "AMARRADERO #4-PP";
+  }
+  return normalized;
 }
 
 function formatDieselMovementDetail(movement, direction = "destino", detailType = "") {
@@ -4129,7 +4145,7 @@ function applyDieselDailyReportAbastecedorLines(sheet, startRow, rowCount) {
 }
 
 function getDieselDailyReportOriginOrder(movement) {
-  const origin = normalizeDieselName(getDieselMovementVesselName(movement, "origin"));
+  const origin = normalizeDieselName(getDieselDailyReportMovementName(movement, "origin"));
   const order = {
     TALARA: 1,
     PARINAS: 2,
@@ -4137,7 +4153,8 @@ function getDieselDailyReportOriginOrder(movement) {
     ORO: 4,
     ROGUE: 5,
     MR_BOB: 6,
-    JADE_IMI: 7
+    JADE_IMI: 7,
+    AMARRADERO_4_PP: 8
   };
   return order[origin] || 99;
 }
@@ -4148,8 +4165,8 @@ function sortDieselDailyReportAbastecedores(movements) {
     if (originDelta !== 0) {
       return originDelta;
     }
-    return normalizeDieselName(getDieselMovementVesselName(first, "origin"))
-      .localeCompare(normalizeDieselName(getDieselMovementVesselName(second, "origin")));
+    return normalizeDieselName(getDieselDailyReportMovementName(first, "origin"))
+      .localeCompare(normalizeDieselName(getDieselDailyReportMovementName(second, "origin")));
   });
 }
 
@@ -4167,12 +4184,14 @@ function fillDieselDailyReportAbastecedores(sheet, movements, reportRecords = []
   const rows = sortDieselDailyReportAbastecedores(
     (movements || []).filter((movement) => {
       const type = String(movement.tipo || "").toLowerCase();
-      const originKey = normalizeDieselName(getDieselMovementVesselName(movement, "origin"));
+      const originName = getDieselDailyReportMovementName(movement, "origin");
+      const originKey = normalizeDieselName(originName);
+      const isAmarraderoReceipt = type === "recibido" && originKey.includes("AMARRADERO");
       const hasEligibleOrigin = !reportRecords?.length || eligibleOriginKeys.has(originKey);
       return (
-        (type === "despacho" || type === "transferencia")
+        (type === "despacho" || type === "transferencia" || isAmarraderoReceipt)
         && toNumber(movement.cantidad) > 0
-        && hasEligibleOrigin
+        && (isAmarraderoReceipt || hasEligibleOrigin)
       );
     })
   );
@@ -4182,20 +4201,20 @@ function fillDieselDailyReportAbastecedores(sheet, movements, reportRecords = []
 
   rows.forEach((movement, index) => {
     const rowNumber = startRow + index;
-    sheet.getCell(rowNumber, 4).value = getDieselMovementVesselName(movement, "origin");
-    sheet.getCell(rowNumber, 7).value = getDieselMovementVesselName(movement, "destino");
+    sheet.getCell(rowNumber, 4).value = getDieselDailyReportMovementName(movement, "origin");
+    sheet.getCell(rowNumber, 7).value = getDieselDailyReportMovementName(movement, "destino");
     sheet.getCell(rowNumber, 10).value = toNumber(movement.cantidad) || null;
     sheet.getCell(rowNumber, 11).value = movement.n_vale || null;
   });
 
   let groupStartRow = startRow;
   while (groupStartRow < startRow + rows.length) {
-    const originName = getDieselMovementVesselName(rows[groupStartRow - startRow], "origin");
+    const originName = getDieselDailyReportMovementName(rows[groupStartRow - startRow], "origin");
     let groupEndRow = groupStartRow;
 
     while (
       groupEndRow + 1 < startRow + rows.length
-      && normalizeDieselName(getDieselMovementVesselName(rows[groupEndRow + 1 - startRow], "origin")) === normalizeDieselName(originName)
+      && normalizeDieselName(getDieselDailyReportMovementName(rows[groupEndRow + 1 - startRow], "origin")) === normalizeDieselName(originName)
     ) {
       groupEndRow += 1;
     }
