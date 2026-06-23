@@ -4068,6 +4068,26 @@ function prepareDieselDailyReportAbastecedorRows(sheet, rowCount) {
   }, {});
 
   clearDieselDailyReportAbastecedorMerges(sheet, startRow, templateEndRow);
+  if (normalizedRowCount === 0) {
+    for (let rowNumber = startRow; rowNumber <= templateEndRow; rowNumber += 1) {
+      sheet.getRow(rowNumber).height = rowNumber === startRow ? 15 : 0;
+      styledColumns.forEach((columnNumber) => {
+        const cell = sheet.getCell(rowNumber, columnNumber);
+        cell.value = null;
+        cell.style = cloneExcelStyle(baseStyles[columnNumber]);
+        cell.alignment = {
+          ...(cell.alignment || {}),
+          horizontal: "center",
+          vertical: "middle",
+          wrapText: true
+        };
+      });
+    }
+    safeMergeCells(sheet, `D${startRow}:F${startRow}`);
+    safeMergeCells(sheet, `G${startRow}:I${startRow}`);
+    return;
+  }
+
   if (normalizedRowCount < templateEndRow - startRow + 1) {
     sheet.spliceRows(startRow + normalizedRowCount, templateEndRow - startRow + 1 - normalizedRowCount);
   }
@@ -4133,12 +4153,27 @@ function sortDieselDailyReportAbastecedores(movements) {
   });
 }
 
-function fillDieselDailyReportAbastecedores(sheet, movements) {
+function fillDieselDailyReportAbastecedores(sheet, movements, reportRecords = []) {
   const startRow = 39;
+  const eligibleOriginKeys = new Set(
+    (reportRecords || [])
+      .filter((record) => (
+        toNumber(record.cantidad_despachada) > 0
+        || toNumber(record.cantidad_transferida) > 0
+      ))
+      .map((record) => normalizeDieselName(record.unidad_nombre))
+      .filter(Boolean)
+  );
   const rows = sortDieselDailyReportAbastecedores(
     (movements || []).filter((movement) => {
       const type = String(movement.tipo || "").toLowerCase();
-      return type === "despacho" || type === "transferencia";
+      const originKey = normalizeDieselName(getDieselMovementVesselName(movement, "origin"));
+      const hasEligibleOrigin = !reportRecords?.length || eligibleOriginKeys.has(originKey);
+      return (
+        (type === "despacho" || type === "transferencia")
+        && toNumber(movement.cantidad) > 0
+        && hasEligibleOrigin
+      );
     })
   );
 
@@ -4261,7 +4296,8 @@ async function downloadDieselDailyReportExcel() {
 
     fillDieselDailyReportAbastecedores(
       sheet,
-      allMovements.filter((movement) => movement.fecha === selectedDate)
+      allMovements.filter((movement) => movement.fecha === selectedDate),
+      records
     );
 
     workbook.calcProperties = { fullCalcOnLoad: true };
