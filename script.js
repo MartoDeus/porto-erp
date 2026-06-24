@@ -128,7 +128,7 @@ const dieselRefs = {
   recharge: document.querySelector("#dieselRecharge"),
   rechargeVoucher: document.querySelector("#dieselRechargeVoucher"),
   consumption: document.querySelector("#dieselConsumption"),
-  consumptionEdit: document.querySelector("#dieselConsumptionEdit"),
+  consumptionControl: document.querySelector("#dieselConsumptionControl"),
   returnVolume: document.querySelector("#dieselReturn"),
   difference: document.querySelector("#dieselDifference"),
   sondajeConsumption: document.querySelector("#dieselSondajeConsumption"),
@@ -382,7 +382,6 @@ const DIESEL_SONDAJE_SLOTS = [1, 2, 3, 4, 5];
 let unavailableDieselSondajeIndices = new Set();
 let dieselSondajeAvailabilityRequest = 0;
 let dieselSavedSondajeConsumptionBySlot = new Map();
-let dieselConsumptionManualOverride = false;
 let showAllDieselConsultItems = false;
 let dieselConsultCache = { key: "", rows: [] };
 let dieselEditDraft = null;
@@ -1610,22 +1609,27 @@ function getDieselSondajeConsumptionTotal() {
   return [...totals.values()].reduce((sum, value) => sum + toNumber(value), 0);
 }
 
-function setDieselConsumptionEditable(editable) {
-  if (!dieselRefs.consumption) {
-    return;
-  }
-
-  dieselRefs.consumption.readOnly = !editable;
-  dieselRefs.consumption.classList.toggle("is-derived", !editable);
-  dieselRefs.consumption.classList.toggle("is-manual", editable);
-  dieselRefs.consumptionEdit?.setAttribute("aria-pressed", String(editable));
-}
-
 function syncDieselConsumptionFromSondajes() {
-  const total = getDieselSondajeConsumptionTotal();
+  const controlConsumption = getDieselSondajeConsumptionTotal();
+  const officialRaw = String(dieselRefs.consumption?.value ?? "").trim();
+  const officialConsumption = toNumber(officialRaw);
 
-  if (dieselRefs.consumption && !dieselConsumptionManualOverride) {
-    dieselRefs.consumption.value = total ? formatDieselInputNumber(total) : "";
+  if (dieselRefs.consumptionControl) {
+    if (controlConsumption > 0 && officialRaw !== "") {
+      const difference = controlConsumption - officialConsumption;
+      const sign = difference > 0 ? "+" : "";
+      dieselRefs.consumptionControl.textContent =
+        `Control por sondajes: ${formatDieselInputNumber(controlConsumption)} gal · Diferencia: ${sign}${formatDieselInputNumber(difference)} gal`;
+      dieselRefs.consumptionControl.classList.toggle("has-difference", difference !== 0);
+    } else if (controlConsumption > 0) {
+      dieselRefs.consumptionControl.textContent =
+        `Control por sondajes: ${formatDieselInputNumber(controlConsumption)} gal. Ingresa el consumo oficial reportado.`;
+      dieselRefs.consumptionControl.classList.remove("has-difference");
+    } else {
+      dieselRefs.consumptionControl.textContent =
+        "Las actas de sondaje se usarán únicamente como control.";
+      dieselRefs.consumptionControl.classList.remove("has-difference");
+    }
   }
 
   updateDieselSummary();
@@ -1633,8 +1637,6 @@ function syncDieselConsumptionFromSondajes() {
 }
 
 function resetDieselConsumptionOverride() {
-  dieselConsumptionManualOverride = false;
-  setDieselConsumptionEditable(false);
   syncDieselConsumptionFromSondajes();
 }
 
@@ -1980,7 +1982,7 @@ function getDieselTotals() {
   const transferred = activeDispatches
     .filter((entry) => isDieselTransfer(origin, entry.vessel))
     .reduce((sum, entry) => sum + entry.quantity, 0);
-  const finalStock = initialStock + recharge - dispatched - transferred - consumption + sondage;
+  const finalStock = initialStock + recharge - dispatched - transferred - consumption;
 
   return {
     initialStock,
@@ -2046,7 +2048,7 @@ function validateDieselRecord() {
     errors.push("Vale de recarga");
   }
 
-  if (modules.consumo && totals.consumption <= 0) {
+  if (modules.consumo && totals.consumption < 0) {
     errors.push("Volumen de consumo");
   }
 
@@ -2244,7 +2246,7 @@ function getDieselModuleStates() {
   const sondajes = getDieselSondajeEntriesSnapshot();
   return {
     despacho: dieselDispatches.length > 0,
-    consumo: toNumber(dieselRefs.consumption?.value) > 0,
+    consumo: String(dieselRefs.consumption?.value ?? "").trim() !== "",
     recarga: toNumber(dieselRefs.recharge?.value) > 0 || Boolean(dieselRefs.rechargeVoucher?.value.trim()),
     sondaje: sondajes.some((entry) =>
       entry.document
@@ -3879,7 +3881,7 @@ function buildDieselExportRow(record, overrides = {}) {
   const sondajeConsumptionDay = overrides.sondajeConsumptionDay ?? 0;
   const sondajeConsumptionNight = overrides.sondajeConsumptionNight ?? 0;
   const totalSondajeConsumption = overrides.totalSondajeConsumption ?? (sondajeConsumptionDay + sondajeConsumptionNight);
-  const consumptionTotal = overrides.consumptionTotal ?? (consumptionDay + consumptionNight + totalSondajeConsumption);
+  const consumptionTotal = overrides.consumptionTotal ?? (consumptionDay + consumptionNight);
 
   return [
     meta.dateValue,
@@ -3948,10 +3950,8 @@ function buildDieselExportSplitRows(record, receivedMovements, outgoingGroups, s
     const transferred = toNumber(transferredDay) + toNumber(transferredNight);
     const dispatched = toNumber(dispatchedDay) + toNumber(dispatchedNight);
     const recharge = isLastOverall ? toNumber(record.total_recarga) : 0;
-    const sondajeDifferenceForRow = isLastOverall ? toNumber(sondajeData.totalDifference) : 0;
-    const sondajeConsumptionForRow = isLastOverall ? toNumber(sondajeData.totalConsumption) : 0;
-    const finalStock = runningStock + received + recharge + sondajeDifferenceForRow
-      - consumptionDay - consumptionNight - sondajeConsumptionForRow - transferred - dispatched;
+    const finalStock = runningStock + received + recharge
+      - consumptionDay - consumptionNight - transferred - dispatched;
     const currentInitialStock = runningStock;
     runningStock = finalStock;
 
@@ -3964,7 +3964,7 @@ function buildDieselExportSplitRows(record, receivedMovements, outgoingGroups, s
       receivedFrom: getDieselMovementVesselName(movement, "origin"),
       consumptionDay,
       consumptionNight,
-      consumptionTotal: consumptionDay + consumptionNight + sondajeConsumptionForRow,
+      consumptionTotal: consumptionDay + consumptionNight,
       transferredDay,
       transferredNight,
       transferred,
@@ -4033,7 +4033,7 @@ function setDieselDailyReportRow(sheet, rowNumber, record) {
   sheet.getCell(rowNumber, 8).value = { formula: `SUM(F${rowNumber}:G${rowNumber})` };
   sheet.getCell(rowNumber, 9).value = delivered || null;
   sheet.getCell(rowNumber, 10).value = sondage || null;
-  sheet.getCell(rowNumber, 11).value = { formula: `C${rowNumber}+D${rowNumber}-H${rowNumber}-I${rowNumber}+J${rowNumber}` };
+  sheet.getCell(rowNumber, 11).value = { formula: `C${rowNumber}+D${rowNumber}-H${rowNumber}-I${rowNumber}` };
   sheet.getCell(rowNumber, 12).value = getDieselDailyReportCrew(record?.capitan_dia, record?.motorista_dia);
   sheet.getCell(rowNumber, 13).value = getDieselDailyReportCrew(record?.capitan_noche, record?.motorista_noche);
   row.commit?.();
@@ -4795,8 +4795,6 @@ function clearDieselForm() {
   resetDieselSondajeEntries();
   unavailableDieselSondajeIndices = new Set();
   dieselSavedSondajeConsumptionBySlot = new Map();
-  dieselConsumptionManualOverride = false;
-  setDieselConsumptionEditable(false);
   dieselRefs.date.value = "";
   dieselRefs.origin.selectedIndex = -1;
   dieselRefs.receive.selectedIndex = -1;
@@ -4844,8 +4842,6 @@ function syncDieselInitialStockDisplay() {
 
 function clearDieselFormAfterSave() {
   resetDieselSondajeEntries();
-  dieselConsumptionManualOverride = false;
-  setDieselConsumptionEditable(false);
   dieselRefs.receive.selectedIndex = -1;
   dieselRefs.captain.value = "";
   dieselRefs.driver.value = "";
@@ -4958,20 +4954,6 @@ function bootDiesel() {
   dieselRefs.clear?.addEventListener("click", clearDieselForm);
   dieselRefs.save?.addEventListener("click", saveDieselRecord);
   dieselRefs.sondajeSelect?.addEventListener("change", handleDieselSondajeSelectChange);
-  dieselRefs.consumptionEdit?.addEventListener("click", () => {
-    dieselConsumptionManualOverride = !dieselConsumptionManualOverride;
-    setDieselConsumptionEditable(dieselConsumptionManualOverride);
-
-    if (!dieselConsumptionManualOverride) {
-      syncDieselConsumptionFromSondajes();
-      return;
-    }
-
-    dieselRefs.consumption?.focus();
-    updateDieselSummary();
-    updateDieselSaveState();
-  });
-
   [
     dieselRefs.date,
     dieselRefs.origin,
@@ -5076,7 +5058,10 @@ function bootDiesel() {
   });
 
   [dieselRefs.recharge, dieselRefs.consumption].forEach((control) => {
-    control?.addEventListener("input", updateDieselSummary);
+    control?.addEventListener("input", () => {
+      updateDieselSummary();
+      syncDieselConsumptionFromSondajes();
+    });
   });
 
   [dieselRefs.returnVolume, dieselRefs.difference].forEach((control) => {

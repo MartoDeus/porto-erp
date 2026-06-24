@@ -607,12 +607,10 @@
               <article class="diesel-stage-panel diesel-module" data-module="consumo" hidden>
                 <div class="diesel-module-head"><h3>Consumo</h3></div>
                 <div class="diesel-stage-fields diesel-stage-fields--single">
-                  <div class="diesel-derived-field">
-                    <label>Volumen (gal)<input id="dieselConsumption" type="number" min="0" readonly></label>
-                    <button class="diesel-inline-edit-button" type="button" id="dieselConsumptionEdit" aria-label="Editar consumo calculado" aria-pressed="false">
-                      <i data-lucide="square-pen"></i>
-                    </button>
-                  </div>
+                  <label>Volumen reportado (gal)<input id="dieselConsumption" type="number" min="0"></label>
+                  <p class="diesel-consumption-control" id="dieselConsumptionControl">
+                    Las actas de sondaje se usarán únicamente como control.
+                  </p>
                 </div>
               </article>
 
