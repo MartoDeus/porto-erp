@@ -120,6 +120,7 @@ const dieselRefs = {
   sondajeSelect: document.querySelector("#dieselSondajeSelect"),
   sondajeIndices: document.querySelectorAll("[data-diesel-sondaje-index]"),
   sondajeBody: document.querySelector(".diesel-sondaje-body"),
+  sondajeApplyStock: document.querySelector("#dieselSondajeApplyStock"),
   sondajeStartTime: document.querySelector("#dieselSondajeStartTime"),
   sondajeEndTime: document.querySelector("#dieselSondajeEndTime"),
   captain: document.querySelector("#dieselCaptain"),
@@ -246,6 +247,148 @@ const bitacoraRefs = {
   saveMessage: document.querySelector("#categorizeSaveMessage"),
   saveCategorized: document.querySelector("#saveCategorizedDay")
 };
+
+const treatedWaterRefs = {
+  form: document.querySelector("#treatedWaterForm"),
+  date: document.querySelector("#treatedWaterDate"),
+  month: document.querySelector("#treatedWaterMonth"),
+  year: document.querySelector("#treatedWaterYear"),
+  ship: document.querySelector("#treatedWaterShip"),
+  detail: document.querySelector("#treatedWaterDetail"),
+  shipType: document.querySelector("#treatedWaterShipType"),
+  movement: document.querySelector("#treatedWaterMovement"),
+  zone: document.querySelector("#treatedWaterZone"),
+  qty: document.querySelector("#treatedWaterQty"),
+  guide: document.querySelector("#treatedWaterGuide"),
+  start: document.querySelector("#treatedWaterStart"),
+  end: document.querySelector("#treatedWaterEnd"),
+  duration: document.querySelector("#treatedWaterDuration"),
+  observations: document.querySelector("#treatedWaterObservations"),
+  observationCount: document.querySelector("#treatedWaterObservationCount"),
+  clear: document.querySelector("#treatedWaterClear"),
+  save: document.querySelector("#treatedWaterSave"),
+  consult: document.querySelector("#treatedWaterConsult")
+};
+
+const treatedWaterConsultRefs = {
+  form: document.querySelector("#treatedWaterFilterForm"),
+  startDate: document.querySelector("#treatedWaterFilterStartDate"),
+  endDate: document.querySelector("#treatedWaterFilterEndDate"),
+  ship: document.querySelector("#treatedWaterFilterShip"),
+  detail: document.querySelector("#treatedWaterFilterDetail"),
+  movement: document.querySelector("#treatedWaterFilterMovement"),
+  zone: document.querySelector("#treatedWaterFilterZone"),
+  guide: document.querySelector("#treatedWaterFilterGuide"),
+  shipType: document.querySelector("#treatedWaterFilterShipType"),
+  clear: document.querySelector("#treatedWaterFilterClear"),
+  search: document.querySelector("#treatedWaterSearch"),
+  back: document.querySelector("#treatedWaterBack"),
+  export: document.querySelector("#treatedWaterExport"),
+  refresh: document.querySelector("#treatedWaterRefresh"),
+  rows: document.querySelector("#treatedWaterRows"),
+  empty: document.querySelector("#treatedWaterEmpty"),
+  summary: document.querySelector("#treatedWaterSummary"),
+  prev: document.querySelector("#treatedWaterPrevPage"),
+  next: document.querySelector("#treatedWaterNextPage"),
+  pageLabel: document.querySelector("#treatedWaterPageLabel"),
+  pageSize: document.querySelector("#treatedWaterPageSize")
+};
+
+const TREATED_WATER_TABLE = "AguaTratada";
+const TREATED_WATER_COLUMNS = "fecha,mes,año,nave,detalle,tipo_nave,tipo_movimiento,zona,cantidad,guia_remision,hora_inicio,hora_fin,tiempo_recarga,observaciones";
+const TREATED_WATER_TEMP_STORAGE_KEY = "portoErp.treatedWaterTempRecords";
+let treatedWaterConsultRecords = [];
+let treatedWaterConsultPage = 1;
+let treatedWaterConsultInitialized = false;
+
+const treatedWaterPlatformCatalog = [
+  { plataforma: "PN1", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
+  { plataforma: "PN2", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
+  { plataforma: "PN3", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
+  { plataforma: "PN8", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
+  { plataforma: "PN9", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
+  { plataforma: "OO", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
+  { plataforma: "PN7", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
+  { plataforma: "LL", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
+  { plataforma: "BB", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
+  { plataforma: "KK", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
+  { plataforma: "Z", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
+  { plataforma: "TT", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
+  { plataforma: "HH", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
+  { plataforma: "DD", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
+  { plataforma: "PN111", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
+  { plataforma: "GG", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
+  { plataforma: "PN4", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
+  { plataforma: "PN14", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
+  { plataforma: "A2", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
+  { plataforma: "YY", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
+  { plataforma: "NN", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
+  { plataforma: "R", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
+  { plataforma: "FF", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
+  { plataforma: "M", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
+  { plataforma: "PN5", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
+  { plataforma: "UU", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
+  { plataforma: "SS", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
+  { plataforma: "PN12", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
+  { plataforma: "PN10", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
+  { plataforma: "LO6", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
+  { plataforma: "LO16", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
+  { plataforma: "LO3", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
+  { plataforma: "LO4", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
+  { plataforma: "LO7", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
+  { plataforma: "LO10", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
+  { plataforma: "LO13", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
+  { plataforma: "CC", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
+  { plataforma: "LO18", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
+  { plataforma: "LO11", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
+  { plataforma: "LO14", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
+  { plataforma: "VV", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
+  { plataforma: "A8", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
+  { plataforma: "UU", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
+  { plataforma: "LO19", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
+  { plataforma: "PP", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
+  { plataforma: "ZZ", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
+  { plataforma: "LO9", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
+  { plataforma: "LO12", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
+  { plataforma: "HH", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
+  { plataforma: "LO15", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
+  { plataforma: "LO8", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
+  { plataforma: "PQ", zona: "PROVIDENCIA", tipoNave: "PLATAFORMA" },
+  { plataforma: "JJ", zona: "PROVIDENCIA", tipoNave: "PLATAFORMA" },
+  { plataforma: "PV15", zona: "PROVIDENCIA", tipoNave: "PLATAFORMA" },
+  { plataforma: "PG", zona: "PROVIDENCIA", tipoNave: "PLATAFORMA" },
+  { plataforma: "OV14", zona: "PROVIDENCIA", tipoNave: "PLATAFORMA" },
+  { plataforma: "PVX8", zona: "PROVIDENCIA", tipoNave: "PLATAFORMA" },
+  { plataforma: "PVX13", zona: "PROVIDENCIA", tipoNave: "PLATAFORMA" },
+  { plataforma: "LT1", zona: "LITORAL", tipoNave: "PLATAFORMA" },
+  { plataforma: "LT2", zona: "LITORAL", tipoNave: "PLATAFORMA" },
+  { plataforma: "LT4", zona: "LITORAL", tipoNave: "PLATAFORMA" },
+  { plataforma: "LT12", zona: "LITORAL", tipoNave: "PLATAFORMA" },
+  { plataforma: "3J", zona: "LITORAL", tipoNave: "PLATAFORMA" },
+  { plataforma: "LT11", zona: "LITORAL", tipoNave: "PLATAFORMA" },
+  { plataforma: "LT3", zona: "LITORAL", tipoNave: "PLATAFORMA" },
+  { plataforma: "3B", zona: "LITORAL", tipoNave: "PLATAFORMA" },
+  { plataforma: "3C", zona: "LITORAL", tipoNave: "PLATAFORMA" },
+  { plataforma: "4D", zona: "LITORAL", tipoNave: "PLATAFORMA" },
+  { plataforma: "4E", zona: "LITORAL", tipoNave: "PLATAFORMA" },
+  { plataforma: "LT6", zona: "LITORAL", tipoNave: "PLATAFORMA" },
+  { plataforma: "2D", zona: "LITORAL", tipoNave: "PLATAFORMA" },
+  { plataforma: "3D", zona: "LITORAL", tipoNave: "PLATAFORMA" },
+  { plataforma: "2B", zona: "LITORAL", tipoNave: "PLATAFORMA" },
+  { plataforma: "ES1", zona: "ESPREANZA", tipoNave: "PLATAFORMA" },
+  { plataforma: "SP1", zona: "SAN PERDO", tipoNave: "PLATAFORMA" },
+  { plataforma: "SP1A", zona: "SAN PERDO", tipoNave: "PLATAFORMA" },
+  { plataforma: "SP2", zona: "SAN PERDO", tipoNave: "PLATAFORMA" },
+  { plataforma: "SP3", zona: "SAN PERDO", tipoNave: "PLATAFORMA" },
+  { plataforma: "SF1", zona: "SAN PERDO", tipoNave: "PLATAFORMA" },
+  { plataforma: "RECARGA", zona: "TORTUGA", tipoNave: "MOVIMIENTO" },
+  { plataforma: "REINGRESO", zona: "TORTUGA", tipoNave: "MOVIMIENTO" },
+  { plataforma: "TALARA", zona: "TORTUGA", tipoNave: "NAVE" },
+  { plataforma: "PARIÑAS", zona: "TORTUGA", tipoNave: "NAVE" },
+  { plataforma: "CHIMERA", zona: "TORTUGA", tipoNave: "NAVE" },
+  { plataforma: "PRODUCCION SAN PEDRO", zona: "SAN PEDRO", tipoNave: "PLATAFORMA" },
+  { plataforma: "DIFERENCIA POR SONDAJE", zona: "TORTUGA", tipoNave: "MOVIMIENTO" }
+];
 
 const navesRefs = {
   canvas: document.querySelector("#navesCanvas"),
@@ -820,7 +963,8 @@ function setPage(pageName) {
 
   navItems.forEach((item) => {
     const isBitacoraChild = pageName.startsWith("bitacora-") && item.dataset.page === "bitacora";
-    item.classList.toggle("active", item.dataset.page === pageName || isBitacoraChild);
+    const isTreatedWaterChild = pageName === "agua-tratada-consulta" && item.dataset.page === "agua-tratada";
+    item.classList.toggle("active", item.dataset.page === pageName || isBitacoraChild || isTreatedWaterChild);
   });
 
   if (topbarTitle) {
@@ -831,6 +975,7 @@ function setPage(pageName) {
       consulta: "Consulta",
       lubricante: "Lubricante",
       "agua-tratada": "Agua Tratada",
+      "agua-tratada-consulta": "Agua Tratada",
       "agua-consumo": "Agua de Consumo",
       buceo: "Buceo",
       horometros: "Horómetros",
@@ -867,6 +1012,525 @@ function setPage(pageName) {
   if (pageName === "diesel") {
     syncDieselInitialStockDisplay();
   }
+
+  if (pageName === "agua-tratada") {
+    initTreatedWaterView();
+  }
+
+  if (pageName === "agua-tratada-consulta") {
+    initTreatedWaterConsultView();
+  }
+}
+
+function getTreatedWaterMonthName(dateValue) {
+  const months = [
+    "ENERO",
+    "FEBRERO",
+    "MARZO",
+    "ABRIL",
+    "MAYO",
+    "JUNIO",
+    "JULIO",
+    "AGOSTO",
+    "SEPTIEMBRE",
+    "OCTUBRE",
+    "NOVIEMBRE",
+    "DICIEMBRE"
+  ];
+  const date = dateValue ? new Date(`${dateValue}T00:00:00`) : new Date();
+  return months[date.getMonth()] || months[new Date().getMonth()];
+}
+
+function syncTreatedWaterDateParts() {
+  if (!treatedWaterRefs.date?.value) {
+    return;
+  }
+  const date = new Date(`${treatedWaterRefs.date.value}T00:00:00`);
+  if (treatedWaterRefs.month) {
+    treatedWaterRefs.month.value = getTreatedWaterMonthName(treatedWaterRefs.date.value);
+  }
+  if (treatedWaterRefs.year) {
+    treatedWaterRefs.year.value = String(date.getFullYear());
+  }
+  updateTreatedWaterSaveState();
+}
+
+function normalizeTreatedWaterValue(value) {
+  return String(value || "").trim().toUpperCase();
+}
+
+function populateTreatedWaterDetails() {
+  if (!treatedWaterRefs.detail || treatedWaterRefs.detail.dataset.loaded === "true") {
+    return;
+  }
+  const duplicateCount = treatedWaterPlatformCatalog.reduce((acc, item) => {
+    const key = normalizeTreatedWaterValue(item.plataforma);
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+  treatedWaterRefs.detail.innerHTML = '<option value="">Seleccione detalle</option>';
+  treatedWaterPlatformCatalog.forEach((item, index) => {
+    const option = document.createElement("option");
+    option.value = String(index);
+    option.dataset.plataforma = item.plataforma;
+    option.textContent = duplicateCount[normalizeTreatedWaterValue(item.plataforma)] > 1
+      ? `${item.plataforma} - ${item.zona}`
+      : item.plataforma;
+    treatedWaterRefs.detail.appendChild(option);
+  });
+  treatedWaterRefs.detail.dataset.loaded = "true";
+}
+
+function getSelectedTreatedWaterDetail() {
+  const rawValue = treatedWaterRefs.detail?.value;
+  if (rawValue === "") {
+    return null;
+  }
+  const index = Number(rawValue);
+  return Number.isInteger(index) ? treatedWaterPlatformCatalog[index] || null : null;
+}
+
+function resolveTreatedWaterMovement(detail) {
+  const value = normalizeTreatedWaterValue(detail?.plataforma);
+  if (value === "RECARGA") {
+    return "RECARGA";
+  }
+  if (value === "REINGRESO") {
+    return "REINGRESO";
+  }
+  if (value === "TALARA" || value === "PARIÑAS") {
+    return "TRANSFERENCIA";
+  }
+  return value ? "DESPACHO" : "";
+}
+
+function updateTreatedWaterDetailMetadata() {
+  const detail = getSelectedTreatedWaterDetail();
+  if (treatedWaterRefs.shipType) {
+    treatedWaterRefs.shipType.value = detail?.tipoNave || "";
+  }
+  if (treatedWaterRefs.zone) {
+    treatedWaterRefs.zone.value = detail?.zona || "";
+  }
+  if (treatedWaterRefs.movement) {
+    treatedWaterRefs.movement.value = resolveTreatedWaterMovement(detail);
+  }
+  updateTreatedWaterSaveState();
+}
+
+function updateTreatedWaterDuration() {
+  if (!treatedWaterRefs.duration) {
+    return;
+  }
+  const start = treatedWaterRefs.start?.value;
+  const end = treatedWaterRefs.end?.value;
+  if (!start || !end) {
+    treatedWaterRefs.duration.value = "-";
+    updateTreatedWaterSaveState();
+    return;
+  }
+  const [startHour, startMinute] = start.split(":").map(Number);
+  const [endHour, endMinute] = end.split(":").map(Number);
+  let minutes = (endHour * 60 + endMinute) - (startHour * 60 + startMinute);
+  if (minutes < 0) {
+    minutes += 24 * 60;
+  }
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  treatedWaterRefs.duration.value = `${String(hours).padStart(2, "0")}:${String(remainingMinutes).padStart(2, "0")}`;
+  updateTreatedWaterSaveState();
+}
+
+function updateTreatedWaterObservationCount() {
+  if (treatedWaterRefs.observationCount) {
+    treatedWaterRefs.observationCount.textContent = String(treatedWaterRefs.observations?.value.length || 0);
+  }
+}
+
+function isTreatedWaterReadyToSave() {
+  const detail = getSelectedTreatedWaterDetail();
+  const quantity = Number(treatedWaterRefs.qty?.value);
+  return Boolean(
+    treatedWaterRefs.date?.value
+    && treatedWaterRefs.month?.value
+    && treatedWaterRefs.year?.value
+    && treatedWaterRefs.ship?.value
+    && detail?.plataforma
+    && treatedWaterRefs.shipType?.value
+    && treatedWaterRefs.movement?.value
+    && treatedWaterRefs.zone?.value
+    && Number.isFinite(quantity)
+    && quantity > 0
+    && treatedWaterRefs.guide?.value.trim()
+    && treatedWaterRefs.start?.value
+    && treatedWaterRefs.end?.value
+    && treatedWaterRefs.duration?.value
+    && treatedWaterRefs.duration.value !== "-"
+  );
+}
+
+function updateTreatedWaterSaveState() {
+  if (treatedWaterRefs.save) {
+    treatedWaterRefs.save.disabled = !isTreatedWaterReadyToSave();
+  }
+}
+
+function clearTreatedWaterForm(options = {}) {
+  treatedWaterRefs.form?.reset();
+  if (options.keepToday && treatedWaterRefs.date) {
+    treatedWaterRefs.date.value = getTodayValue();
+    syncTreatedWaterDateParts();
+  } else {
+    if (treatedWaterRefs.date) {
+      treatedWaterRefs.date.value = "";
+    }
+    if (treatedWaterRefs.month) {
+      treatedWaterRefs.month.value = "";
+    }
+    if (treatedWaterRefs.year) {
+      treatedWaterRefs.year.value = "";
+    }
+  }
+  updateTreatedWaterDetailMetadata();
+  updateTreatedWaterDuration();
+  updateTreatedWaterObservationCount();
+  updateTreatedWaterSaveState();
+}
+
+function buildTreatedWaterPayload() {
+  const detail = getSelectedTreatedWaterDetail();
+  return {
+    fecha: treatedWaterRefs.date?.value || "",
+    mes: treatedWaterRefs.month?.value || "",
+    año: treatedWaterRefs.year?.value || "",
+    nave: treatedWaterRefs.ship?.value || "",
+    detalle: detail?.plataforma || "",
+    tipo_nave: treatedWaterRefs.shipType?.value || "",
+    tipo_movimiento: treatedWaterRefs.movement?.value || "",
+    zona: treatedWaterRefs.zone?.value || "",
+    cantidad: treatedWaterRefs.qty?.value ? Number(treatedWaterRefs.qty.value) : null,
+    guia_remision: treatedWaterRefs.guide?.value.trim() || "",
+    hora_inicio: treatedWaterRefs.start?.value || "",
+    hora_fin: treatedWaterRefs.end?.value || "",
+    tiempo_recarga: treatedWaterRefs.duration?.value === "-" ? "" : treatedWaterRefs.duration?.value || "",
+    observaciones: treatedWaterRefs.observations?.value.trim() || ""
+  };
+}
+
+function getTreatedWaterAuthHeaders() {
+  const session = getSession();
+  return session?.accessToken ? { Authorization: `Bearer ${session.accessToken}` } : {};
+}
+
+function loadTreatedWaterTempRecords() {
+  try {
+    return JSON.parse(sessionStorage.getItem(TREATED_WATER_TEMP_STORAGE_KEY) || "[]");
+  } catch (error) {
+    return [];
+  }
+}
+
+function saveTreatedWaterTempRecord(payload) {
+  const records = loadTreatedWaterTempRecords();
+  records.push({ ...payload, saved_at: new Date().toISOString() });
+  sessionStorage.setItem(TREATED_WATER_TEMP_STORAGE_KEY, JSON.stringify(records));
+}
+
+function getTreatedWaterConsultFilters() {
+  return {
+    startDate: treatedWaterConsultRefs.startDate?.value || "",
+    endDate: treatedWaterConsultRefs.endDate?.value || "",
+    ship: treatedWaterConsultRefs.ship?.value || "",
+    detail: treatedWaterConsultRefs.detail?.value || "",
+    movement: treatedWaterConsultRefs.movement?.value || "",
+    zone: treatedWaterConsultRefs.zone?.value || "",
+    guide: treatedWaterConsultRefs.guide?.value.trim().toUpperCase() || "",
+    shipType: treatedWaterConsultRefs.shipType?.value || ""
+  };
+}
+
+function filterTreatedWaterRecords(records, filters = getTreatedWaterConsultFilters()) {
+  return records.filter((record) => {
+    const fecha = String(record.fecha || "").slice(0, 10);
+    const guia = String(record.guia_remision || "").toUpperCase();
+    return (!filters.startDate || fecha >= filters.startDate)
+      && (!filters.endDate || fecha <= filters.endDate)
+      && (!filters.ship || record.nave === filters.ship)
+      && (!filters.detail || record.detalle === filters.detail)
+      && (!filters.movement || record.tipo_movimiento === filters.movement)
+      && (!filters.zone || record.zona === filters.zone)
+      && (!filters.shipType || record.tipo_nave === filters.shipType)
+      && (!filters.guide || guia.includes(filters.guide));
+  });
+}
+
+async function saveTreatedWaterRecord() {
+  if (!isTreatedWaterReadyToSave() || !treatedWaterRefs.form?.reportValidity()) {
+    updateTreatedWaterSaveState();
+    return;
+  }
+  const payload = buildTreatedWaterPayload();
+  const originalHtml = treatedWaterRefs.save?.innerHTML;
+  if (treatedWaterRefs.save) {
+    treatedWaterRefs.save.disabled = true;
+    treatedWaterRefs.save.textContent = "Guardando...";
+  }
+  try {
+    await supabaseRequest(`/rest/v1/${TREATED_WATER_TABLE}`, {
+      method: "POST",
+      headers: {
+        ...getTreatedWaterAuthHeaders(),
+        Prefer: "return=minimal"
+      },
+      body: JSON.stringify(payload)
+    });
+    window.dispatchEvent(new CustomEvent("treated-water:save", { detail: payload }));
+    showSuccessToast("Registro guardado", "El registro de agua tratada se guardó correctamente.");
+    clearTreatedWaterForm();
+  } catch (error) {
+    console.warn("No se pudo guardar AguaTratada.", error);
+    saveTreatedWaterTempRecord(payload);
+    window.dispatchEvent(new CustomEvent("treated-water:save", { detail: payload }));
+    showSuccessToast("Registro temporal guardado", "El registro de prueba se guardó temporalmente y aparecerá en Consulta.");
+    clearTreatedWaterForm();
+  } finally {
+    if (treatedWaterRefs.save && originalHtml) {
+      treatedWaterRefs.save.innerHTML = originalHtml;
+      renderIcons();
+    }
+    updateTreatedWaterSaveState();
+  }
+}
+
+function initTreatedWaterView() {
+  if (!treatedWaterRefs.form) {
+    return;
+  }
+  populateTreatedWaterDetails();
+  if (treatedWaterRefs.date && !treatedWaterRefs.date.value) {
+    treatedWaterRefs.date.value = getTodayValue();
+  }
+  syncTreatedWaterDateParts();
+  updateTreatedWaterDetailMetadata();
+  updateTreatedWaterDuration();
+  updateTreatedWaterObservationCount();
+  updateTreatedWaterSaveState();
+}
+
+function populateTreatedWaterConsultFilters() {
+  if (!treatedWaterConsultRefs.form || treatedWaterConsultInitialized) {
+    return;
+  }
+  fillTreatedWaterSelect(treatedWaterConsultRefs.ship, [
+    "TALARA",
+    "PARIÑAS",
+    "LOBITOS EXPRESS",
+    "OLYMPIC EXPRESS",
+    "NEPTUNE EXPRESS",
+    "DONALD ROBIN",
+    "SHEILA R",
+    "IRIS",
+    "CHIP II",
+    "BUCKLEY EXPRESS",
+    "CABO BLANCO",
+    "ELIZABETH",
+    "ORO",
+    "ROGUE",
+    "MR BOB"
+  ], "Seleccione una nave");
+  fillTreatedWaterSelect(
+    treatedWaterConsultRefs.detail,
+    [...new Set(treatedWaterPlatformCatalog.map((item) => item.plataforma))],
+    "Seleccione detalle"
+  );
+  fillTreatedWaterSelect(
+    treatedWaterConsultRefs.zone,
+    [...new Set(treatedWaterPlatformCatalog.map((item) => item.zona).filter(Boolean))],
+    "Seleccione zona"
+  );
+  fillTreatedWaterSelect(
+    treatedWaterConsultRefs.shipType,
+    [...new Set(treatedWaterPlatformCatalog.map((item) => item.tipoNave).filter(Boolean))],
+    "Seleccione tipo"
+  );
+  treatedWaterConsultInitialized = true;
+}
+
+function fillTreatedWaterSelect(select, values, placeholder) {
+  if (!select) {
+    return;
+  }
+  const currentValue = select.value;
+  select.innerHTML = `<option value="">${placeholder}</option>`;
+  values.forEach((value) => {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = value;
+    select.appendChild(option);
+  });
+  select.value = values.includes(currentValue) ? currentValue : "";
+}
+
+function buildTreatedWaterConsultQuery() {
+  const params = new URLSearchParams({
+    select: TREATED_WATER_COLUMNS,
+    order: "fecha.desc"
+  });
+  if (treatedWaterConsultRefs.startDate?.value) {
+    params.append("fecha", `gte.${treatedWaterConsultRefs.startDate.value}`);
+  }
+  if (treatedWaterConsultRefs.endDate?.value) {
+    params.append("fecha", `lte.${treatedWaterConsultRefs.endDate.value}`);
+  }
+  if (treatedWaterConsultRefs.ship?.value) {
+    params.append("nave", `eq.${treatedWaterConsultRefs.ship.value}`);
+  }
+  if (treatedWaterConsultRefs.detail?.value) {
+    params.append("detalle", `eq.${treatedWaterConsultRefs.detail.value}`);
+  }
+  if (treatedWaterConsultRefs.movement?.value) {
+    params.append("tipo_movimiento", `eq.${treatedWaterConsultRefs.movement.value}`);
+  }
+  if (treatedWaterConsultRefs.shipType?.value) {
+    params.append("tipo_nave", `eq.${treatedWaterConsultRefs.shipType.value}`);
+  }
+  if (treatedWaterConsultRefs.zone?.value) {
+    params.append("zona", `eq.${treatedWaterConsultRefs.zone.value}`);
+  }
+  if (treatedWaterConsultRefs.guide?.value.trim()) {
+    params.append("guia_remision", `ilike.*${treatedWaterConsultRefs.guide.value.trim()}*`);
+  }
+  return params.toString();
+}
+
+async function loadTreatedWaterConsultRecords() {
+  if (!treatedWaterConsultRefs.rows) {
+    return;
+  }
+  setTreatedWaterConsultLoading(true);
+  const filters = getTreatedWaterConsultFilters();
+  try {
+    const query = buildTreatedWaterConsultQuery();
+    const apiRecords = await supabaseRequest(`/rest/v1/${TREATED_WATER_TABLE}?${query}`, {
+      headers: getTreatedWaterAuthHeaders()
+    }) || [];
+    const tempRecords = filterTreatedWaterRecords(loadTreatedWaterTempRecords(), filters);
+    treatedWaterConsultRecords = [...apiRecords, ...tempRecords];
+    treatedWaterConsultPage = 1;
+  } catch (error) {
+    console.warn("No se pudo cargar la consulta de AguaTratada.", error);
+    treatedWaterConsultRecords = filterTreatedWaterRecords(loadTreatedWaterTempRecords(), filters);
+    treatedWaterConsultPage = 1;
+  } finally {
+    setTreatedWaterConsultLoading(false);
+    renderTreatedWaterConsultRows();
+  }
+}
+
+function setTreatedWaterConsultLoading(isLoading) {
+  if (treatedWaterConsultRefs.search) {
+    treatedWaterConsultRefs.search.disabled = isLoading;
+    treatedWaterConsultRefs.search.innerHTML = isLoading
+      ? "Buscando..."
+      : '<i data-lucide="search"></i>Buscar';
+  }
+  if (treatedWaterConsultRefs.refresh) {
+    treatedWaterConsultRefs.refresh.disabled = isLoading;
+  }
+  renderIcons();
+}
+
+function renderTreatedWaterConsultRows() {
+  if (!treatedWaterConsultRefs.rows) {
+    return;
+  }
+  const pageSize = Number(treatedWaterConsultRefs.pageSize?.value || 5);
+  const total = treatedWaterConsultRecords.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  treatedWaterConsultPage = Math.min(Math.max(1, treatedWaterConsultPage), totalPages);
+  const start = (treatedWaterConsultPage - 1) * pageSize;
+  const pageRows = treatedWaterConsultRecords.slice(start, start + pageSize);
+  treatedWaterConsultRefs.rows.innerHTML = pageRows.map(renderTreatedWaterConsultRow).join("");
+  if (treatedWaterConsultRefs.empty) {
+    treatedWaterConsultRefs.empty.hidden = total > 0;
+  }
+  if (treatedWaterConsultRefs.summary) {
+    const first = total === 0 ? 0 : start + 1;
+    const last = Math.min(start + pageSize, total);
+    treatedWaterConsultRefs.summary.textContent = `Mostrando ${first} a ${last} de ${total} registros`;
+  }
+  if (treatedWaterConsultRefs.pageLabel) {
+    treatedWaterConsultRefs.pageLabel.textContent = String(treatedWaterConsultPage);
+  }
+  if (treatedWaterConsultRefs.prev) {
+    treatedWaterConsultRefs.prev.disabled = treatedWaterConsultPage <= 1;
+  }
+  if (treatedWaterConsultRefs.next) {
+    treatedWaterConsultRefs.next.disabled = treatedWaterConsultPage >= totalPages;
+  }
+  renderIcons();
+}
+
+function renderTreatedWaterConsultRow(row) {
+  return `
+    <tr>
+      <td>${escapeHtml(formatDisplayDate(String(row.fecha || "").slice(0, 10)))}</td>
+      <td>${escapeHtml(row.nave || "")}</td>
+      <td>${escapeHtml(row.detalle || "")}</td>
+      <td>${escapeHtml(row.tipo_nave || "")}</td>
+      <td>${escapeHtml(row.tipo_movimiento || "")}</td>
+      <td>${escapeHtml(row.zona || "")}</td>
+      <td>${escapeHtml(formatNumber(row.cantidad || 0))}</td>
+      <td>${escapeHtml(row.guia_remision || "")}</td>
+      <td>${escapeHtml(row.hora_inicio || "")}</td>
+      <td>${escapeHtml(row.hora_fin || "")}</td>
+      <td>${escapeHtml(row.tiempo_recarga || "")}</td>
+    </tr>
+  `;
+}
+
+function clearTreatedWaterConsultFilters() {
+  treatedWaterConsultRefs.form?.reset();
+  treatedWaterConsultPage = 1;
+  loadTreatedWaterConsultRecords();
+}
+
+function exportTreatedWaterConsultRecords() {
+  const headers = [
+    "Fecha",
+    "Nave",
+    "Detalle / Plataforma",
+    "Tipo de Nave",
+    "Tipo de Movimiento",
+    "Zona",
+    "Cantidad (Gal)",
+    "N° Guía / Vale",
+    "Hora Inicio",
+    "Hora Fin",
+    "Tiempo de Recarga"
+  ];
+  const lines = treatedWaterConsultRecords.map((row) => [
+    row.fecha || "",
+    row.nave || "",
+    row.detalle || "",
+    row.tipo_nave || "",
+    row.tipo_movimiento || "",
+    row.zona || "",
+    row.cantidad ?? "",
+    row.guia_remision || "",
+    row.hora_inicio || "",
+    row.hora_fin || "",
+    row.tiempo_recarga || ""
+  ]);
+  const csv = [headers, ...lines]
+    .map((line) => line.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(","))
+    .join("\n");
+  downloadBlob(new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" }), "consulta_agua_tratada.csv");
+}
+
+function initTreatedWaterConsultView() {
+  populateTreatedWaterConsultFilters();
+  loadTreatedWaterConsultRecords();
 }
 
 function getCheckedValue(name) {
@@ -1726,6 +2390,8 @@ function buildEmptyDieselRecord(date, ship, shift) {
     returnVolume: 0,
     difference: 0,
     sondage: 0,
+    sondageAppliesToStock: false,
+    sondageStockImpact: 0,
     dispatched: 0,
     transferred: 0,
     initialStock,
@@ -1807,6 +2473,7 @@ function setDieselSondajeFieldsDisabled(disabled) {
     dieselRefs.document,
     dieselRefs.sondajeStartTime,
     dieselRefs.sondajeEndTime,
+    dieselRefs.sondajeApplyStock,
     dieselRefs.returnVolume,
     dieselRefs.difference,
     dieselRefs.sondajeConsumption
@@ -1839,6 +2506,9 @@ function renderDieselSondajeOptions() {
     }
     if (dieselRefs.sondajeEndTime) {
       dieselRefs.sondajeEndTime.value = "";
+    }
+    if (dieselRefs.sondajeApplyStock) {
+      dieselRefs.sondajeApplyStock.checked = false;
     }
     dieselRefs.document.value = "";
     dieselRefs.returnVolume.value = "";
@@ -1967,6 +2637,7 @@ function getDieselTotals() {
   const initialStock = getDieselInitialStock(origin);
   const recharge = modules.recarga ? toNumber(dieselRefs.recharge.value) : 0;
   const consumption = modules.consumo ? toNumber(dieselRefs.consumption.value) : 0;
+  const sondageAppliesToStock = Boolean(modules.sondaje && dieselRefs.sondajeApplyStock?.checked);
   const sondajes = modules.sondaje ? getDieselSondajeEntriesSnapshot() : [];
   const returnVolume = modules.sondaje
     ? sondajes.reduce((sum, entry) => sum + toNumber(entry.returnVolume), 0)
@@ -1982,7 +2653,8 @@ function getDieselTotals() {
   const transferred = activeDispatches
     .filter((entry) => isDieselTransfer(origin, entry.vessel))
     .reduce((sum, entry) => sum + entry.quantity, 0);
-  const finalStock = initialStock + recharge - dispatched - transferred - consumption;
+  const sondageStockImpact = sondageAppliesToStock ? sondage : 0;
+  const finalStock = initialStock + recharge - dispatched - transferred - consumption + sondageStockImpact;
 
   return {
     initialStock,
@@ -1991,6 +2663,8 @@ function getDieselTotals() {
     returnVolume,
     difference: differenceValue,
     sondage,
+    sondageAppliesToStock,
+    sondageStockImpact,
     dispatched,
     transferred,
     finalStock
@@ -2186,6 +2860,9 @@ function updateDieselSummary() {
   dieselRefs.summaryTransferred.textContent = formatNumber(totals.transferred);
   dieselRefs.summaryConsumption.textContent = formatNumber(totals.consumption);
   dieselRefs.summaryDifference.textContent = `${totals.sondage >= 0 ? "+" : "-"}${formatNumber(Math.abs(totals.sondage))}`;
+  dieselRefs.summaryDifference.title = totals.sondageAppliesToStock
+    ? "Este sondaje afecta el stock final."
+    : "Este sondaje se guarda como control y no afecta el stock final.";
   dieselRefs.summaryDifference.classList.toggle("positive", totals.sondage >= 0);
   dieselRefs.summaryDifference.classList.toggle("negative", totals.sondage < 0);
   dieselRefs.summaryFinal.textContent = formatNumber(totals.finalStock);
@@ -2319,6 +2996,8 @@ function buildDieselRecordFromForm() {
     returnVolume: totals.returnVolume,
     difference: totals.difference,
     sondage: totals.sondage,
+    sondageAppliesToStock: totals.sondageAppliesToStock,
+    sondageStockImpact: totals.sondageStockImpact,
     dispatched: totals.dispatched,
     transferred: totals.transferred,
     initialStock: totals.initialStock,
@@ -2333,7 +3012,8 @@ function buildDieselRecordFromForm() {
     observation: dieselRefs.observation.value.trim(),
     moduleStates: {
       ...modules,
-      despacho: effectiveDispatchModule
+      despacho: effectiveDispatchModule,
+      sondaje_aplica_stock: totals.sondageAppliesToStock
     },
     hasMovement,
     savedAt: new Date().toISOString()
@@ -2358,12 +3038,15 @@ function buildDieselPayload(record) {
     consumo: record.consumption,
     reingreso: record.returnVolume,
     diferencia: record.difference,
+    sondaje_aplica_stock: record.sondageAppliesToStock,
     stock_inicial: record.initialStock,
     observaciones: record.observation,
     modulos_estado: record.moduleStates,
     cabecera: {
       registrado_por_texto: record.registeredBy,
       origen_web_id: record.id,
+      sondaje_aplica_stock: record.sondageAppliesToStock,
+      sondaje_impacto_stock: record.sondageStockImpact,
       sondajes: record.sondajes || []
     },
     movimiento_ids_reemplazar: Array.isArray(record.movementIdsToReplace) ? record.movementIdsToReplace : [],
@@ -4815,6 +5498,9 @@ function clearDieselForm() {
   if (dieselRefs.sondajeConsumption) {
     dieselRefs.sondajeConsumption.value = "";
   }
+  if (dieselRefs.sondajeApplyStock) {
+    dieselRefs.sondajeApplyStock.checked = false;
+  }
   dieselRefs.qty.value = "";
   dieselRefs.voucher.value = "";
   dieselRefs.observation.value = "";
@@ -4853,6 +5539,9 @@ function clearDieselFormAfterSave() {
   dieselRefs.difference.value = "";
   if (dieselRefs.sondajeConsumption) {
     dieselRefs.sondajeConsumption.value = "";
+  }
+  if (dieselRefs.sondajeApplyStock) {
+    dieselRefs.sondajeApplyStock.checked = false;
   }
   dieselRefs.qty.value = "";
   dieselRefs.voucher.value = "";
@@ -4967,6 +5656,7 @@ function bootDiesel() {
     dieselRefs.returnVolume,
     dieselRefs.difference,
     dieselRefs.sondajeConsumption,
+    dieselRefs.sondajeApplyStock,
     dieselRefs.qty,
     dieselRefs.voucher,
     dieselRefs.observation
@@ -5077,6 +5767,12 @@ function bootDiesel() {
       saveCurrentDieselSondajeEntry();
       syncDieselConsumptionFromSondajes();
     });
+  });
+
+  dieselRefs.sondajeApplyStock?.addEventListener("change", () => {
+    saveCurrentDieselSondajeEntry();
+    updateDieselSummary();
+    updateDieselSaveState();
   });
 
   updateSondageInputs();
@@ -5404,6 +6100,43 @@ passengerRefs.save?.addEventListener("click", savePassengerRecords);
 });
 
 bindDateStepper(passengerRefs.date, passengerRefs.prevDay, passengerRefs.nextDay);
+
+treatedWaterRefs.date?.addEventListener("change", syncTreatedWaterDateParts);
+treatedWaterRefs.detail?.addEventListener("change", updateTreatedWaterDetailMetadata);
+treatedWaterRefs.start?.addEventListener("change", updateTreatedWaterDuration);
+treatedWaterRefs.end?.addEventListener("change", updateTreatedWaterDuration);
+treatedWaterRefs.observations?.addEventListener("input", updateTreatedWaterObservationCount);
+treatedWaterRefs.form?.addEventListener("input", updateTreatedWaterSaveState);
+treatedWaterRefs.form?.addEventListener("change", updateTreatedWaterSaveState);
+treatedWaterRefs.clear?.addEventListener("click", clearTreatedWaterForm);
+treatedWaterRefs.consult?.addEventListener("click", () => {
+  setPage("agua-tratada-consulta");
+});
+treatedWaterRefs.form?.addEventListener("submit", (event) => {
+  event.preventDefault();
+  saveTreatedWaterRecord();
+});
+
+treatedWaterConsultRefs.form?.addEventListener("submit", (event) => {
+  event.preventDefault();
+  loadTreatedWaterConsultRecords();
+});
+treatedWaterConsultRefs.clear?.addEventListener("click", clearTreatedWaterConsultFilters);
+treatedWaterConsultRefs.back?.addEventListener("click", () => setPage("agua-tratada"));
+treatedWaterConsultRefs.refresh?.addEventListener("click", loadTreatedWaterConsultRecords);
+treatedWaterConsultRefs.export?.addEventListener("click", exportTreatedWaterConsultRecords);
+treatedWaterConsultRefs.prev?.addEventListener("click", () => {
+  treatedWaterConsultPage -= 1;
+  renderTreatedWaterConsultRows();
+});
+treatedWaterConsultRefs.next?.addEventListener("click", () => {
+  treatedWaterConsultPage += 1;
+  renderTreatedWaterConsultRows();
+});
+treatedWaterConsultRefs.pageSize?.addEventListener("change", () => {
+  treatedWaterConsultPage = 1;
+  renderTreatedWaterConsultRows();
+});
 
 document.addEventListener("keydown", (event) => {
   if (document.querySelector('[data-view="passengers"]')?.hidden === false) {
@@ -6971,6 +7704,7 @@ function boot() {
   if (session) {
     bootDiesel();
     bootBitacora();
+    initTreatedWaterView();
     showDashboard(session);
     setSidebarCollapsed(sessionStorage.getItem("portoErp.sidebarCollapsed") === "true");
     return;
@@ -6979,6 +7713,7 @@ function boot() {
   usernameInput.focus();
   bootDiesel();
   bootBitacora();
+  initTreatedWaterView();
   resetPassengerInitialState();
   renderIcons();
 }
