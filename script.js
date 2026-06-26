@@ -284,6 +284,9 @@ const treatedWaterConsultRefs = {
   search: document.querySelector("#treatedWaterSearch"),
   back: document.querySelector("#treatedWaterBack"),
   export: document.querySelector("#treatedWaterExport"),
+  exportOptions: document.querySelector("#treatedWaterExportOptions"),
+  exportExcel: document.querySelector("#treatedWaterExportExcel"),
+  exportPdf: document.querySelector("#treatedWaterExportPdf"),
   refresh: document.querySelector("#treatedWaterRefresh"),
   rows: document.querySelector("#treatedWaterRows"),
   empty: document.querySelector("#treatedWaterEmpty"),
@@ -296,7 +299,13 @@ const treatedWaterConsultRefs = {
 
 const TREATED_WATER_TABLE = "AguaTratada";
 const TREATED_WATER_COLUMNS = "fecha,mes,año,nave,detalle,tipo_nave,tipo_movimiento,zona,cantidad,guia_remision,hora_inicio,hora_fin,tiempo_recarga,observaciones";
-const TREATED_WATER_TEMP_STORAGE_KEY = "portoErp.treatedWaterTempRecords";
+const TREATED_WATER_SHIPS = ["TALARA", "PARIÑAS", "CHIMERA"];
+const TREATED_WATER_STOCK_BASE_DATE = "2026-06-23";
+const TREATED_WATER_INITIAL_STOCK = {
+  "PARIÑAS": 0,
+  "TALARA": 2000,
+  "CHIMERA": 0
+};
 let treatedWaterConsultRecords = [];
 let treatedWaterConsultPage = 1;
 let treatedWaterConsultInitialized = false;
@@ -316,7 +325,7 @@ const treatedWaterPlatformCatalog = [
   { plataforma: "TT", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
   { plataforma: "HH", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
   { plataforma: "DD", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
-  { plataforma: "PN111", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
+  { plataforma: "PN11", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
   { plataforma: "GG", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
   { plataforma: "PN4", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
   { plataforma: "PN14", zona: "PEÑA NEGRA", tipoNave: "PLATAFORMA" },
@@ -344,20 +353,20 @@ const treatedWaterPlatformCatalog = [
   { plataforma: "LO14", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
   { plataforma: "VV", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
   { plataforma: "A8", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
-  { plataforma: "UU", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
+  { plataforma: "U", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
   { plataforma: "LO19", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
   { plataforma: "PP", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
   { plataforma: "ZZ", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
   { plataforma: "LO9", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
   { plataforma: "LO12", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
-  { plataforma: "HH", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
+  { plataforma: "H", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
   { plataforma: "LO15", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
   { plataforma: "LO8", zona: "LOBITOS", tipoNave: "PLATAFORMA" },
   { plataforma: "PQ", zona: "PROVIDENCIA", tipoNave: "PLATAFORMA" },
   { plataforma: "JJ", zona: "PROVIDENCIA", tipoNave: "PLATAFORMA" },
   { plataforma: "PV15", zona: "PROVIDENCIA", tipoNave: "PLATAFORMA" },
   { plataforma: "PG", zona: "PROVIDENCIA", tipoNave: "PLATAFORMA" },
-  { plataforma: "OV14", zona: "PROVIDENCIA", tipoNave: "PLATAFORMA" },
+  { plataforma: "PV14", zona: "PROVIDENCIA", tipoNave: "PLATAFORMA" },
   { plataforma: "PVX8", zona: "PROVIDENCIA", tipoNave: "PLATAFORMA" },
   { plataforma: "PVX13", zona: "PROVIDENCIA", tipoNave: "PLATAFORMA" },
   { plataforma: "LT1", zona: "LITORAL", tipoNave: "PLATAFORMA" },
@@ -382,7 +391,6 @@ const treatedWaterPlatformCatalog = [
   { plataforma: "SP3", zona: "SAN PERDO", tipoNave: "PLATAFORMA" },
   { plataforma: "SF1", zona: "SAN PERDO", tipoNave: "PLATAFORMA" },
   { plataforma: "RECARGA", zona: "TORTUGA", tipoNave: "MOVIMIENTO" },
-  { plataforma: "REINGRESO", zona: "TORTUGA", tipoNave: "MOVIMIENTO" },
   { plataforma: "TALARA", zona: "TORTUGA", tipoNave: "NAVE" },
   { plataforma: "PARIÑAS", zona: "TORTUGA", tipoNave: "NAVE" },
   { plataforma: "CHIMERA", zona: "TORTUGA", tipoNave: "NAVE" },
@@ -940,6 +948,31 @@ function showSuccessToast(title = "Se guardó con éxito", message = "El registr
   window.setTimeout(removeToast, 3600);
 }
 
+function showWarningToast(title = "Dato no válido", message = "Solo se aceptan números.") {
+  if (!toastContainer) {
+    return;
+  }
+
+  const toast = document.createElement("div");
+  toast.className = "toast-notification toast-warning";
+  toast.innerHTML = `
+    <span class="toast-icon"><i data-lucide="triangle-alert"></i></span>
+    <span class="toast-content"><strong>${escapeHtml(title)}</strong><span>${escapeHtml(message)}</span></span>
+    <button class="toast-close" type="button" aria-label="Cerrar notificación"><i data-lucide="x"></i></button>
+  `;
+
+  const removeToast = () => {
+    toast.classList.remove("visible");
+    window.setTimeout(() => toast.remove(), 250);
+  };
+
+  toast.querySelector(".toast-close")?.addEventListener("click", removeToast);
+  toastContainer.appendChild(toast);
+  renderIcons();
+  window.requestAnimationFrame(() => toast.classList.add("visible"));
+  window.setTimeout(removeToast, 3600);
+}
+
 function closeNotificationPanel() {
   if (notificationPanel && notificationButton) {
     notificationPanel.hidden = true;
@@ -1059,17 +1092,36 @@ function normalizeTreatedWaterValue(value) {
   return String(value || "").trim().toUpperCase();
 }
 
+function sanitizeDigitsOnlyInput(input, message = "Solo se aceptan números.") {
+  if (!input) {
+    return false;
+  }
+  const originalValue = input.value;
+  const sanitizedValue = originalValue.replace(/\D/g, "");
+  if (originalValue !== sanitizedValue) {
+    input.value = sanitizedValue;
+    showWarningToast("Solo números", message);
+    return true;
+  }
+  return false;
+}
+
+function getTreatedWaterCatalog() {
+  return treatedWaterPlatformCatalog.filter((item) => normalizeTreatedWaterValue(item.plataforma) !== "REINGRESO");
+}
+
 function populateTreatedWaterDetails() {
   if (!treatedWaterRefs.detail || treatedWaterRefs.detail.dataset.loaded === "true") {
     return;
   }
-  const duplicateCount = treatedWaterPlatformCatalog.reduce((acc, item) => {
+  const catalog = getTreatedWaterCatalog();
+  const duplicateCount = catalog.reduce((acc, item) => {
     const key = normalizeTreatedWaterValue(item.plataforma);
     acc[key] = (acc[key] || 0) + 1;
     return acc;
   }, {});
   treatedWaterRefs.detail.innerHTML = '<option value="">Seleccione detalle</option>';
-  treatedWaterPlatformCatalog.forEach((item, index) => {
+  catalog.forEach((item, index) => {
     const option = document.createElement("option");
     option.value = String(index);
     option.dataset.plataforma = item.plataforma;
@@ -1087,16 +1139,13 @@ function getSelectedTreatedWaterDetail() {
     return null;
   }
   const index = Number(rawValue);
-  return Number.isInteger(index) ? treatedWaterPlatformCatalog[index] || null : null;
+  return Number.isInteger(index) ? getTreatedWaterCatalog()[index] || null : null;
 }
 
 function resolveTreatedWaterMovement(detail) {
   const value = normalizeTreatedWaterValue(detail?.plataforma);
   if (value === "RECARGA") {
     return "RECARGA";
-  }
-  if (value === "REINGRESO") {
-    return "REINGRESO";
   }
   if (value === "TALARA" || value === "PARIÑAS") {
     return "TRANSFERENCIA";
@@ -1150,6 +1199,7 @@ function updateTreatedWaterObservationCount() {
 function isTreatedWaterReadyToSave() {
   const detail = getSelectedTreatedWaterDetail();
   const quantity = Number(treatedWaterRefs.qty?.value);
+  const guide = treatedWaterRefs.guide?.value.trim() || "";
   return Boolean(
     treatedWaterRefs.date?.value
     && treatedWaterRefs.month?.value
@@ -1161,7 +1211,7 @@ function isTreatedWaterReadyToSave() {
     && treatedWaterRefs.zone?.value
     && Number.isFinite(quantity)
     && quantity > 0
-    && treatedWaterRefs.guide?.value.trim()
+    && /^\d+$/.test(guide)
     && treatedWaterRefs.start?.value
     && treatedWaterRefs.end?.value
     && treatedWaterRefs.duration?.value
@@ -1208,7 +1258,7 @@ function buildTreatedWaterPayload() {
     tipo_nave: treatedWaterRefs.shipType?.value || "",
     tipo_movimiento: treatedWaterRefs.movement?.value || "",
     zona: treatedWaterRefs.zone?.value || "",
-    cantidad: treatedWaterRefs.qty?.value ? Number(treatedWaterRefs.qty.value) : null,
+    cantidad: treatedWaterRefs.qty?.value ? Number(treatedWaterRefs.qty.value.replace(/\D/g, "")) : null,
     guia_remision: treatedWaterRefs.guide?.value.trim() || "",
     hora_inicio: treatedWaterRefs.start?.value || "",
     hora_fin: treatedWaterRefs.end?.value || "",
@@ -1220,20 +1270,6 @@ function buildTreatedWaterPayload() {
 function getTreatedWaterAuthHeaders() {
   const session = getSession();
   return session?.accessToken ? { Authorization: `Bearer ${session.accessToken}` } : {};
-}
-
-function loadTreatedWaterTempRecords() {
-  try {
-    return JSON.parse(sessionStorage.getItem(TREATED_WATER_TEMP_STORAGE_KEY) || "[]");
-  } catch (error) {
-    return [];
-  }
-}
-
-function saveTreatedWaterTempRecord(payload) {
-  const records = loadTreatedWaterTempRecords();
-  records.push({ ...payload, saved_at: new Date().toISOString() });
-  sessionStorage.setItem(TREATED_WATER_TEMP_STORAGE_KEY, JSON.stringify(records));
 }
 
 function getTreatedWaterConsultFilters() {
@@ -1253,7 +1289,11 @@ function filterTreatedWaterRecords(records, filters = getTreatedWaterConsultFilt
   return records.filter((record) => {
     const fecha = String(record.fecha || "").slice(0, 10);
     const guia = String(record.guia_remision || "").toUpperCase();
-    return (!filters.startDate || fecha >= filters.startDate)
+    const movement = normalizeTreatedWaterValue(record.tipo_movimiento);
+    const detail = normalizeTreatedWaterValue(record.detalle);
+    return movement !== "REINGRESO"
+      && detail !== "REINGRESO"
+      && (!filters.startDate || fecha >= filters.startDate)
       && (!filters.endDate || fecha <= filters.endDate)
       && (!filters.ship || record.nave === filters.ship)
       && (!filters.detail || record.detalle === filters.detail)
@@ -1284,15 +1324,11 @@ async function saveTreatedWaterRecord() {
       },
       body: JSON.stringify(payload)
     });
-    window.dispatchEvent(new CustomEvent("treated-water:save", { detail: payload }));
     showSuccessToast("Registro guardado", "El registro de agua tratada se guardó correctamente.");
     clearTreatedWaterForm();
   } catch (error) {
     console.warn("No se pudo guardar AguaTratada.", error);
-    saveTreatedWaterTempRecord(payload);
-    window.dispatchEvent(new CustomEvent("treated-water:save", { detail: payload }));
-    showSuccessToast("Registro temporal guardado", "El registro de prueba se guardó temporalmente y aparecerá en Consulta.");
-    clearTreatedWaterForm();
+    showWarningToast("No se pudo guardar", error.message || "Revisa la conexión con Supabase e intenta nuevamente.");
   } finally {
     if (treatedWaterRefs.save && originalHtml) {
       treatedWaterRefs.save.innerHTML = originalHtml;
@@ -1306,6 +1342,7 @@ function initTreatedWaterView() {
   if (!treatedWaterRefs.form) {
     return;
   }
+  sessionStorage.removeItem("portoErp.treatedWaterTempRecords");
   populateTreatedWaterDetails();
   if (treatedWaterRefs.date && !treatedWaterRefs.date.value) {
     treatedWaterRefs.date.value = getTodayValue();
@@ -1321,36 +1358,20 @@ function populateTreatedWaterConsultFilters() {
   if (!treatedWaterConsultRefs.form || treatedWaterConsultInitialized) {
     return;
   }
-  fillTreatedWaterSelect(treatedWaterConsultRefs.ship, [
-    "TALARA",
-    "PARIÑAS",
-    "LOBITOS EXPRESS",
-    "OLYMPIC EXPRESS",
-    "NEPTUNE EXPRESS",
-    "DONALD ROBIN",
-    "SHEILA R",
-    "IRIS",
-    "CHIP II",
-    "BUCKLEY EXPRESS",
-    "CABO BLANCO",
-    "ELIZABETH",
-    "ORO",
-    "ROGUE",
-    "MR BOB"
-  ], "Seleccione una nave");
+  fillTreatedWaterSelect(treatedWaterConsultRefs.ship, TREATED_WATER_SHIPS, "Seleccione una nave");
   fillTreatedWaterSelect(
     treatedWaterConsultRefs.detail,
-    [...new Set(treatedWaterPlatformCatalog.map((item) => item.plataforma))],
+    [...new Set(getTreatedWaterCatalog().map((item) => item.plataforma))],
     "Seleccione detalle"
   );
   fillTreatedWaterSelect(
     treatedWaterConsultRefs.zone,
-    [...new Set(treatedWaterPlatformCatalog.map((item) => item.zona).filter(Boolean))],
+    [...new Set(getTreatedWaterCatalog().map((item) => item.zona).filter(Boolean))],
     "Seleccione zona"
   );
   fillTreatedWaterSelect(
     treatedWaterConsultRefs.shipType,
-    [...new Set(treatedWaterPlatformCatalog.map((item) => item.tipoNave).filter(Boolean))],
+    [...new Set(getTreatedWaterCatalog().map((item) => item.tipoNave).filter(Boolean))],
     "Seleccione tipo"
   );
   treatedWaterConsultInitialized = true;
@@ -1414,17 +1435,33 @@ async function loadTreatedWaterConsultRecords() {
     const apiRecords = await supabaseRequest(`/rest/v1/${TREATED_WATER_TABLE}?${query}`, {
       headers: getTreatedWaterAuthHeaders()
     }) || [];
-    const tempRecords = filterTreatedWaterRecords(loadTreatedWaterTempRecords(), filters);
-    treatedWaterConsultRecords = [...apiRecords, ...tempRecords];
+    treatedWaterConsultRecords = filterTreatedWaterRecords(apiRecords, filters);
     treatedWaterConsultPage = 1;
   } catch (error) {
     console.warn("No se pudo cargar la consulta de AguaTratada.", error);
-    treatedWaterConsultRecords = filterTreatedWaterRecords(loadTreatedWaterTempRecords(), filters);
+    treatedWaterConsultRecords = [];
     treatedWaterConsultPage = 1;
+    showWarningToast("No se pudo consultar", error.message || "Revisa la conexión con Supabase e intenta nuevamente.");
   } finally {
     setTreatedWaterConsultLoading(false);
     renderTreatedWaterConsultRows();
   }
+}
+
+async function loadTreatedWaterReportHistory(reportDate) {
+  if (!reportDate) {
+    return [];
+  }
+  const params = new URLSearchParams({
+    select: TREATED_WATER_COLUMNS,
+    fecha: `gte.${TREATED_WATER_STOCK_BASE_DATE}`,
+    order: "fecha.asc,hora_inicio.asc"
+  });
+  params.append("fecha", `lte.${reportDate}`);
+  const records = await supabaseRequest(`/rest/v1/${TREATED_WATER_TABLE}?${params}`, {
+    headers: getTreatedWaterAuthHeaders()
+  }) || [];
+  return filterTreatedWaterRecords(records, {});
 }
 
 function setTreatedWaterConsultLoading(isLoading) {
@@ -1478,7 +1515,7 @@ function renderTreatedWaterConsultRow(row) {
       <td>${escapeHtml(row.nave || "")}</td>
       <td>${escapeHtml(row.detalle || "")}</td>
       <td>${escapeHtml(row.tipo_nave || "")}</td>
-      <td>${escapeHtml(row.tipo_movimiento || "")}</td>
+      <td>${renderTreatedWaterMovementBadge(row.tipo_movimiento)}</td>
       <td>${escapeHtml(row.zona || "")}</td>
       <td>${escapeHtml(formatNumber(row.cantidad || 0))}</td>
       <td>${escapeHtml(row.guia_remision || "")}</td>
@@ -1489,46 +1526,594 @@ function renderTreatedWaterConsultRow(row) {
   `;
 }
 
+function renderTreatedWaterMovementBadge(value) {
+  const movement = normalizeTreatedWaterValue(value);
+  const className = movement ? `treated-water-movement-badge movement-${movement.toLowerCase()}` : "";
+  return movement ? `<span class="${className}">${escapeHtml(movement)}</span>` : "";
+}
+
 function clearTreatedWaterConsultFilters() {
   treatedWaterConsultRefs.form?.reset();
   treatedWaterConsultPage = 1;
   loadTreatedWaterConsultRecords();
 }
 
-function exportTreatedWaterConsultRecords() {
-  const headers = [
-    "Fecha",
-    "Nave",
-    "Detalle / Plataforma",
-    "Tipo de Nave",
-    "Tipo de Movimiento",
-    "Zona",
-    "Cantidad (Gal)",
-    "N° Guía / Vale",
-    "Hora Inicio",
-    "Hora Fin",
-    "Tiempo de Recarga"
+function getTreatedWaterReportDate(records = treatedWaterConsultRecords) {
+  return treatedWaterConsultRefs.startDate?.value
+    || records.find((row) => row.fecha)?.fecha?.slice(0, 10)
+    || getTodayValue();
+}
+
+function getTreatedWaterReportRows(records = treatedWaterConsultRecords, reportDate = getTreatedWaterReportDate(records)) {
+  return filterTreatedWaterRecords(records)
+    .filter((row) => String(row.fecha || "").slice(0, 10) === reportDate)
+    .slice()
+    .sort((a, b) => {
+      const dateCompare = String(a.fecha || "").localeCompare(String(b.fecha || ""));
+      if (dateCompare !== 0) {
+        return dateCompare;
+      }
+      return String(a.hora_inicio || "").localeCompare(String(b.hora_inicio || ""));
+    });
+}
+
+function getTreatedWaterShipLabel(ship) {
+  const value = normalizeTreatedWaterValue(ship);
+  return value === "TALARA" || value === "PARIÑAS" ? `${value} (AT)` : value;
+}
+
+function getTreatedWaterMovementTotals(rows, ship) {
+  const shipRows = rows.filter((row) => normalizeTreatedWaterValue(row.nave) === ship);
+  const recharge = shipRows
+    .filter((row) => normalizeTreatedWaterValue(row.tipo_movimiento) === "RECARGA")
+    .reduce((sum, row) => sum + toNumber(row.cantidad), 0);
+  const dispatch = shipRows
+    .filter((row) => normalizeTreatedWaterValue(row.tipo_movimiento) === "DESPACHO")
+    .reduce((sum, row) => sum + toNumber(row.cantidad), 0);
+  const transferOut = shipRows
+    .filter((row) => normalizeTreatedWaterValue(row.tipo_movimiento) === "TRANSFERENCIA")
+    .reduce((sum, row) => sum + toNumber(row.cantidad), 0);
+  const transferIn = rows
+    .filter((row) => normalizeTreatedWaterValue(row.tipo_movimiento) === "TRANSFERENCIA"
+      && normalizeTreatedWaterValue(row.detalle) === ship)
+    .reduce((sum, row) => sum + toNumber(row.cantidad), 0);
+  const impact = recharge + transferIn - dispatch - transferOut;
+  return { recharge, dispatch, transferOut, transferIn, impact };
+}
+
+function getTreatedWaterInitialStockForDate(ship, reportDate, historyRows) {
+  const baseStock = TREATED_WATER_INITIAL_STOCK[ship] || 0;
+  const previousRows = filterTreatedWaterRecords(historyRows || [])
+    .filter((row) => {
+      const fecha = String(row.fecha || "").slice(0, 10);
+      return fecha >= TREATED_WATER_STOCK_BASE_DATE && fecha < reportDate;
+    });
+  return baseStock + getTreatedWaterMovementTotals(previousRows, ship).impact;
+}
+
+function buildTreatedWaterReportData(records = treatedWaterConsultRecords, historyRecords = records) {
+  const reportDate = getTreatedWaterReportDate(records);
+  const rows = getTreatedWaterReportRows(records, reportDate);
+  const ships = [...TREATED_WATER_SHIPS];
+  [...rows, ...(historyRecords || [])].forEach((row) => {
+    const ship = normalizeTreatedWaterValue(row.nave);
+    if (ship && !ships.includes(ship)) {
+      ships.push(ship);
+    }
+  });
+
+  const balance = ships.map((ship) => {
+    const { recharge, dispatch, transferOut, transferIn } = getTreatedWaterMovementTotals(rows, ship);
+    const initialStock = getTreatedWaterInitialStockForDate(ship, reportDate, historyRecords);
+    const finalStock = initialStock + recharge + transferIn - dispatch - transferOut;
+    return { ship, initialStock, recharge, transferIn, dispatch, transferOut, finalStock };
+  });
+
+  const recharges = ships.map((ship) => ({
+    ship,
+    quantity: rows
+      .filter((row) => normalizeTreatedWaterValue(row.tipo_movimiento) === "RECARGA"
+        && normalizeTreatedWaterValue(row.nave) === ship)
+      .reduce((sum, row) => sum + toNumber(row.cantidad), 0)
+  }));
+  const dispatches = [...rows
+    .filter((row) => normalizeTreatedWaterValue(row.tipo_movimiento) === "DESPACHO")
+    .reduce((map, row) => {
+      const detail = row.detalle || "-";
+      map.set(detail, (map.get(detail) || 0) + toNumber(row.cantidad));
+      return map;
+    }, new Map())]
+    .map(([platform, quantity]) => ({ platform, quantity }));
+  const transfers = rows
+    .filter((row) => normalizeTreatedWaterValue(row.tipo_movimiento) === "TRANSFERENCIA")
+    .map((row) => ({
+      origin: row.nave || "",
+      destination: row.detalle || "",
+      quantity: toNumber(row.cantidad)
+    }));
+  const totals = {
+    initialStock: balance.reduce((sum, row) => sum + row.initialStock, 0),
+    recharge: balance.reduce((sum, row) => sum + row.recharge, 0),
+    dispatch: balance.reduce((sum, row) => sum + row.dispatch, 0),
+    finalStock: balance.reduce((sum, row) => sum + row.finalStock, 0),
+    movements: rows.length,
+    averageDuration: getTreatedWaterAverageDuration(rows)
+  };
+
+  return { reportDate, rows, balance, recharges, dispatches, transfers, totals };
+}
+
+function getTreatedWaterAverageDuration(rows) {
+  const minutes = rows
+    .map((row) => parseTreatedWaterDurationMinutes(row.tiempo_recarga))
+    .filter((value) => value > 0);
+  if (!minutes.length) {
+    return "00:00";
+  }
+  const average = Math.round(minutes.reduce((sum, value) => sum + value, 0) / minutes.length);
+  return `${String(Math.floor(average / 60)).padStart(2, "0")}:${String(average % 60).padStart(2, "0")}`;
+}
+
+function parseTreatedWaterDurationMinutes(value) {
+  const match = String(value || "").match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) {
+    return 0;
+  }
+  return Number(match[1]) * 60 + Number(match[2]);
+}
+
+function formatTreatedWaterReportDate(value) {
+  const date = new Date(`${value}T00:00:00`);
+  return date.toLocaleDateString("es-PE", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric"
+  });
+}
+
+function getTreatedWaterReportFilename(extension) {
+  return `reporte-diario-agua-tratada-${getTreatedWaterReportDate()}.${extension}`;
+}
+
+function setTreatedWaterExportMenuOpen(isOpen) {
+  if (treatedWaterConsultRefs.exportOptions) {
+    treatedWaterConsultRefs.exportOptions.hidden = !isOpen;
+  }
+  treatedWaterConsultRefs.export?.setAttribute("aria-expanded", String(isOpen));
+}
+
+function toggleTreatedWaterExportMenu() {
+  setTreatedWaterExportMenuOpen(Boolean(treatedWaterConsultRefs.exportOptions?.hidden));
+}
+
+function requireTreatedWaterReportRows() {
+  if (treatedWaterConsultRecords.length) {
+    return true;
+  }
+  showWarningToast("Sin registros", "No hay registros para exportar.");
+  return false;
+}
+
+function styleTreatedWaterExcelHeaderRow(row) {
+  row.eachCell((cell) => {
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF007D70" } };
+    cell.font = { color: { argb: "FFFFFFFF" }, bold: true, size: 11 };
+    cell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+    cell.border = {
+      top: { style: "thin", color: { argb: "FFDCE6EF" } },
+      left: { style: "thin", color: { argb: "FFDCE6EF" } },
+      bottom: { style: "thin", color: { argb: "FFDCE6EF" } },
+      right: { style: "thin", color: { argb: "FFDCE6EF" } }
+    };
+  });
+}
+
+function styleTreatedWaterExcelBodyRow(row, total = false) {
+  row.eachCell((cell) => {
+    cell.font = { color: { argb: total ? "FFFFFFFF" : "FF001B5B" }, bold: total };
+    cell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+    cell.border = {
+      top: { style: "thin", color: { argb: "FFE0E7EF" } },
+      left: { style: "thin", color: { argb: "FFE0E7EF" } },
+      bottom: { style: "thin", color: { argb: "FFE0E7EF" } },
+      right: { style: "thin", color: { argb: "FFE0E7EF" } }
+    };
+    if (total) {
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF007D70" } };
+    }
+  });
+}
+
+function addTreatedWaterExcelSectionTitle(sheet, rowNumber, title) {
+  sheet.mergeCells(rowNumber, 1, rowNumber, 10);
+  const cell = sheet.getCell(rowNumber, 1);
+  cell.value = title;
+  cell.font = { bold: true, size: 14, color: { argb: "FF001B5B" } };
+  cell.alignment = { vertical: "middle" };
+}
+
+async function exportTreatedWaterExcel() {
+  await loadTreatedWaterConsultRecords();
+  if (!requireTreatedWaterReportRows()) {
+    return;
+  }
+  if (!window.ExcelJS) {
+    showWarningToast("Exportación no disponible", "No se pudo cargar el exportador de Excel.");
+    return;
+  }
+
+  const reportDate = getTreatedWaterReportDate(treatedWaterConsultRecords);
+  const historyRecords = await loadTreatedWaterReportHistory(reportDate);
+  const report = buildTreatedWaterReportData(treatedWaterConsultRecords, historyRecords);
+  const templateResponse = await fetch("assets/templates/reporte-diario-agua-tratada.xlsx", { cache: "no-store" });
+  if (!templateResponse.ok) {
+    showWarningToast("Plantilla no encontrada", "No se pudo cargar la plantilla Excel de Agua Tratada.");
+    return;
+  }
+
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(await templateResponse.arrayBuffer());
+  const sheet = workbook.getWorksheet("REPORTE DIARIO") || workbook.worksheets[0];
+  if (!sheet) {
+    showWarningToast("Plantilla inválida", "La plantilla no contiene la hoja REPORTE DIARIO.");
+    return;
+  }
+  sheet.conditionalFormattings = [];
+
+  const setValue = (cellAddress, value) => {
+    sheet.getCell(cellAddress).value = value;
+  };
+  const setNumber = (cellAddress, value) => {
+    const cell = sheet.getCell(cellAddress);
+    cell.value = toNumber(value);
+    cell.numFmt = "#,##0";
+  };
+  const setFormula = (cellAddress, formula, result = undefined) => {
+    sheet.getCell(cellAddress).value = { formula, result };
+  };
+  const parseTime = (value) => {
+    const [hours = 0, minutes = 0, seconds = 0] = String(value || "00:00").split(":").map(Number);
+    return ((hours * 60 * 60) + (minutes * 60) + seconds) / 86400;
+  };
+  const setTime = (cellAddress, value) => {
+    const cell = sheet.getCell(cellAddress);
+    cell.value = value ? parseTime(value) : "";
+    cell.numFmt = "hh:mm";
+  };
+  const setDate = (cellAddress, value) => {
+    const cell = sheet.getCell(cellAddress);
+    cell.value = value ? createExcelSafeDate(value) : "";
+    cell.numFmt = "dd/mm/yyyy";
+  };
+  const movementFill = (movement) => {
+    const value = normalizeTreatedWaterValue(movement);
+    if (value === "DESPACHO") {
+      return { fill: "FFFFD9D9", font: "FFFF0000" };
+    }
+    if (value === "RECARGA") {
+      return { fill: "FFE4F6EF", font: "FF008F54" };
+    }
+    if (value === "TRANSFERENCIA") {
+      return { fill: "FFFFE2C7", font: "FFF57000" };
+    }
+    return { fill: "FFFFFFFF", font: "FF001B5B" };
+  };
+  const applyMovementStyle = (cellAddress, movement) => {
+    const colors = movementFill(movement);
+    const row = Number(String(cellAddress).replace(/\D/g, ""));
+    const addresses = String(cellAddress).startsWith("H") && row ? [`H${row}`, `I${row}`] : [cellAddress];
+    addresses.forEach((address) => {
+      const cell = sheet.getCell(address);
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: colors.fill } };
+      cell.font = { ...(cell.font || {}), bold: true, color: { argb: colors.font } };
+      cell.alignment = { ...(cell.alignment || {}), horizontal: "center", vertical: "middle" };
+    });
+  };
+  const addMovementConditionalFormatting = (lastRow) => {
+    if (typeof sheet.addConditionalFormatting !== "function") {
+      return;
+    }
+    const styleFor = (movement) => {
+      const colors = movementFill(movement);
+      return {
+        fill: { type: "pattern", pattern: "solid", fgColor: { argb: colors.fill }, bgColor: { argb: colors.fill } },
+        font: { bold: true, color: { argb: colors.font } }
+      };
+    };
+    sheet.addConditionalFormatting({
+      ref: `H28:I${lastRow}`,
+      rules: [
+        { type: "containsText", operator: "containsText", text: "DESPACHO", priority: 1, style: styleFor("DESPACHO") },
+        { type: "containsText", operator: "containsText", text: "RECARGA", priority: 2, style: styleFor("RECARGA") },
+        { type: "containsText", operator: "containsText", text: "TRANSFERENCIA", priority: 3, style: styleFor("TRANSFERENCIA") }
+      ]
+    });
+  };
+  const clearCellValues = (addresses) => addresses.forEach((address) => {
+    sheet.getCell(address).value = "";
+  });
+
+  setValue("A1", "REPORTE DIARIO DE AGUA TRATADA - FLOTA MARÍTIMA");
+  setValue("D4", `📅 ${formatTreatedWaterReportDate(report.reportDate)}`);
+  setValue("N10", "STOCK FINAL\n(GAL)");
+  sheet.getColumn("E").width = 13;
+
+  const parinas = report.balance.find((row) => normalizeTreatedWaterValue(row.ship) === "PARIÑAS") || {};
+  const talara = report.balance.find((row) => normalizeTreatedWaterValue(row.ship) === "TALARA") || {};
+  [
+    { row: 11, data: parinas, label: "PARIÑAS (AT)" },
+    { row: 12, data: talara, label: "TALARA (AT)" }
+  ].forEach(({ row, data, label }) => {
+    setValue(`B${row}`, label);
+    setNumber(`D${row}`, data.initialStock || 0);
+    setNumber(`F${row}`, data.recharge || 0);
+    setNumber(`H${row}`, data.transferIn || 0);
+    setNumber(`J${row}`, data.dispatch || 0);
+    setNumber(`L${row}`, data.transferOut || 0);
+    setFormula(`N${row}`, `D${row}+F${row}+H${row}-J${row}-L${row}`, data.finalStock || 0);
+    sheet.getCell(`N${row}`).numFmt = "#,##0";
+  });
+
+  setValue("B18", "PARIÑAS (AT)");
+  setFormula("D18", "F11", parinas.recharge || 0);
+  setValue("B19", "TALARA (AT)");
+  setFormula("D19", "F12", talara.recharge || 0);
+  setValue("B20", "TOTAL RECARGAS");
+  setFormula("D20", "SUM(D18:D19)", report.totals.recharge || 0);
+
+  clearCellValues(["G18", "J18", "G19", "J19", "G20", "J20"]);
+  report.dispatches.slice(0, 3).forEach((row, index) => {
+    const excelRow = 18 + index;
+    setValue(`G${excelRow}`, row.platform || "");
+    setNumber(`J${excelRow}`, row.quantity || 0);
+  });
+  setValue("G21", "TOTAL DESPACHOS");
+  setFormula("J21", "SUM(J18:J20)", report.totals.dispatch || 0);
+
+  clearCellValues(["M18", "N18", "O18", "M19", "N19", "O19"]);
+  report.transfers.slice(0, 2).forEach((row, index) => {
+    const excelRow = 18 + index;
+    setValue(`M${excelRow}`, getTreatedWaterShipLabel(row.origin || ""));
+    setValue(`N${excelRow}`, getTreatedWaterShipLabel(row.destination || ""));
+    setNumber(`O${excelRow}`, row.quantity || 0);
+  });
+  setValue("M20", "TOTAL TRANSFERENCIA");
+  setFormula("O20", "SUM(O18:O19)", report.balance.reduce((sum, row) => sum + row.transferOut, 0));
+
+  const copyDetailRowStyle = (targetRow) => {
+    const sourceRow = 30;
+    sheet.getRow(targetRow).height = sheet.getRow(sourceRow).height;
+    for (let col = 1; col <= 17; col += 1) {
+      const sourceCell = sheet.getCell(sourceRow, col);
+      const targetCell = sheet.getCell(targetRow, col);
+      targetCell.style = JSON.parse(JSON.stringify(sourceCell.style || {}));
+    }
+    ["F:G", "H:I", "J:K", "L:M"].forEach((range) => {
+      const [startCol, endCol] = range.split(":");
+      try {
+        sheet.mergeCells(`${startCol}${targetRow}:${endCol}${targetRow}`);
+      } catch (error) {
+        // The row may already be merged if the template grows later.
+      }
+    });
+  };
+  const fillDetailRow = (record, row) => {
+    setDate(`B${row}`, String(record.fecha || "").slice(0, 10));
+    setTime(`C${row}`, record.hora_inicio || "");
+    setTime(`D${row}`, record.hora_fin || "");
+    setValue(`E${row}`, getTreatedWaterShipLabel(record.nave || ""));
+    setValue(`F${row}`, record.detalle || "");
+    setValue(`H${row}`, normalizeTreatedWaterValue(record.tipo_movimiento));
+    applyMovementStyle(`H${row}`, record.tipo_movimiento);
+    setValue(`J${row}`, record.zona || "");
+    setNumber(`L${row}`, record.cantidad || 0);
+    setValue(`N${row}`, record.guia_remision || "");
+    setFormula(`O${row}`, `IF(D${row}<C${row},D${row}+1-C${row},D${row}-C${row})`, parseTreatedWaterDurationMinutes(record.tiempo_recarga) / 1440);
+    sheet.getCell(`O${row}`).numFmt = "hh:mm";
+  };
+
+  [28, 29, 30].forEach((row) => {
+    clearCellValues([`B${row}`, `C${row}`, `D${row}`, `E${row}`, `F${row}`, `H${row}`, `J${row}`, `L${row}`, `N${row}`, `O${row}`]);
+  });
+  report.rows.forEach((record, index) => {
+    const row = 28 + index;
+    if (row > 30) {
+      copyDetailRowStyle(row);
+    }
+    fillDetailRow(record, row);
+  });
+  addMovementConditionalFormatting(Math.max(30, 27 + report.rows.length));
+
+  workbook.calcProperties = { fullCalcOnLoad: true };
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  downloadBlob(
+    new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }),
+    getTreatedWaterReportFilename("xlsx")
+  );
+}
+
+async function exportTreatedWaterPdf() {
+  await loadTreatedWaterConsultRecords();
+  if (!requireTreatedWaterReportRows()) {
+    return;
+  }
+  if (!window.jspdf?.jsPDF) {
+    showWarningToast("Exportación no disponible", "No se pudo cargar el generador de PDF.");
+    return;
+  }
+
+  const reportDate = getTreatedWaterReportDate(treatedWaterConsultRecords);
+  const historyRecords = await loadTreatedWaterReportHistory(reportDate);
+  const report = buildTreatedWaterReportData(treatedWaterConsultRecords, historyRecords);
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const navy = [0, 27, 91];
+  const teal = [0, 125, 112];
+  const orange = [245, 112, 0];
+  const green = [0, 143, 84];
+  const logoLeft = await loadImageDataUrl("assets/templates/reporte-diario-logo-izquierdo.png");
+  const logoRight = await loadImageDataUrl("assets/templates/reporte-diario-logo-derecho.jpeg");
+
+  const drawHeader = () => {
+    if (logoLeft) {
+      doc.addImage(logoLeft, "PNG", 5, 5, 24, 16);
+    }
+    if (logoRight) {
+      doc.addImage(logoRight, "PNG", 174, 6, 27, 15);
+    }
+    doc.setTextColor(...navy);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(17);
+    doc.text("REPORTE DIARIO DE AGUA TRATADA - FLOTA MARÍTIMA", 105, 14, { align: "center" });
+    doc.setTextColor(...teal);
+    doc.setFontSize(10);
+    doc.text(formatTreatedWaterReportDate(report.reportDate), 105, 23, { align: "center" });
+    doc.setDrawColor(...teal);
+    doc.line(0, 29, 210, 29);
+  };
+
+  drawHeader();
+  let y = 38;
+  const cardWidth = 44;
+  const cards = [
+    ["AGUA DISPONIBLE INICIAL", report.totals.initialStock, "Stock total al inicio del día", teal],
+    ["AGUA DESPACHADA", report.totals.dispatch, "Agua despachada a plataformas", orange],
+    ["AGUA RECARGADA", report.totals.recharge, "Agua recibida desde Playa Tortuga", [0, 118, 190]],
+    ["STOCK FINAL TOTAL", report.totals.finalStock, "Stock final total de todas las naves", green]
   ];
-  const lines = treatedWaterConsultRecords.map((row) => [
-    row.fecha || "",
-    row.nave || "",
-    row.detalle || "",
-    row.tipo_nave || "",
-    row.tipo_movimiento || "",
-    row.zona || "",
-    row.cantidad ?? "",
-    row.guia_remision || "",
-    row.hora_inicio || "",
-    row.hora_fin || "",
-    row.tiempo_recarga || ""
-  ]);
-  const csv = [headers, ...lines]
-    .map((line) => line.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(","))
-    .join("\n");
-  downloadBlob(new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" }), "consulta_agua_tratada.csv");
+  cards.forEach((card, index) => {
+    const x = 5 + index * 51;
+    doc.setDrawColor(222, 231, 240);
+    doc.roundedRect(x, y, cardWidth, 36, 2, 2);
+    doc.setTextColor(...navy);
+    doc.setFontSize(6.5);
+    doc.text(card[0], x + 20, y + 11, { align: "center", maxWidth: 28 });
+    doc.setTextColor(...card[3]);
+    doc.setFontSize(17);
+    doc.text(`${formatNumber(card[1])} gal`, x + 20, y + 23, { align: "center" });
+    doc.setTextColor(...navy);
+    doc.setFontSize(6);
+    doc.text(card[2], x + 20, y + 31, { align: "center", maxWidth: 32 });
+  });
+
+  y += 48;
+  doc.setTextColor(...navy);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.text("BALANCE DIARIO POR NAVE", 8, y);
+  doc.autoTable({
+    startY: y + 6,
+    head: [["NAVE", "STOCK INICIAL (Gal)", "RECARGA (Gal)", "TRANSFERENCIA ENTRADA (Gal)", "DESPACHO (Gal)", "TRANSFERENCIA SALIDA (Gal)", "STOCK FINAL (Gal)"]],
+    body: report.balance.map((row) => [
+      getTreatedWaterShipLabel(row.ship),
+      formatNumber(row.initialStock),
+      formatNumber(row.recharge),
+      formatNumber(row.transferIn),
+      formatNumber(row.dispatch),
+      formatNumber(row.transferOut),
+      formatNumber(row.finalStock)
+    ]),
+    theme: "grid",
+    styles: { fontSize: 7, textColor: navy, halign: "center", cellPadding: 2 },
+    headStyles: { fillColor: teal, textColor: 255, fontStyle: "bold" }
+  });
+
+  y = doc.lastAutoTable.finalY + 8;
+  const summaryTables = [
+    {
+      title: "RECARGAS DESDE PLAYA TORTUGA",
+      head: [["NAVE DESTINO", "CANTIDAD (Gal)"]],
+      body: report.recharges.map((row) => [getTreatedWaterShipLabel(row.ship), formatNumber(row.quantity)])
+    },
+    {
+      title: "DESPACHOS POR PLATAFORMA",
+      head: [["PLATAFORMA", "CANTIDAD (Gal)"]],
+      body: report.dispatches.length ? report.dispatches.map((row) => [row.platform, formatNumber(row.quantity)]) : [["-", "0"]]
+    },
+    {
+      title: "TRANSFERENCIAS ENTRE NAVES",
+      head: [["ORIGEN", "DESTINO", "CANTIDAD (Gal)"]],
+      body: report.transfers.length ? report.transfers.map((row) => [row.origin, row.destination, formatNumber(row.quantity)]) : [["No se registraron transferencias", "", ""]]
+    }
+  ];
+  summaryTables.forEach((table, index) => {
+    const x = 5 + index * 67;
+    doc.setTextColor(...navy);
+    doc.setFontSize(8);
+    doc.text(table.title, x, y);
+    doc.autoTable({
+      startY: y + 4,
+      margin: { left: x, right: 210 - x - 62 },
+      tableWidth: 62,
+      head: table.head,
+      body: table.body,
+      theme: "grid",
+      styles: { fontSize: 6.4, textColor: navy, halign: "center", cellPadding: 1.8 },
+      headStyles: { fillColor: teal, textColor: 255, fontStyle: "bold" }
+    });
+  });
+
+  y = Math.max(doc.lastAutoTable.finalY + 10, y + 56);
+  doc.setTextColor(...navy);
+  doc.setFontSize(10);
+  doc.text("DETALLE DE MOVIMIENTOS DEL DÍA", 8, y);
+  doc.autoTable({
+    startY: y + 5,
+    head: [["FECHA", "HORA INICIO", "HORA FIN", "NAVE", "DETALLE / PLATAFORMA", "TIPO MOVIMIENTO", "ZONA", "CANTIDAD (Gal)", "N° VALE", "TIEMPO DE RECARGA"]],
+    body: report.rows.map((row) => [
+      formatDisplayDate(String(row.fecha || "").slice(0, 10)),
+      row.hora_inicio || "",
+      row.hora_fin || "",
+      getTreatedWaterShipLabel(row.nave || ""),
+      row.detalle || "",
+      row.tipo_movimiento || "",
+      row.zona || "",
+      formatNumber(row.cantidad || 0),
+      row.guia_remision || "",
+      row.tiempo_recarga || ""
+    ]),
+    theme: "grid",
+    styles: { fontSize: 5.7, textColor: navy, halign: "center", cellPadding: 1.6 },
+    headStyles: { fillColor: teal, textColor: 255, fontStyle: "bold" },
+    didParseCell: (data) => {
+      if (data.section === "body" && data.column.index === 5) {
+        const movement = normalizeTreatedWaterValue(data.cell.raw);
+        if (movement === "DESPACHO") {
+          data.cell.styles.fillColor = [255, 218, 218];
+          data.cell.styles.textColor = [255, 0, 0];
+          data.cell.styles.fontStyle = "bold";
+        } else if (movement === "RECARGA") {
+          data.cell.styles.fillColor = [228, 246, 239];
+          data.cell.styles.textColor = teal;
+          data.cell.styles.fontStyle = "bold";
+        } else if (movement === "TRANSFERENCIA") {
+          data.cell.styles.fillColor = [255, 226, 199];
+          data.cell.styles.textColor = orange;
+          data.cell.styles.fontStyle = "bold";
+        }
+      }
+    },
+    didDrawPage: (data) => {
+      if (data.pageNumber > 1) {
+        drawHeader();
+      }
+    }
+  });
+
+  const footerY = Math.min(doc.lastAutoTable.finalY + 8, 283);
+  doc.setFontSize(6);
+  doc.setTextColor(...navy);
+  doc.text(`Fecha del reporte: ${formatDisplayDate(report.reportDate)}   |   Total movimientos: ${report.totals.movements}   |   Tiempo promedio de recarga: ${report.totals.averageDuration}`, 8, footerY);
+  doc.text("Gal = Galones | El stock final se calcula según los movimientos registrados en Agua Tratada.", 8, footerY + 5);
+
+  const blob = doc.output("blob");
+  downloadBlob(blob, getTreatedWaterReportFilename("pdf"));
 }
 
 function initTreatedWaterConsultView() {
+  sessionStorage.removeItem("portoErp.treatedWaterTempRecords");
   populateTreatedWaterConsultFilters();
   loadTreatedWaterConsultRecords();
 }
@@ -2048,6 +2633,17 @@ function normalizeDieselName(value) {
   return normalized;
 }
 
+function normalizeDieselShift(value) {
+  const normalized = normalizeDieselName(value);
+  if (normalized === "DIURNO" || normalized === "A") {
+    return "DIURNO";
+  }
+  if (normalized === "NOCTURNO" || normalized === "B") {
+    return "NOCTURNO";
+  }
+  return normalized;
+}
+
 function normalizeDieselDisplayName(value) {
   const text = repairLegacyText(value);
   if (normalizeDieselName(text) === "PARINAS" || text.includes(`PARI${String.fromCharCode(195)}`)) {
@@ -2333,22 +2929,34 @@ async function refreshDieselSondajeAvailability() {
   }
 }
 
-function getDieselInitialStock(ship) {
-  return dieselInitialStockCache.get(normalizeDieselName(ship)) || 0;
+function getDieselInitialStockCacheKey(ship, date = dieselRefs.date?.value || "", shift = getCheckedValue("dieselShift") || "") {
+  return [normalizeDieselName(ship), date || "", normalizeDieselShift(shift || "")].join("__");
+}
+
+function getDieselInitialStock(ship, date = dieselRefs.date?.value || "", shift = getCheckedValue("dieselShift") || "") {
+  return dieselInitialStockCache.get(getDieselInitialStockCacheKey(ship, date, shift)) || 0;
 }
 
 async function refreshDieselInitialStock() {
   const session = getSession();
   const ship = dieselRefs.origin?.value;
+  const date = dieselRefs.date?.value || "";
+  const shift = getCheckedValue("dieselShift") || "";
   const requestedShip = ship;
+  const requestedDate = date;
+  const requestedShift = shift;
 
   if (!session?.accessToken || !ship) {
     return;
   }
 
-  const query = new URLSearchParams({
-    p_nave: ship
-  });
+  const query = new URLSearchParams({ p_nave: ship });
+  if (date) {
+    query.set("p_fecha", date);
+  }
+  if (shift) {
+    query.set("p_turno", shift);
+  }
 
   try {
     const rows = await supabaseRequest(`/rest/v1/rpc/ultimo_stock_diesel?${query}`, {
@@ -2357,10 +2965,17 @@ async function refreshDieselInitialStock() {
       }
     });
     const stock = Number(rows?.[0]?.stock_final ?? 0);
-    if (dieselRefs.origin?.value !== requestedShip) {
+    if (
+      dieselRefs.origin?.value !== requestedShip
+      || (dieselRefs.date?.value || "") !== requestedDate
+      || (getCheckedValue("dieselShift") || "") !== requestedShift
+    ) {
       return;
     }
-    dieselInitialStockCache.set(normalizeDieselName(requestedShip), Number.isFinite(stock) ? stock : 0);
+    dieselInitialStockCache.set(
+      getDieselInitialStockCacheKey(requestedShip, requestedDate, requestedShift),
+      Number.isFinite(stock) ? stock : 0
+    );
     updateDieselSummary();
   } catch (error) {
     console.warn("No se pudo cargar el stock inicial diesel.", error);
@@ -3106,7 +3721,6 @@ async function saveDieselRecord() {
     }
 
     setDieselKardex(kardex);
-    dieselInitialStockCache.set(normalizeDieselName(record.ship), record.finalStock);
     renderDieselConsult();
 
     clearDieselFormAfterSave();
@@ -5668,6 +6282,7 @@ function bootDiesel() {
   document.querySelectorAll('input[name="dieselShift"]').forEach((input) => {
     input.addEventListener("change", () => {
       updateDieselSaveState();
+      syncDieselInitialStockDisplay();
       refreshDieselSondajeAvailability();
     });
   });
@@ -6103,6 +6718,14 @@ bindDateStepper(passengerRefs.date, passengerRefs.prevDay, passengerRefs.nextDay
 
 treatedWaterRefs.date?.addEventListener("change", syncTreatedWaterDateParts);
 treatedWaterRefs.detail?.addEventListener("change", updateTreatedWaterDetailMetadata);
+treatedWaterRefs.qty?.addEventListener("input", () => {
+  sanitizeDigitsOnlyInput(treatedWaterRefs.qty, "La cantidad solo acepta números.");
+  updateTreatedWaterSaveState();
+});
+treatedWaterRefs.guide?.addEventListener("input", () => {
+  sanitizeDigitsOnlyInput(treatedWaterRefs.guide, "El vale de salida solo acepta números.");
+  updateTreatedWaterSaveState();
+});
 treatedWaterRefs.start?.addEventListener("change", updateTreatedWaterDuration);
 treatedWaterRefs.end?.addEventListener("change", updateTreatedWaterDuration);
 treatedWaterRefs.observations?.addEventListener("input", updateTreatedWaterObservationCount);
@@ -6121,10 +6744,30 @@ treatedWaterConsultRefs.form?.addEventListener("submit", (event) => {
   event.preventDefault();
   loadTreatedWaterConsultRecords();
 });
+treatedWaterConsultRefs.guide?.addEventListener("input", () => {
+  sanitizeDigitsOnlyInput(treatedWaterConsultRefs.guide, "El vale de salida solo acepta números.");
+});
 treatedWaterConsultRefs.clear?.addEventListener("click", clearTreatedWaterConsultFilters);
 treatedWaterConsultRefs.back?.addEventListener("click", () => setPage("agua-tratada"));
 treatedWaterConsultRefs.refresh?.addEventListener("click", loadTreatedWaterConsultRecords);
-treatedWaterConsultRefs.export?.addEventListener("click", exportTreatedWaterConsultRecords);
+treatedWaterConsultRefs.export?.addEventListener("click", toggleTreatedWaterExportMenu);
+treatedWaterConsultRefs.exportExcel?.addEventListener("click", () => {
+  setTreatedWaterExportMenuOpen(false);
+  exportTreatedWaterExcel();
+});
+treatedWaterConsultRefs.exportPdf?.addEventListener("click", () => {
+  setTreatedWaterExportMenuOpen(false);
+  exportTreatedWaterPdf();
+});
+document.addEventListener("click", (event) => {
+  if (!treatedWaterConsultRefs.exportOptions || treatedWaterConsultRefs.exportOptions.hidden) {
+    return;
+  }
+  const target = event.target;
+  if (target instanceof Node && !target.closest?.(".treated-water-export-menu")) {
+    setTreatedWaterExportMenuOpen(false);
+  }
+});
 treatedWaterConsultRefs.prev?.addEventListener("click", () => {
   treatedWaterConsultPage -= 1;
   renderTreatedWaterConsultRows();
