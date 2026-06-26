@@ -634,6 +634,10 @@
                       <option value="5">Sondaje 5</option>
                     </select>
                   </label>
+                  <label class="diesel-sondaje-apply-stock">
+                    <input id="dieselSondajeApplyStock" type="checkbox">
+                    <span>Aplicar reingreso/diferencia al stock final</span>
+                  </label>
                   <div class="diesel-sondaje-time-row">
                     <label><span>Hora Inicio Sondaje</span><input id="dieselSondajeStartTime" type="time"></label>
                     <label><span>Hora Fin Sondaje</span><input id="dieselSondajeEndTime" type="time"></label>
@@ -767,8 +771,249 @@
         <section class="page-view placeholder-view" data-view="lubricante" hidden>
           <article class="panel-card placeholder-card"><i data-lucide="container"></i><h1>Lubricante</h1><p>Pantalla preparada para el control de lubricantes.</p></article>
         </section>
-        <section class="page-view placeholder-view" data-view="agua-tratada" hidden>
-          <article class="panel-card placeholder-card"><i data-lucide="paint-bucket"></i><h1>Agua Tratada</h1><p>Pantalla preparada para registros y seguimiento de agua tratada.</p></article>
+        <section class="page-view treated-water-view" data-view="agua-tratada" hidden>
+          <article class="panel-card treated-water-card">
+            <header class="treated-water-header">
+              <h3><i data-lucide="droplets"></i>Información del Registro</h3>
+              <button class="treated-water-consult" type="button" id="treatedWaterConsult"><i data-lucide="search"></i>Consulta</button>
+            </header>
+
+            <form class="treated-water-form" id="treatedWaterForm">
+              <label class="treated-water-field treated-water-date-field">
+                <span>Fecha del Registro <b>*</b></span>
+                <span class="treated-water-input-icon">
+                  <i data-lucide="calendar-days"></i>
+                  <input id="treatedWaterDate" type="date" required>
+                </span>
+              </label>
+
+              <label class="treated-water-field">
+                <span>Mes <b>*</b></span>
+                <select id="treatedWaterMonth" required>
+                  <option value="ENERO">ENERO</option>
+                  <option value="FEBRERO">FEBRERO</option>
+                  <option value="MARZO">MARZO</option>
+                  <option value="ABRIL">ABRIL</option>
+                  <option value="MAYO">MAYO</option>
+                  <option value="JUNIO">JUNIO</option>
+                  <option value="JULIO">JULIO</option>
+                  <option value="AGOSTO">AGOSTO</option>
+                  <option value="SEPTIEMBRE">SEPTIEMBRE</option>
+                  <option value="OCTUBRE">OCTUBRE</option>
+                  <option value="NOVIEMBRE">NOVIEMBRE</option>
+                  <option value="DICIEMBRE">DICIEMBRE</option>
+                </select>
+              </label>
+
+              <label class="treated-water-field">
+                <span>Año <b>*</b></span>
+                <select id="treatedWaterYear" required>
+                  <option>2024</option>
+                  <option selected>2025</option>
+                  <option>2026</option>
+                  <option>2027</option>
+                </select>
+              </label>
+
+              <label class="treated-water-field">
+                <span>Nave <b>*</b></span>
+                <select id="treatedWaterShip" required>
+                  <option value="">Seleccione una nave</option>
+                  <option>TALARA</option>
+                  <option>PARIÑAS</option>
+                  <option>LOBITOS EXPRESS</option>
+                  <option>OLYMPIC EXPRESS</option>
+                  <option>NEPTUNE EXPRESS</option>
+                  <option>DONALD ROBIN</option>
+                  <option>SHEILA R</option>
+                  <option>IRIS</option>
+                  <option>CHIP II</option>
+                  <option>BUCKLEY EXPRESS</option>
+                  <option>CABO BLANCO</option>
+                  <option>ELIZABETH</option>
+                  <option>ORO</option>
+                  <option>ROGUE</option>
+                  <option>MR BOB</option>
+                </select>
+              </label>
+
+              <label class="treated-water-field">
+                <span>Detalle / Plataforma <b>*</b></span>
+                <select id="treatedWaterDetail" required>
+                  <option value="">Seleccione detalle</option>
+                </select>
+              </label>
+
+              <label class="treated-water-field">
+                <span>Tipo de Nave</span>
+                <input id="treatedWaterShipType" type="text" placeholder="Automático" disabled>
+              </label>
+
+              <label class="treated-water-field">
+                <span>Tipo de Movimiento <b>*</b></span>
+                <input id="treatedWaterMovement" type="text" placeholder="Automático" disabled>
+              </label>
+
+              <label class="treated-water-field">
+                <span>Zona</span>
+                <input id="treatedWaterZone" type="text" placeholder="Automático" disabled>
+              </label>
+
+              <label class="treated-water-field">
+                <span>Cantidad (Gal) <b>*</b></span>
+                <input id="treatedWaterQty" type="number" min="0" step="0.001" placeholder="Ej: 1000" required>
+              </label>
+
+              <label class="treated-water-field">
+                <span>Guía de Remisión</span>
+                <input id="treatedWaterGuide" type="text" placeholder="Ej: 001-12345" required>
+              </label>
+
+              <label class="treated-water-field">
+                <span>Hora Inicio</span>
+                <span class="treated-water-input-icon">
+                  <i data-lucide="clock-3"></i>
+                  <input id="treatedWaterStart" type="time" required>
+                </span>
+              </label>
+
+              <label class="treated-water-field">
+                <span>Hora Fin</span>
+                <span class="treated-water-input-icon">
+                  <i data-lucide="clock-3"></i>
+                  <input id="treatedWaterEnd" type="time" required>
+                </span>
+              </label>
+
+              <label class="treated-water-field">
+                <span>Tiempo de Recarga</span>
+                <input id="treatedWaterDuration" type="text" value="-" disabled>
+              </label>
+
+              <label class="treated-water-field treated-water-observations">
+                <span>Observaciones</span>
+                <textarea id="treatedWaterObservations" maxlength="500" placeholder="Ingrese observaciones (opcional)"></textarea>
+                <small><span id="treatedWaterObservationCount">0</span> / 500</small>
+              </label>
+
+              <div class="treated-water-actions">
+                <button class="treated-water-clear" type="button" id="treatedWaterClear">Limpiar</button>
+                <button class="treated-water-save" type="submit" id="treatedWaterSave" disabled><i data-lucide="save"></i>Guardar Registro</button>
+              </div>
+            </form>
+          </article>
+        </section>
+        <section class="page-view treated-water-consult-view" data-view="agua-tratada-consulta" hidden>
+          <section class="panel-card treated-water-consult-card">
+            <header class="treated-water-consult-head">
+              <h3><i data-lucide="filter"></i>Filtros de Búsqueda</h3>
+              <button class="treated-water-back" type="button" id="treatedWaterBack"><i data-lucide="arrow-left"></i>Regresar</button>
+            </header>
+
+            <form class="treated-water-filter-form" id="treatedWaterFilterForm">
+              <label class="treated-water-field">
+                <span>Fecha Inicio</span>
+                <span class="treated-water-input-icon">
+                  <i data-lucide="calendar-days"></i>
+                  <input id="treatedWaterFilterStartDate" type="date">
+                </span>
+              </label>
+              <label class="treated-water-field">
+                <span>Fecha Fin</span>
+                <span class="treated-water-input-icon">
+                  <i data-lucide="calendar-days"></i>
+                  <input id="treatedWaterFilterEndDate" type="date">
+                </span>
+              </label>
+              <label class="treated-water-field">
+                <span>Nave</span>
+                <select id="treatedWaterFilterShip">
+                  <option value="">Seleccione una nave</option>
+                </select>
+              </label>
+              <label class="treated-water-field">
+                <span>Detalle / Plataforma</span>
+                <select id="treatedWaterFilterDetail">
+                  <option value="">Seleccione detalle</option>
+                </select>
+              </label>
+              <label class="treated-water-field">
+                <span>Tipo Movimiento</span>
+                <select id="treatedWaterFilterMovement">
+                  <option value="">Seleccione tipo</option>
+                  <option value="RECARGA">RECARGA</option>
+                  <option value="REINGRESO">REINGRESO</option>
+                  <option value="TRANSFERENCIA">TRANSFERENCIA</option>
+                  <option value="DESPACHO">DESPACHO</option>
+                </select>
+              </label>
+              <label class="treated-water-field">
+                <span>Zona</span>
+                <select id="treatedWaterFilterZone">
+                  <option value="">Seleccione zona</option>
+                </select>
+              </label>
+              <label class="treated-water-field">
+                <span>Guía de Remisión</span>
+                <input id="treatedWaterFilterGuide" type="text" placeholder="Ingrese guía">
+              </label>
+              <label class="treated-water-field">
+                <span>Tipo de Nave</span>
+                <select id="treatedWaterFilterShipType">
+                  <option value="">Seleccione tipo</option>
+                </select>
+              </label>
+              <div class="treated-water-filter-actions">
+                <button class="treated-water-clear" type="button" id="treatedWaterFilterClear"><i data-lucide="rotate-ccw"></i>Limpiar</button>
+                <button class="treated-water-save" type="submit" id="treatedWaterSearch"><i data-lucide="search"></i>Buscar</button>
+              </div>
+            </form>
+          </section>
+
+          <section class="panel-card treated-water-results-card">
+            <header class="treated-water-results-head">
+              <h3><i data-lucide="table-2"></i>Resultados de la Búsqueda</h3>
+              <div class="treated-water-results-actions">
+                <button class="treated-water-export" type="button" id="treatedWaterExport"><i data-lucide="download"></i>Exportar</button>
+                <button class="treated-water-refresh" type="button" id="treatedWaterRefresh" aria-label="Actualizar"><i data-lucide="refresh-cw"></i></button>
+              </div>
+            </header>
+            <div class="treated-water-table-wrap">
+              <table class="treated-water-table">
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Nave</th>
+                    <th>Detalle / Plataforma</th>
+                    <th>Tipo de Nave</th>
+                    <th>Tipo de Movimiento</th>
+                    <th>Zona</th>
+                    <th>Cantidad (Gal)</th>
+                    <th>N° Guía / Vale</th>
+                    <th>Hora Inicio</th>
+                    <th>Hora Fin</th>
+                    <th>Tiempo de Recarga</th>
+                  </tr>
+                </thead>
+                <tbody id="treatedWaterRows"></tbody>
+              </table>
+            </div>
+            <p class="treated-water-empty" id="treatedWaterEmpty" hidden>No hay registros para los filtros seleccionados.</p>
+            <footer class="treated-water-results-footer">
+              <span id="treatedWaterSummary">Mostrando 0 registros</span>
+              <div class="treated-water-pager">
+                <button type="button" id="treatedWaterPrevPage" aria-label="Página anterior"><i data-lucide="chevron-left"></i></button>
+                <strong id="treatedWaterPageLabel">1</strong>
+                <button type="button" id="treatedWaterNextPage" aria-label="Página siguiente"><i data-lucide="chevron-right"></i></button>
+                <select id="treatedWaterPageSize" aria-label="Registros por página">
+                  <option value="5">5 por página</option>
+                  <option value="10">10 por página</option>
+                  <option value="20">20 por página</option>
+                  <option value="50">50 por página</option>
+                </select>
+              </div>
+            </footer>
+          </section>
         </section>
         <section class="page-view placeholder-view" data-view="agua-consumo" hidden>
           <article class="panel-card placeholder-card"><i data-lucide="glass-water"></i><h1>Agua de Consumo</h1><p>Pantalla preparada para consumos diarios de agua.</p></article>
