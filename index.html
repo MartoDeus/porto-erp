@@ -787,33 +787,8 @@
                 </span>
               </label>
 
-              <label class="treated-water-field">
-                <span>Mes <b>*</b></span>
-                <select id="treatedWaterMonth" required>
-                  <option value="ENERO">ENERO</option>
-                  <option value="FEBRERO">FEBRERO</option>
-                  <option value="MARZO">MARZO</option>
-                  <option value="ABRIL">ABRIL</option>
-                  <option value="MAYO">MAYO</option>
-                  <option value="JUNIO">JUNIO</option>
-                  <option value="JULIO">JULIO</option>
-                  <option value="AGOSTO">AGOSTO</option>
-                  <option value="SEPTIEMBRE">SEPTIEMBRE</option>
-                  <option value="OCTUBRE">OCTUBRE</option>
-                  <option value="NOVIEMBRE">NOVIEMBRE</option>
-                  <option value="DICIEMBRE">DICIEMBRE</option>
-                </select>
-              </label>
-
-              <label class="treated-water-field">
-                <span>Año <b>*</b></span>
-                <select id="treatedWaterYear" required>
-                  <option>2024</option>
-                  <option selected>2025</option>
-                  <option>2026</option>
-                  <option>2027</option>
-                </select>
-              </label>
+              <input id="treatedWaterMonth" type="hidden">
+              <input id="treatedWaterYear" type="hidden">
 
               <label class="treated-water-field">
                 <span>Nave <b>*</b></span>
@@ -821,19 +796,7 @@
                   <option value="">Seleccione una nave</option>
                   <option>TALARA</option>
                   <option>PARIÑAS</option>
-                  <option>LOBITOS EXPRESS</option>
-                  <option>OLYMPIC EXPRESS</option>
-                  <option>NEPTUNE EXPRESS</option>
-                  <option>DONALD ROBIN</option>
-                  <option>SHEILA R</option>
-                  <option>IRIS</option>
-                  <option>CHIP II</option>
-                  <option>BUCKLEY EXPRESS</option>
-                  <option>CABO BLANCO</option>
-                  <option>ELIZABETH</option>
-                  <option>ORO</option>
-                  <option>ROGUE</option>
-                  <option>MR BOB</option>
+                  <option>CHIMERA</option>
                 </select>
               </label>
 
@@ -861,12 +824,12 @@
 
               <label class="treated-water-field">
                 <span>Cantidad (Gal) <b>*</b></span>
-                <input id="treatedWaterQty" type="number" min="0" step="0.001" placeholder="Ej: 1000" required>
+                <input id="treatedWaterQty" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Ej: 1000" autocomplete="off" required>
               </label>
 
               <label class="treated-water-field">
-                <span>Guía de Remisión</span>
-                <input id="treatedWaterGuide" type="text" placeholder="Ej: 001-12345" required>
+                <span>Vale de Salida <b>*</b></span>
+                <input id="treatedWaterGuide" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Ej: 12345" autocomplete="off" required>
               </label>
 
               <label class="treated-water-field">
@@ -942,7 +905,6 @@
                 <select id="treatedWaterFilterMovement">
                   <option value="">Seleccione tipo</option>
                   <option value="RECARGA">RECARGA</option>
-                  <option value="REINGRESO">REINGRESO</option>
                   <option value="TRANSFERENCIA">TRANSFERENCIA</option>
                   <option value="DESPACHO">DESPACHO</option>
                 </select>
@@ -954,8 +916,8 @@
                 </select>
               </label>
               <label class="treated-water-field">
-                <span>Guía de Remisión</span>
-                <input id="treatedWaterFilterGuide" type="text" placeholder="Ingrese guía">
+                <span>Vale de Salida</span>
+                <input id="treatedWaterFilterGuide" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Ingrese vale">
               </label>
               <label class="treated-water-field">
                 <span>Tipo de Nave</span>
@@ -974,7 +936,13 @@
             <header class="treated-water-results-head">
               <h3><i data-lucide="table-2"></i>Resultados de la Búsqueda</h3>
               <div class="treated-water-results-actions">
-                <button class="treated-water-export" type="button" id="treatedWaterExport"><i data-lucide="download"></i>Exportar</button>
+                <div class="treated-water-export-menu">
+                  <button class="treated-water-export" type="button" id="treatedWaterExport" aria-expanded="false" aria-haspopup="true"><i data-lucide="download"></i>Exportar<i data-lucide="chevron-down"></i></button>
+                  <div class="treated-water-export-options" id="treatedWaterExportOptions" hidden>
+                    <button type="button" id="treatedWaterExportExcel"><i data-lucide="file-spreadsheet"></i>Exportar en Excel</button>
+                    <button type="button" id="treatedWaterExportPdf"><i data-lucide="file-text"></i>Exportar en PDF</button>
+                  </div>
+                </div>
                 <button class="treated-water-refresh" type="button" id="treatedWaterRefresh" aria-label="Actualizar"><i data-lucide="refresh-cw"></i></button>
               </div>
             </header>
@@ -989,7 +957,7 @@
                     <th>Tipo de Movimiento</th>
                     <th>Zona</th>
                     <th>Cantidad (Gal)</th>
-                    <th>N° Guía / Vale</th>
+                    <th>N° Vale</th>
                     <th>Hora Inicio</th>
                     <th>Hora Fin</th>
                     <th>Tiempo de Recarga</th>
