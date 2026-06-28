@@ -533,7 +533,7 @@ const DIESEL_SONDAJE_SLOTS = [1, 2, 3, 4, 5];
 let unavailableDieselSondajeIndices = new Set();
 let dieselSondajeAvailabilityRequest = 0;
 let dieselSavedSondajeConsumptionBySlot = new Map();
-let showAllDieselConsultItems = false;
+let showAllDieselConsultItems = true;
 let dieselConsultCache = { key: "", rows: [] };
 let dieselEditDraft = null;
 let bitacoraEventsCache = [];
@@ -1044,6 +1044,10 @@ function setPage(pageName) {
 
   if (pageName === "diesel") {
     syncDieselInitialStockDisplay();
+  }
+
+  if (pageName === "consulta") {
+    showAllDieselConsultItems = true;
   }
 
   if (pageName === "agua-tratada") {
@@ -4645,8 +4649,8 @@ async function renderDieselConsult({ showError = false } = {}) {
   if (dieselRefs.consultModeToggle) {
     dieselRefs.consultModeToggle.setAttribute("aria-pressed", String(showAllDieselConsultItems));
     dieselRefs.consultModeToggle.innerHTML = showAllDieselConsultItems
-      ? '<i data-lucide="activity"></i>Ver solo movimientos'
-      : '<i data-lucide="list-filter"></i>Ver todas las naves';
+      ? '<i data-lucide="list-filter"></i>Ver todas las naves'
+      : '<i data-lucide="activity"></i>Ver solo movimientos';
   }
 
   if (!report.groups.length) {
