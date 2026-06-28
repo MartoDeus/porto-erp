@@ -2987,7 +2987,7 @@ function getDieselRecordId(date, ship, shift) {
 }
 
 function buildEmptyDieselRecord(date, ship, shift) {
-  const initialStock = getDieselInitialStock(ship);
+  const initialStock = getDieselInitialStock(ship, date, shift);
   return {
     id: getDieselRecordId(date, ship, shift),
     saveMode: "agregar",
@@ -3249,7 +3249,7 @@ function getPrimaryDieselSondajeEntry(entries) {
 function getDieselTotals() {
   const modules = getActiveDieselModules();
   const origin = dieselRefs.origin.value;
-  const initialStock = getDieselInitialStock(origin);
+  const initialStock = getDieselInitialStock(origin, dieselRefs.date?.value || "", getCheckedValue("dieselShift") || "");
   const recharge = modules.recarga ? toNumber(dieselRefs.recharge.value) : 0;
   const consumption = modules.consumo ? toNumber(dieselRefs.consumption.value) : 0;
   const sondageAppliesToStock = Boolean(modules.sondaje && dieselRefs.sondajeApplyStock?.checked);
@@ -3401,6 +3401,12 @@ function fillDieselSelect(select, options, selectedValue, excludeValue = "") {
   }
 }
 
+function sortDieselOptions(options) {
+  return [...options].sort((first, second) =>
+    String(first).localeCompare(String(second), "es", { sensitivity: "base", numeric: true })
+  );
+}
+
 function populateDieselShips() {
   if (!dieselRefs.origin || !dieselRefs.receive) {
     return;
@@ -3408,8 +3414,10 @@ function populateDieselShips() {
 
   const selectedOrigin = dieselRefs.origin.value;
   const selectedReceive = dieselRefs.receive.value;
-  const originOptions = dieselShips;
-  const receiveOptions = isDieselPlatformMode(dieselRefs.receivePlatformToggle) ? dieselPlatforms : dieselShips;
+  const originOptions = sortDieselOptions(dieselShips);
+  const receiveOptions = sortDieselOptions(
+    isDieselPlatformMode(dieselRefs.receivePlatformToggle) ? dieselPlatforms : dieselShips
+  );
 
   fillDieselSelect(dieselRefs.origin, originOptions, selectedOrigin);
   fillDieselSelect(dieselRefs.receive, receiveOptions, selectedReceive, dieselRefs.origin.value);
@@ -3420,9 +3428,11 @@ function populateDieselConsultFilters() {
     return;
   }
 
-  dieselCatalog.forEach((unit) => {
-    dieselRefs.consultVessel.add(new Option(unit.ship, unit.ship));
-  });
+  [...dieselCatalog]
+    .sort((first, second) => first.ship.localeCompare(second.ship, "es", { sensitivity: "base", numeric: true }))
+    .forEach((unit) => {
+      dieselRefs.consultVessel.add(new Option(unit.ship, unit.ship));
+    });
 }
 
 function renderDieselRows() {
