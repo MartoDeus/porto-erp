@@ -535,6 +535,7 @@ let dieselSondajeAvailabilityRequest = 0;
 let dieselSavedSondajeConsumptionBySlot = new Map();
 let showAllDieselConsultItems = true;
 let dieselConsultCache = { key: "", rows: [] };
+let dieselConsultRequestId = 0;
 let dieselEditDraft = null;
 let bitacoraEventsCache = [];
 let bitacoraTypesCache = [];
@@ -2938,7 +2939,9 @@ function getDieselInitialStockCacheKey(ship, date = dieselRefs.date?.value || ""
 }
 
 function getDieselInitialStock(ship, date = dieselRefs.date?.value || "", shift = getCheckedValue("dieselShift") || "") {
-  return dieselInitialStockCache.get(getDieselInitialStockCacheKey(ship, date, shift)) || 0;
+  return dieselInitialStockCache.get(getDieselInitialStockCacheKey(ship, date, shift))
+    ?? dieselInitialStockCache.get(getDieselInitialStockCacheKey(ship, "", ""))
+    ?? 0;
 }
 
 async function refreshDieselInitialStock() {
@@ -2955,12 +2958,6 @@ async function refreshDieselInitialStock() {
   }
 
   const query = new URLSearchParams({ p_nave: ship });
-  if (date) {
-    query.set("p_fecha", date);
-  }
-  if (shift) {
-    query.set("p_turno", shift);
-  }
 
   try {
     const rows = await supabaseRequest(`/rest/v1/rpc/ultimo_stock_diesel?${query}`, {
@@ -2980,9 +2977,50 @@ async function refreshDieselInitialStock() {
       getDieselInitialStockCacheKey(requestedShip, requestedDate, requestedShift),
       Number.isFinite(stock) ? stock : 0
     );
+    dieselInitialStockCache.set(
+      getDieselInitialStockCacheKey(requestedShip, "", ""),
+      Number.isFinite(stock) ? stock : 0
+    );
     updateDieselSummary();
   } catch (error) {
     console.warn("No se pudo cargar el stock inicial diesel.", error);
+  }
+}
+
+async function recalculateDieselHistoryForRecord(record) {
+  const session = getSession();
+  if (!session?.accessToken || !record?.ship || !record?.date || !record?.shift) {
+    return;
+  }
+
+  const targets = [
+    record.ship,
+    ...(record.dispatches || []).map((entry) => entry.vessel)
+  ]
+    .map((ship) => (ship || "").trim())
+    .filter(Boolean);
+  const uniqueTargets = [...new Set(targets.map(normalizeDieselName))]
+    .map((normalized) => targets.find((ship) => normalizeDieselName(ship) === normalized))
+    .filter(Boolean);
+
+  const results = await Promise.allSettled(uniqueTargets.map((ship) => supabaseRequest(
+    "/rest/v1/rpc/recalcular_diesel_historial_nave",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`
+      },
+      body: JSON.stringify({
+        p_nave: ship,
+        p_fecha: record.date,
+        p_turno: record.shift
+      })
+    }
+  )));
+
+  const failed = results.filter((result) => result.status === "rejected");
+  if (failed.length > 0) {
+    console.warn("No se pudo recalcular todo el historial diesel después de guardar.", failed);
   }
 }
 
@@ -3728,6 +3766,8 @@ async function saveDieselRecord() {
       })
     });
 
+    await recalculateDieselHistoryForRecord(record);
+
     if (existingIndex >= 0) {
       kardex[existingIndex] = record;
     } else {
@@ -3735,9 +3775,10 @@ async function saveDieselRecord() {
     }
 
     setDieselKardex(kardex);
-    renderDieselConsult();
+    await renderDieselConsult({ showError: true });
 
     clearDieselFormAfterSave();
+    await refreshDieselInitialStock();
     refreshDieselSondajeAvailability();
     showSuccessToast("Se guardó con éxito", "El registro de diésel se ha guardado correctamente.");
   } catch (error) {
@@ -3763,13 +3804,15 @@ function getDieselConsultKey() {
   ].join("|");
 }
 
-async function loadDieselConsultFromSupabase() {
+async function loadDieselConsultFromSupabase(expectedKey = getDieselConsultKey()) {
   const session = getSession();
   const selectedDate = dieselRefs.consultDate?.value || getTodayValue();
 
   if (!session?.accessToken || !selectedDate) {
-    dieselConsultCache = { key: getDieselConsultKey(), rows: [] };
-    return;
+    if (expectedKey === getDieselConsultKey()) {
+      dieselConsultCache = { key: expectedKey, rows: [] };
+    }
+    return false;
   }
 
   const query = new URLSearchParams({
@@ -3784,14 +3827,21 @@ async function loadDieselConsultFromSupabase() {
     }
   });
 
-  dieselConsultCache = { key: getDieselConsultKey(), rows: rows || [] };
+  if (expectedKey !== getDieselConsultKey()) {
+    return false;
+  }
+
+  dieselConsultCache = { key: expectedKey, rows: rows || [] };
+  return true;
 }
 
 function buildDieselConsultData() {
   const selectedShip = dieselRefs.consultVessel?.value || "";
   const selectedShift = dieselRefs.consultShift?.value || "";
   const selectedDate = dieselRefs.consultDate?.value || getTodayValue();
-  const recordsForDate = (dieselConsultCache.rows || []).filter((record) => {
+  const currentKey = getDieselConsultKey();
+  const cachedRows = dieselConsultCache.key === currentKey ? dieselConsultCache.rows : [];
+  const recordsForDate = cachedRows.filter((record) => {
     if (selectedShip && normalizeDieselName(record.unidad_nombre) !== normalizeDieselName(selectedShip)) return false;
     return showAllDieselConsultItems || record.tiene_movimiento;
   });
@@ -4633,14 +4683,36 @@ async function renderDieselConsult({ showError = false } = {}) {
     return;
   }
 
+  const requestId = ++dieselConsultRequestId;
+  const requestKey = getDieselConsultKey();
+
+  dieselRefs.consultGroups.innerHTML = `
+    <article class="panel-card empty-consult-card">
+      <i data-lucide="loader-circle"></i>
+      <h3>Actualizando consulta</h3>
+      <p>Cargando datos reales de Supabase para la fecha seleccionada.</p>
+    </article>
+  `;
+  if (dieselRefs.consultSummary) {
+    dieselRefs.consultSummary.textContent = "Actualizando consulta...";
+  }
+  renderIcons();
+
   try {
-    await loadDieselConsultFromSupabase();
+    await loadDieselConsultFromSupabase(requestKey);
   } catch (error) {
+    if (requestId !== dieselConsultRequestId || requestKey !== getDieselConsultKey()) {
+      return;
+    }
     console.warn("No se pudo cargar la consulta diesel desde Supabase.", error);
-    dieselConsultCache = { key: getDieselConsultKey(), rows: [] };
+    dieselConsultCache = { key: requestKey, rows: [] };
     if (showError) {
       window.alert(error.message || "No se pudo actualizar la consulta diesel.");
     }
+  }
+
+  if (requestId !== dieselConsultRequestId || requestKey !== getDieselConsultKey()) {
+    return;
   }
 
   const report = buildDieselConsultData();
