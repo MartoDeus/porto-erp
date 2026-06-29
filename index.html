@@ -772,18 +772,17 @@
           <article class="panel-card placeholder-card"><i data-lucide="container"></i><h1>Lubricante</h1><p>Pantalla preparada para el control de lubricantes.</p></article>
         </section>
         <section class="page-view treated-water-view" data-view="agua-tratada" hidden>
-          <article class="panel-card treated-water-card">
-            <header class="treated-water-header">
-              <h3><i data-lucide="droplets"></i>Información del Registro</h3>
-              <button class="treated-water-consult" type="button" id="treatedWaterConsult"><i data-lucide="search"></i>Consulta</button>
-            </header>
-
-            <form class="treated-water-form" id="treatedWaterForm">
+          <form class="treated-water-form treated-water-operational" id="treatedWaterForm">
+            <article class="panel-card treated-water-commandbar">
               <label class="treated-water-field treated-water-date-field">
-                <span>Fecha del Registro <b>*</b></span>
-                <span class="treated-water-input-icon">
-                  <i data-lucide="calendar-days"></i>
-                  <input id="treatedWaterDate" type="date" required>
+                <span>Fecha <b>*</b></span>
+                <span class="treated-water-date-control">
+                  <button type="button" id="treatedWaterPrevDay" aria-label="Día anterior"><i data-lucide="chevron-left"></i></button>
+                  <span class="treated-water-input-icon">
+                    <i data-lucide="calendar-days"></i>
+                    <input id="treatedWaterDate" type="date" required>
+                  </span>
+                  <button type="button" id="treatedWaterNextDay" aria-label="Día siguiente"><i data-lucide="chevron-right"></i></button>
                 </span>
               </label>
 
@@ -791,7 +790,7 @@
               <input id="treatedWaterYear" type="hidden">
 
               <label class="treated-water-field">
-                <span>Nave <b>*</b></span>
+                <span>Nave Origen <b>*</b></span>
                 <select id="treatedWaterShip" required>
                   <option value="">Seleccione una nave</option>
                   <option>TALARA</option>
@@ -800,71 +799,140 @@
                 </select>
               </label>
 
-              <label class="treated-water-field">
-                <span>Detalle / Plataforma <b>*</b></span>
-                <select id="treatedWaterDetail" required>
-                  <option value="">Seleccione detalle</option>
-                </select>
-              </label>
+              <fieldset class="treated-water-shift-group">
+                <legend>Turno</legend>
+                <label class="is-active">
+                  <input type="radio" name="treatedWaterShift" value="DIURNO" checked>
+                  <span><i data-lucide="sun"></i>Diurno</span>
+                </label>
+                <label>
+                  <input type="radio" name="treatedWaterShift" value="NOCTURNO">
+                  <span><i data-lucide="moon"></i>Nocturno</span>
+                </label>
+              </fieldset>
 
-              <label class="treated-water-field">
-                <span>Tipo de Nave</span>
-                <input id="treatedWaterShipType" type="text" placeholder="Automático" disabled>
-              </label>
+              <button class="treated-water-consult" type="button" id="treatedWaterConsult"><i data-lucide="search"></i>Consulta</button>
+            </article>
 
-              <label class="treated-water-field">
-                <span>Tipo de Movimiento <b>*</b></span>
-                <input id="treatedWaterMovement" type="text" placeholder="Automático" disabled>
-              </label>
+            <div class="treated-water-workgrid">
+              <aside class="panel-card treated-water-mode-nav" aria-label="Tipo de movimiento de agua tratada">
+                <button class="treated-water-mode is-active" type="button" data-treated-water-mode="DESPACHO"><i data-lucide="truck"></i><span>Despacho</span></button>
+                <button class="treated-water-mode" type="button" data-treated-water-mode="RECARGA"><i data-lucide="ship"></i><span>Recarga</span></button>
+                <button class="treated-water-mode" type="button" data-treated-water-mode="TRANSFERENCIA"><i data-lucide="arrow-left-right"></i><span>Transferencia</span></button>
+              </aside>
 
-              <label class="treated-water-field">
-                <span>Zona</span>
-                <input id="treatedWaterZone" type="text" placeholder="Automático" disabled>
-              </label>
+              <article class="panel-card treated-water-card">
+                <header class="treated-water-header">
+                  <h3><i data-lucide="truck"></i><span id="treatedWaterWorkspaceTitle">REGISTRO DE MOVIMIENTO - DESPACHO</span></h3>
+                </header>
 
-              <label class="treated-water-field">
-                <span>Cantidad (Gal) <b>*</b></span>
-                <input id="treatedWaterQty" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Ej: 1000" autocomplete="off" required>
-              </label>
+                <div class="treated-water-entry-grid">
+                  <label class="treated-water-field treated-water-detail-field">
+                    <span>Nave / Plataforma <b>*</b></span>
+                    <select id="treatedWaterDetail" required>
+                      <option value="">Seleccione detalle</option>
+                    </select>
+                  </label>
 
-              <label class="treated-water-field">
-                <span>Vale de Salida <b>*</b></span>
-                <input id="treatedWaterGuide" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Ej: 12345" autocomplete="off" required>
-              </label>
+                  <label class="treated-water-field">
+                    <span>Cantidad (Gal) <b>*</b></span>
+                    <input id="treatedWaterQty" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Ej: 1000" autocomplete="off" required>
+                  </label>
 
-              <label class="treated-water-field">
-                <span>Hora Inicio</span>
-                <span class="treated-water-input-icon">
-                  <i data-lucide="clock-3"></i>
-                  <input id="treatedWaterStart" type="time" required>
-                </span>
-              </label>
+                  <label class="treated-water-field">
+                    <span>N° Vale <b>*</b></span>
+                    <input id="treatedWaterGuide" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Ej: 12345" autocomplete="off" required>
+                  </label>
 
-              <label class="treated-water-field">
-                <span>Hora Fin</span>
-                <span class="treated-water-input-icon">
-                  <i data-lucide="clock-3"></i>
-                  <input id="treatedWaterEnd" type="time" required>
-                </span>
-              </label>
+                  <button class="treated-water-add-button" type="button" aria-label="Agregar movimiento"><i data-lucide="plus"></i></button>
 
-              <label class="treated-water-field">
-                <span>Tiempo de Recarga</span>
-                <input id="treatedWaterDuration" type="text" value="-" disabled>
-              </label>
+                  <label class="treated-water-field treated-water-auto-field">
+                    <span>Tipo de Nave</span>
+                    <input id="treatedWaterShipType" type="text" placeholder="Automático" disabled>
+                  </label>
 
+                  <label class="treated-water-field treated-water-auto-field">
+                    <span>Tipo de Movimiento <b>*</b></span>
+                    <input id="treatedWaterMovement" type="text" placeholder="Automático" disabled>
+                  </label>
+
+                  <label class="treated-water-field treated-water-auto-field">
+                    <span>Zona</span>
+                    <input id="treatedWaterZone" type="text" placeholder="Automático" disabled>
+                  </label>
+
+                  <label class="treated-water-field">
+                    <span>Hora Inicio</span>
+                    <span class="treated-water-input-icon">
+                      <i data-lucide="clock-3"></i>
+                      <input id="treatedWaterStart" type="time" required>
+                    </span>
+                  </label>
+
+                  <label class="treated-water-field">
+                    <span>Hora Fin</span>
+                    <span class="treated-water-input-icon">
+                      <i data-lucide="clock-3"></i>
+                      <input id="treatedWaterEnd" type="time" required>
+                    </span>
+                  </label>
+
+                  <label class="treated-water-field">
+                    <span>Tiempo de Recarga</span>
+                    <input id="treatedWaterDuration" type="text" value="-" disabled>
+                  </label>
+                </div>
+
+                <div class="treated-water-register-table" aria-label="Detalle del registro actual">
+                  <div class="treated-water-register-head">
+                    <span>#</span>
+                    <span>Nave / Plataforma</span>
+                    <span>Cantidad (gal)</span>
+                    <span>N° Vale</span>
+                    <span>Tipo de Movimiento</span>
+                    <span>Zona</span>
+                    <span>Acciones</span>
+                  </div>
+                  <div class="treated-water-register-empty">Complete los datos para guardar el registro.</div>
+                </div>
+              </article>
+
+              <div class="treated-water-right-stack">
+                <aside class="panel-card treated-water-summary-card">
+                  <header>
+                    <h3>RESUMEN</h3>
+                    <i data-lucide="clipboard-list"></i>
+                  </header>
+                  <dl>
+                    <div><dt>Nave:</dt><dd id="treatedWaterSummaryShip">-</dd></div>
+                    <div><dt>Stock Inicial (gal):</dt><dd id="treatedWaterSummaryInitialStock">0</dd></div>
+                    <div><dt>Movimiento:</dt><dd id="treatedWaterSummaryMovement">-</dd></div>
+                    <div><dt>Detalle:</dt><dd id="treatedWaterSummaryDetail">-</dd></div>
+                    <div><dt>Cantidad (gal):</dt><dd id="treatedWaterSummaryQty">0</dd></div>
+                    <div><dt>Tiempo:</dt><dd id="treatedWaterSummaryDuration">-</dd></div>
+                  </dl>
+                  <div class="treated-water-final-stock">
+                    <i data-lucide="database"></i>
+                    <span>STOCK FINAL <small>(gal)</small></span>
+                    <strong id="treatedWaterSummaryFinalStock">0</strong>
+                  </div>
+                </aside>
+
+                <div class="treated-water-actions">
+                  <button class="treated-water-clear" type="button" id="treatedWaterClear"><i data-lucide="trash-2"></i>Limpiar</button>
+                  <button class="treated-water-save" type="submit" id="treatedWaterSave" disabled><i data-lucide="save"></i>Guardar Registro</button>
+                </div>
+              </div>
+            </div>
+
+            <section class="treated-water-bottom panel-card">
               <label class="treated-water-field treated-water-observations">
-                <span>Observaciones</span>
+                <span><i data-lucide="pencil"></i>Observaciones</span>
                 <textarea id="treatedWaterObservations" maxlength="500" placeholder="Ingrese observaciones (opcional)"></textarea>
                 <small><span id="treatedWaterObservationCount">0</span> / 500</small>
               </label>
-
-              <div class="treated-water-actions">
-                <button class="treated-water-clear" type="button" id="treatedWaterClear">Limpiar</button>
-                <button class="treated-water-save" type="submit" id="treatedWaterSave" disabled><i data-lucide="save"></i>Guardar Registro</button>
-              </div>
-            </form>
-          </article>
+            </section>
+          </form>
         </section>
         <section class="page-view treated-water-consult-view" data-view="agua-tratada-consulta" hidden>
           <section class="panel-card treated-water-consult-card">

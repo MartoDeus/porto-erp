@@ -251,10 +251,13 @@ const bitacoraRefs = {
 const treatedWaterRefs = {
   form: document.querySelector("#treatedWaterForm"),
   date: document.querySelector("#treatedWaterDate"),
+  prevDay: document.querySelector("#treatedWaterPrevDay"),
+  nextDay: document.querySelector("#treatedWaterNextDay"),
   month: document.querySelector("#treatedWaterMonth"),
   year: document.querySelector("#treatedWaterYear"),
   ship: document.querySelector("#treatedWaterShip"),
   detail: document.querySelector("#treatedWaterDetail"),
+  card: document.querySelector(".treated-water-card"),
   shipType: document.querySelector("#treatedWaterShipType"),
   movement: document.querySelector("#treatedWaterMovement"),
   zone: document.querySelector("#treatedWaterZone"),
@@ -265,6 +268,16 @@ const treatedWaterRefs = {
   duration: document.querySelector("#treatedWaterDuration"),
   observations: document.querySelector("#treatedWaterObservations"),
   observationCount: document.querySelector("#treatedWaterObservationCount"),
+  shiftOptions: document.querySelectorAll('input[name="treatedWaterShift"]'),
+  modeButtons: document.querySelectorAll("[data-treated-water-mode]"),
+  workspaceTitle: document.querySelector("#treatedWaterWorkspaceTitle"),
+  summaryShip: document.querySelector("#treatedWaterSummaryShip"),
+  summaryInitialStock: document.querySelector("#treatedWaterSummaryInitialStock"),
+  summaryMovement: document.querySelector("#treatedWaterSummaryMovement"),
+  summaryDetail: document.querySelector("#treatedWaterSummaryDetail"),
+  summaryQty: document.querySelector("#treatedWaterSummaryQty"),
+  summaryFinalStock: document.querySelector("#treatedWaterSummaryFinalStock"),
+  summaryDuration: document.querySelector("#treatedWaterSummaryDuration"),
   clear: document.querySelector("#treatedWaterClear"),
   save: document.querySelector("#treatedWaterSave"),
   consult: document.querySelector("#treatedWaterConsult")
@@ -1110,18 +1123,40 @@ function getTreatedWaterCatalog() {
   return treatedWaterPlatformCatalog.filter((item) => normalizeTreatedWaterValue(item.plataforma) !== "REINGRESO");
 }
 
-function populateTreatedWaterDetails() {
-  if (!treatedWaterRefs.detail || treatedWaterRefs.detail.dataset.loaded === "true") {
+function getTreatedWaterCatalogForMode(mode = getTreatedWaterActiveMode()) {
+  const normalizedMode = normalizeTreatedWaterValue(mode);
+  const shipValues = new Set(TREATED_WATER_SHIPS.map(normalizeTreatedWaterValue));
+  return getTreatedWaterCatalog().filter((item) => {
+    const platform = normalizeTreatedWaterValue(item.plataforma);
+    if (normalizedMode === "RECARGA") {
+      return platform === "RECARGA";
+    }
+    if (normalizedMode === "TRANSFERENCIA") {
+      return shipValues.has(platform);
+    }
+    return platform !== "RECARGA"
+      && !shipValues.has(platform)
+      && platform !== "PRODUCCION SAN PEDRO"
+      && platform !== "DIFERENCIA POR SONDAJE";
+  });
+}
+
+function populateTreatedWaterDetails(mode = getTreatedWaterActiveMode()) {
+  if (!treatedWaterRefs.detail) {
     return;
   }
-  const catalog = getTreatedWaterCatalog();
+  const selectedDetail = getSelectedTreatedWaterDetail();
+  const selectedPlatform = selectedDetail?.plataforma || "";
+  const fullCatalog = getTreatedWaterCatalog();
+  const catalog = getTreatedWaterCatalogForMode(mode);
   const duplicateCount = catalog.reduce((acc, item) => {
     const key = normalizeTreatedWaterValue(item.plataforma);
     acc[key] = (acc[key] || 0) + 1;
     return acc;
   }, {});
   treatedWaterRefs.detail.innerHTML = '<option value="">Seleccione detalle</option>';
-  catalog.forEach((item, index) => {
+  catalog.forEach((item) => {
+    const index = fullCatalog.indexOf(item);
     const option = document.createElement("option");
     option.value = String(index);
     option.dataset.plataforma = item.plataforma;
@@ -1130,7 +1165,8 @@ function populateTreatedWaterDetails() {
       : item.plataforma;
     treatedWaterRefs.detail.appendChild(option);
   });
-  treatedWaterRefs.detail.dataset.loaded = "true";
+  const selectedIndex = fullCatalog.findIndex((item) => normalizeTreatedWaterValue(item.plataforma) === normalizeTreatedWaterValue(selectedPlatform));
+  treatedWaterRefs.detail.value = selectedIndex >= 0 && catalog.includes(fullCatalog[selectedIndex]) ? String(selectedIndex) : "";
 }
 
 function getSelectedTreatedWaterDetail() {
@@ -1142,15 +1178,111 @@ function getSelectedTreatedWaterDetail() {
   return Number.isInteger(index) ? getTreatedWaterCatalog()[index] || null : null;
 }
 
+function getTreatedWaterDetailIndexByPlatform(platform) {
+  const target = normalizeTreatedWaterValue(platform);
+  return getTreatedWaterCatalog().findIndex((item) => normalizeTreatedWaterValue(item.plataforma) === target);
+}
+
+function selectTreatedWaterDetailByPlatform(platform) {
+  if (!treatedWaterRefs.detail) {
+    return false;
+  }
+  const index = getTreatedWaterDetailIndexByPlatform(platform);
+  if (index < 0) {
+    return false;
+  }
+  treatedWaterRefs.detail.value = String(index);
+  updateTreatedWaterDetailMetadata();
+  return true;
+}
+
 function resolveTreatedWaterMovement(detail) {
   const value = normalizeTreatedWaterValue(detail?.plataforma);
   if (value === "RECARGA") {
     return "RECARGA";
   }
-  if (value === "TALARA" || value === "PARIÑAS") {
+  if (value === "TALARA" || value === "PARIÑAS" || value === "CHIMERA") {
     return "TRANSFERENCIA";
   }
   return value ? "DESPACHO" : "";
+}
+
+function getTreatedWaterActiveMode() {
+  return document.querySelector("[data-treated-water-mode].is-active")?.dataset.treatedWaterMode || "DESPACHO";
+}
+
+function updateTreatedWaterShiftState() {
+  treatedWaterRefs.shiftOptions?.forEach((option) => {
+    option.closest("label")?.classList.toggle("is-active", option.checked);
+  });
+}
+
+function updateTreatedWaterOperationalSummary() {
+  const detail = getSelectedTreatedWaterDetail();
+  const ship = treatedWaterRefs.ship?.value || "";
+  const movement = treatedWaterRefs.movement?.value || "";
+  const quantity = Number(treatedWaterRefs.qty?.value || 0);
+  const initialStock = Number(TREATED_WATER_INITIAL_STOCK[ship] || 0);
+  let finalStock = initialStock;
+  if (Number.isFinite(quantity) && quantity > 0) {
+    if (movement === "RECARGA") {
+      finalStock += quantity;
+    } else if (movement === "DESPACHO" || movement === "TRANSFERENCIA") {
+      finalStock -= quantity;
+    }
+  }
+  if (treatedWaterRefs.summaryShip) {
+    treatedWaterRefs.summaryShip.textContent = ship || "-";
+  }
+  if (treatedWaterRefs.summaryInitialStock) {
+    treatedWaterRefs.summaryInitialStock.textContent = formatNumber(initialStock);
+  }
+  if (treatedWaterRefs.summaryMovement) {
+    treatedWaterRefs.summaryMovement.textContent = movement || "-";
+  }
+  if (treatedWaterRefs.summaryDetail) {
+    treatedWaterRefs.summaryDetail.textContent = detail?.plataforma || "-";
+  }
+  if (treatedWaterRefs.summaryQty) {
+    treatedWaterRefs.summaryQty.textContent = quantity ? formatNumber(quantity) : "0";
+  }
+  if (treatedWaterRefs.summaryFinalStock) {
+    treatedWaterRefs.summaryFinalStock.textContent = formatNumber(finalStock);
+  }
+  if (treatedWaterRefs.summaryDuration) {
+    treatedWaterRefs.summaryDuration.textContent = treatedWaterRefs.duration?.value || "-";
+  }
+}
+
+function setTreatedWaterMode(mode) {
+  const normalizedMode = normalizeTreatedWaterValue(mode) || "DESPACHO";
+  treatedWaterRefs.modeButtons?.forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.treatedWaterMode === normalizedMode);
+  });
+  treatedWaterRefs.card?.classList.toggle("is-transfer-mode", normalizedMode === "TRANSFERENCIA");
+  if (treatedWaterRefs.workspaceTitle) {
+    treatedWaterRefs.workspaceTitle.textContent = `REGISTRO DE MOVIMIENTO - ${normalizedMode}`;
+  }
+  populateTreatedWaterDetails(normalizedMode);
+  updateTreatedWaterDetailMetadata();
+  if (normalizedMode === "RECARGA") {
+    selectTreatedWaterDetailByPlatform("RECARGA");
+  } else if (normalizedMode === "TRANSFERENCIA") {
+    const detail = getSelectedTreatedWaterDetail();
+    const currentMovement = resolveTreatedWaterMovement(detail);
+    if (currentMovement !== "TRANSFERENCIA") {
+      treatedWaterRefs.detail.value = "";
+      updateTreatedWaterDetailMetadata();
+    }
+  } else if (normalizedMode === "DESPACHO") {
+    const detail = getSelectedTreatedWaterDetail();
+    const currentMovement = resolveTreatedWaterMovement(detail);
+    if (currentMovement && currentMovement !== "DESPACHO") {
+      treatedWaterRefs.detail.value = "";
+      updateTreatedWaterDetailMetadata();
+    }
+  }
+  updateTreatedWaterOperationalSummary();
 }
 
 function updateTreatedWaterDetailMetadata() {
@@ -1164,6 +1296,17 @@ function updateTreatedWaterDetailMetadata() {
   if (treatedWaterRefs.movement) {
     treatedWaterRefs.movement.value = resolveTreatedWaterMovement(detail);
   }
+  const movement = treatedWaterRefs.movement?.value;
+  if (movement && movement !== getTreatedWaterActiveMode()) {
+    treatedWaterRefs.modeButtons?.forEach((button) => {
+      button.classList.toggle("is-active", button.dataset.treatedWaterMode === movement);
+    });
+    treatedWaterRefs.card?.classList.toggle("is-transfer-mode", movement === "TRANSFERENCIA");
+    if (treatedWaterRefs.workspaceTitle) {
+      treatedWaterRefs.workspaceTitle.textContent = `REGISTRO DE MOVIMIENTO - ${movement}`;
+    }
+  }
+  updateTreatedWaterOperationalSummary();
   updateTreatedWaterSaveState();
 }
 
@@ -1175,6 +1318,7 @@ function updateTreatedWaterDuration() {
   const end = treatedWaterRefs.end?.value;
   if (!start || !end) {
     treatedWaterRefs.duration.value = "-";
+    updateTreatedWaterOperationalSummary();
     updateTreatedWaterSaveState();
     return;
   }
@@ -1187,6 +1331,7 @@ function updateTreatedWaterDuration() {
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
   treatedWaterRefs.duration.value = `${String(hours).padStart(2, "0")}:${String(remainingMinutes).padStart(2, "0")}`;
+  updateTreatedWaterOperationalSummary();
   updateTreatedWaterSaveState();
 }
 
@@ -1220,6 +1365,7 @@ function isTreatedWaterReadyToSave() {
 }
 
 function updateTreatedWaterSaveState() {
+  updateTreatedWaterOperationalSummary();
   if (treatedWaterRefs.save) {
     treatedWaterRefs.save.disabled = !isTreatedWaterReadyToSave();
   }
@@ -1244,6 +1390,8 @@ function clearTreatedWaterForm(options = {}) {
   updateTreatedWaterDetailMetadata();
   updateTreatedWaterDuration();
   updateTreatedWaterObservationCount();
+  updateTreatedWaterShiftState();
+  setTreatedWaterMode("DESPACHO");
   updateTreatedWaterSaveState();
 }
 
@@ -1351,6 +1499,8 @@ function initTreatedWaterView() {
   updateTreatedWaterDetailMetadata();
   updateTreatedWaterDuration();
   updateTreatedWaterObservationCount();
+  updateTreatedWaterShiftState();
+  setTreatedWaterMode(getTreatedWaterActiveMode());
   updateTreatedWaterSaveState();
 }
 
@@ -6715,9 +6865,17 @@ passengerRefs.save?.addEventListener("click", savePassengerRecords);
 });
 
 bindDateStepper(passengerRefs.date, passengerRefs.prevDay, passengerRefs.nextDay);
+bindDateStepper(treatedWaterRefs.date, treatedWaterRefs.prevDay, treatedWaterRefs.nextDay, syncTreatedWaterDateParts);
 
 treatedWaterRefs.date?.addEventListener("change", syncTreatedWaterDateParts);
 treatedWaterRefs.detail?.addEventListener("change", updateTreatedWaterDetailMetadata);
+treatedWaterRefs.ship?.addEventListener("change", updateTreatedWaterOperationalSummary);
+treatedWaterRefs.shiftOptions?.forEach((option) => {
+  option.addEventListener("change", updateTreatedWaterShiftState);
+});
+treatedWaterRefs.modeButtons?.forEach((button) => {
+  button.addEventListener("click", () => setTreatedWaterMode(button.dataset.treatedWaterMode));
+});
 treatedWaterRefs.qty?.addEventListener("input", () => {
   sanitizeDigitsOnlyInput(treatedWaterRefs.qty, "La cantidad solo acepta números.");
   updateTreatedWaterSaveState();
