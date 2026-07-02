@@ -1071,41 +1071,48 @@ button {
 
 .treated-water-view {
   min-height: calc(100vh - 118px);
-  padding: 12px 18px 0;
+  padding: 12px 10px 0;
   color: #17233a;
   overflow-x: hidden;
 }
 
+.treated-water-shell {
+  width: 100%;
+  max-width: 1056px;
+}
+
 .treated-water-form {
   width: 100%;
-  max-width: 1320px;
+  max-width: 1056px;
   margin: 0;
   display: grid;
-  gap: 14px;
+  gap: 12px;
 }
 
 .treated-water-commandbar {
+  grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: 300px minmax(220px, 1fr) 292px 160px;
-  gap: 12px;
+  grid-template-columns: 220px minmax(260px, 1fr) 236px 128px;
+  gap: 10px;
   align-items: end;
-  height: 126px;
-  padding: 22px 18px;
+  min-height: 100px;
+  padding: 18px 20px 16px;
   border-radius: 8px;
-  box-shadow: 0 14px 34px rgba(17, 31, 52, 0.08);
+  box-shadow: 0 12px 28px rgba(17, 31, 52, 0.07);
 }
 
 .treated-water-workgrid {
+  grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: 170px minmax(0, 1fr) 250px;
-  gap: 14px;
+  grid-template-columns: 136px minmax(0, 1fr) 188px;
+  gap: 12px;
   align-items: stretch;
 }
 
 .treated-water-card {
   min-width: 0;
-  height: 576px;
-  padding: 24px 18px 18px;
+  height: 455px;
+  padding: 22px 20px 16px;
   border-radius: 8px;
   box-shadow: 0 18px 42px rgba(17, 31, 52, 0.08);
   overflow: visible;
@@ -1143,7 +1150,7 @@ button {
 .treated-water-consult,
 .treated-water-save,
 .treated-water-clear {
-  min-height: 52px;
+  min-height: 42px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1167,7 +1174,8 @@ button {
 }
 
 .treated-water-consult {
-  min-width: 168px;
+  min-width: 0;
+  width: 100%;
   text-transform: uppercase;
 }
 
@@ -1192,9 +1200,9 @@ button {
 
 .treated-water-form {
   display: grid;
-  grid-template-columns: repeat(4, minmax(180px, 1fr));
-  column-gap: 34px;
-  row-gap: 22px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: 12px;
+  row-gap: 12px;
 }
 
 .treated-water-field {
@@ -1228,9 +1236,9 @@ button {
 
 .treated-water-field input,
 .treated-water-field select {
-  height: 50px;
-  min-height: 50px;
-  padding: 0 16px;
+  height: 40px;
+  min-height: 40px;
+  padding: 0 12px;
 }
 
 .treated-water-field select {
@@ -1269,7 +1277,7 @@ button {
 
 .treated-water-input-icon svg {
   position: absolute;
-  left: 14px;
+  left: 12px;
   top: 50%;
   width: 20px;
   height: 20px;
@@ -1279,17 +1287,17 @@ button {
 }
 
 .treated-water-input-icon input {
-  padding-left: 46px;
+  padding-left: 42px;
 }
 
 .treated-water-date-control {
   display: grid;
-  grid-template-columns: 38px 228px 38px;
-  gap: 8px;
+  grid-template-columns: 30px minmax(0, 1fr) 30px;
+  gap: 6px;
 }
 
 .treated-water-date-control > button {
-  height: 50px;
+  height: 40px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1308,7 +1316,7 @@ button {
   min-width: 0;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 7px;
   margin: 0;
   padding: 0;
   border: 0;
@@ -1332,7 +1340,7 @@ button {
 }
 
 .treated-water-shift-group span {
-  height: 50px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1345,8 +1353,17 @@ button {
 }
 
 .treated-water-shift-group svg {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
+}
+
+.treated-water-ship-type-field {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
 }
 
 .treated-water-shift-group input:checked + span,
@@ -1359,11 +1376,11 @@ button {
 
 .panel-card.treated-water-mode-nav {
   display: grid;
-  gap: 16px;
-  padding: 18px 8px;
+  gap: 12px;
+  padding: 14px 8px;
   align-content: start;
   justify-items: center;
-  height: 576px;
+  height: 455px;
   overflow: hidden;
   border-radius: 8px;
   box-shadow: 0 18px 42px rgba(17, 31, 52, 0.08);
@@ -1373,8 +1390,8 @@ button {
   position: relative;
   width: 100%;
   max-width: 100%;
-  height: 84px;
-  min-height: 84px;
+  height: 66px;
+  min-height: 66px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -1412,36 +1429,48 @@ button {
 
 .treated-water-entry-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr) 52px;
-  gap: 18px 20px;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr) 42px;
+  gap: 14px 14px;
   align-items: end;
   position: relative;
   z-index: 2;
 }
 
-.treated-water-entry-grid .treated-water-field:nth-of-type(4) {
+.treated-water-detail-field {
   grid-column: 1 / 2;
 }
 
-.treated-water-entry-grid .treated-water-field:nth-of-type(5) {
+.treated-water-qty-field {
   grid-column: 2 / 3;
 }
 
-.treated-water-entry-grid .treated-water-field:nth-of-type(6) {
+.treated-water-guide-field {
+  grid-column: 3 / 4;
+}
+
+.treated-water-start-field {
+  grid-column: 1 / 2;
+}
+
+.treated-water-end-field {
+  grid-column: 2 / 3;
+}
+
+.treated-water-duration-field {
   grid-column: 3 / 4;
 }
 
 .treated-water-add-actions {
   display: grid;
-  grid-template-columns: 52px;
+  grid-template-columns: 42px;
   gap: 8px;
   align-items: end;
   justify-content: center;
 }
 
 .treated-water-add-button {
-  width: 52px;
-  height: 52px;
+  width: 42px;
+  height: 42px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1458,8 +1487,8 @@ button {
 }
 
 .treated-water-add-button svg {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
 }
 
 .treated-water-cancel-edit {
@@ -1484,9 +1513,9 @@ button {
 }
 
 .treated-water-platform-toggle {
-  width: 104px;
-  min-height: 42px;
-  flex: 0 0 104px;
+  width: 86px;
+  min-height: 34px;
+  flex: 0 0 86px;
   gap: 5px;
   padding: 0 7px;
   font-size: 0.72rem;
@@ -1508,7 +1537,7 @@ button {
 }
 
 .treated-water-detail-field {
-  grid-column: span 1;
+  grid-column: 1 / 2;
   position: relative;
   z-index: 4;
 }
@@ -1541,7 +1570,7 @@ button {
 
 .treated-water-select-button {
   width: 100%;
-  height: 50px;
+  height: 40px;
   min-width: 0;
   display: flex;
   align-items: center;
@@ -1612,7 +1641,7 @@ button {
 }
 
 .treated-water-summary-card {
-  min-height: 584px;
+  min-height: 455px;
   min-width: 0;
   padding: 0;
   overflow: visible;
@@ -1625,8 +1654,8 @@ button {
   align-items: center;
   justify-content: space-between;
   margin: 0;
-  height: 62px;
-  padding: 0 18px;
+  height: 48px;
+  padding: 0 14px;
   color: #003c3a;
   background: linear-gradient(90deg, #e4f7f1, #f6fbfa);
   border-bottom: 1px solid #dcece8;
@@ -1646,16 +1675,16 @@ button {
 
 .treated-water-summary-card dl {
   display: grid;
-  gap: 14px;
+  gap: 10px;
   margin: 0;
-  padding: 20px 16px 12px;
-  font-size: 0.85rem;
+  padding: 18px 12px 10px;
+  font-size: 0.78rem;
 }
 
 .treated-water-summary-card div {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, auto);
-  gap: 14px;
+  gap: 10px;
   align-items: center;
   min-width: 0;
 }
@@ -1700,8 +1729,8 @@ button {
   justify-items: center;
   gap: 7px;
   align-items: center;
-  margin: 4px 14px 14px;
-  padding: 14px 16px 16px;
+  margin: 4px 12px 12px;
+  padding: 12px 10px 14px;
   color: #007d70;
   background: linear-gradient(135deg, #effaf7, #f8fcfb);
   border: 1px solid #d4e9e4;
@@ -1733,23 +1762,23 @@ button {
   grid-area: value;
   display: block;
   color: #007d70;
-  font-size: 2rem;
+  font-size: 1.9rem;
   line-height: 1.08;
   text-align: center;
 }
 
 .treated-water-register-table {
-  --treated-water-register-min-width: 820px;
-  --treated-water-register-columns: 34px minmax(148px, 1.35fr) minmax(126px, 1.15fr) 90px 78px 62px 58px minmax(82px, 0.82fr) 76px;
-  height: 222px;
-  margin-top: 32px;
+  --treated-water-register-min-width: 656px;
+  --treated-water-register-columns: 34px minmax(132px, 1.35fr) minmax(86px, 0.9fr) 76px 68px 62px 58px minmax(62px, 0.72fr) 72px;
+  height: 178px;
+  margin-top: 26px;
   border: 1px solid #d8e2ed;
   border-radius: 5px;
   overflow-x: auto;
   overflow-y: hidden;
   display: grid;
   grid-template-columns: minmax(var(--treated-water-register-min-width), 1fr);
-  grid-template-rows: 50px minmax(0, 1fr) auto;
+  grid-template-rows: 40px minmax(0, 1fr) auto;
 }
 
 .treated-water-register-head {
@@ -1759,13 +1788,13 @@ button {
   box-sizing: border-box;
   display: grid;
   grid-template-columns: var(--treated-water-register-columns);
-  min-height: 50px;
+  min-height: 40px;
   align-items: center;
-  padding: 0 16px;
+  padding: 0 12px;
   color: #006f63;
   background: linear-gradient(90deg, #eef8f5, #f8fcfb);
   border-bottom: 1px solid #e3eaf2;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -1796,7 +1825,7 @@ button {
   grid-column: 1 / -1;
   width: 100%;
   box-sizing: border-box;
-  min-height: 170px;
+  min-height: 120px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1824,12 +1853,12 @@ button {
   box-sizing: border-box;
   display: grid;
   grid-template-columns: var(--treated-water-register-columns);
-  min-height: 56px;
+  min-height: 44px;
   align-items: center;
-  padding: 12px 16px;
+  padding: 8px 12px;
   border-bottom: 1px solid #edf2f7;
   color: #071425;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .treated-water-register-row.is-impact-active {
@@ -1960,7 +1989,7 @@ button {
 .treated-water-register-footer {
   grid-row: 3;
   grid-column: 1 / -1;
-  min-height: 46px;
+  min-height: 36px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -2064,6 +2093,424 @@ button {
 
 .treated-water-info b {
   color: #d11224;
+}
+
+/* Agua Tratada mirrors the Diesel registration workspace measurements. */
+.treated-water-view {
+  padding: 24px 28px 0;
+}
+
+.treated-water-shell,
+.treated-water-form {
+  max-width: none;
+}
+
+.treated-water-form {
+  gap: 14px;
+}
+
+.treated-water-commandbar {
+  grid-template-columns: minmax(204px, 0.8075fr) minmax(240px, 1.08fr) minmax(221px, 1.0625fr) minmax(150px, 0.45fr);
+  gap: 18px;
+  align-items: end;
+  min-height: 0;
+  margin-bottom: 0;
+  padding: 18px 24px;
+  box-shadow: none;
+}
+
+.treated-water-commandbar .treated-water-field,
+.treated-water-commandbar .treated-water-shift-group,
+.treated-water-entry-grid .treated-water-field {
+  display: grid;
+  gap: 5px;
+  color: #1f2c44;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.treated-water-field input,
+.treated-water-field select,
+.treated-water-select-button,
+.treated-water-date-control > button,
+.treated-water-shift-group span {
+  min-height: 32px;
+  height: 32px;
+  border-radius: 6px;
+}
+
+.treated-water-date-control {
+  grid-template-columns: 34px minmax(0, 1fr) 34px;
+  gap: 6px;
+}
+
+.treated-water-shift-group {
+  grid-template-columns: repeat(2, minmax(120px, 1fr));
+  align-items: end;
+  gap: 10px;
+}
+
+.treated-water-shift-group legend {
+  margin-bottom: 5px;
+}
+
+.treated-water-consult {
+  min-height: 44px;
+  justify-content: center;
+}
+
+.treated-water-workgrid {
+  grid-template-columns: 190px minmax(0, 1fr) 220px;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.panel-card.treated-water-mode-nav {
+  gap: 10px;
+  height: 100%;
+  padding: 10px;
+  box-shadow: 0 18px 42px rgba(17, 31, 52, 0.08);
+}
+
+.treated-water-mode {
+  min-height: 74px;
+  height: auto;
+  padding: 14px 16px;
+  color: #4f7f79;
+  background: #e4f7f1;
+  border: 1px solid #cdebe1;
+  border-radius: 8px;
+  font-size: 0.98rem;
+  box-shadow: none;
+}
+
+.treated-water-mode.is-active {
+  color: #ffffff;
+  background: #4d8d84;
+  border-color: #4d8d84;
+  box-shadow: 0 8px 18px rgba(77, 141, 132, 0.2);
+}
+
+.treated-water-card {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  min-height: 408px;
+  height: 100%;
+  padding: 12px 14px;
+  overflow: hidden;
+}
+
+.treated-water-header {
+  min-height: 0;
+  height: auto;
+  margin: 0;
+  padding: 0 0 8px;
+  background: transparent;
+  border: 0;
+  border-bottom: 3px solid #5c9188;
+  border-radius: 0;
+}
+
+.treated-water-header h3 {
+  color: #4f7f79;
+  font-size: 0.98rem;
+  font-weight: 800;
+  text-transform: none;
+}
+
+.treated-water-header h3 span {
+  text-transform: none;
+}
+
+.treated-water-header h3 svg {
+  display: none;
+}
+
+.treated-water-entry-grid {
+  grid-template-columns: minmax(180px, 1.35fr) minmax(120px, 0.8fr) minmax(120px, 0.8fr) minmax(110px, 0.7fr) minmax(110px, 0.7fr) 40px;
+  gap: 10px;
+}
+
+.treated-water-detail-control {
+  gap: 8px;
+}
+
+.treated-water-detail-control .treated-water-select-shell {
+  flex: 1 1 100%;
+}
+
+.treated-water-start-field {
+  grid-column: 4 / 5;
+}
+
+.treated-water-end-field {
+  grid-column: 5 / 6;
+}
+
+.treated-water-start-field .treated-water-input-icon input,
+.treated-water-end-field .treated-water-input-icon input {
+  padding-left: 12px;
+}
+
+.treated-water-duration-field {
+  display: none;
+}
+
+.treated-water-platform-toggle {
+  width: auto;
+  min-height: 30px;
+  flex: 0 0 72px;
+  padding: 0 8px;
+  gap: 4px;
+  font-size: 0.78rem;
+}
+
+.treated-water-add-actions {
+  grid-template-columns: 40px;
+}
+
+.treated-water-add-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  background: var(--teal-dark);
+  box-shadow: none;
+}
+
+.treated-water-register-table {
+  --treated-water-register-min-width: 780px;
+  height: 250px;
+  margin-top: 8px;
+  grid-template-rows: 40px minmax(0, 1fr) auto;
+}
+
+.treated-water-summary-card {
+  min-height: 336px;
+  overflow: hidden;
+}
+
+.treated-water-summary-card header {
+  height: auto;
+  padding: 14px 16px;
+}
+
+.treated-water-summary-card dl {
+  gap: 7px;
+  padding: 14px 16px;
+  font-size: 0.84rem;
+}
+
+.treated-water-summary-card div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.treated-water-summary-card dd {
+  color: #071425;
+}
+
+.treated-water-final-stock {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 4px 16px 0;
+  padding: 10px 0 0;
+  color: #071425;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid #e6edf4;
+  border-radius: 0;
+  font-size: 1.3em;
+}
+
+.treated-water-final-stock svg {
+  display: none;
+}
+
+.treated-water-final-stock span {
+  font-weight: 400;
+  text-align: left;
+  white-space: normal;
+}
+
+.treated-water-final-stock strong {
+  color: var(--teal-dark);
+  font-size: 1em;
+}
+
+.treated-water-right-stack {
+  gap: 10px;
+}
+
+.treated-water-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding-bottom: 0;
+}
+
+.treated-water-actions .treated-water-clear,
+.treated-water-actions .treated-water-save {
+  min-width: 0;
+  min-height: 42px;
+  justify-content: center;
+  box-shadow: none;
+}
+
+.treated-water-bottom {
+  min-height: 120px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  padding: 10px 12px 12px;
+  overflow: hidden;
+}
+
+.treated-water-observations textarea {
+  min-height: 78px;
+}
+
+.treated-water-info {
+  display: none;
+}
+
+.treated-water-card.is-recharge-simple-mode .treated-water-entry-grid {
+  grid-template-columns: minmax(0, 360px);
+  gap: 12px;
+  align-content: start;
+  align-items: start;
+}
+
+.treated-water-card.is-recharge-simple-mode .treated-water-detail-field,
+.treated-water-card.is-recharge-simple-mode .treated-water-add-actions,
+.treated-water-card.is-recharge-simple-mode .treated-water-duration-field,
+.treated-water-card.is-recharge-simple-mode .treated-water-register-table {
+  display: none;
+}
+
+.treated-water-card.is-recharge-simple-mode .treated-water-qty-field,
+.treated-water-card.is-recharge-simple-mode .treated-water-guide-field,
+.treated-water-card.is-recharge-simple-mode .treated-water-start-field,
+.treated-water-card.is-recharge-simple-mode .treated-water-end-field {
+  grid-column: 1 / -1;
+}
+
+.treated-water-card.is-recharge-simple-mode .treated-water-field input {
+  min-height: 32px;
+  height: 32px;
+}
+
+.treated-water-summary-card {
+  min-height: 366px;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+.treated-water-summary-card header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0;
+  padding: 14px 16px;
+  color: #071425;
+  background: linear-gradient(90deg, #e4f7f1, #f6fbfa);
+  border-bottom: 1px solid #dcece8;
+}
+
+.treated-water-summary-card h3 {
+  margin: 0;
+  color: #071425;
+  font-size: inherit;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.treated-water-summary-card svg {
+  width: 22px;
+  height: 22px;
+  color: var(--teal-dark);
+}
+
+.treated-water-summary-card dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 14px 16px;
+  font-size: 0.86rem;
+}
+
+.treated-water-workgrid .treated-water-summary-card dl {
+  gap: 7px;
+  font-size: 0.84rem;
+}
+
+.treated-water-summary-card dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.treated-water-summary-card dt,
+.treated-water-summary-card dd {
+  margin: 0;
+  color: #071425;
+  line-height: 1.2;
+}
+
+.treated-water-summary-card dd {
+  flex: 0 0 auto;
+  font-weight: 800;
+  text-align: right;
+}
+
+.treated-water-summary-card hr {
+  width: 100%;
+  height: 1px;
+  margin: 0;
+  border: 0;
+  background: #e6edf4;
+}
+
+.treated-water-final-stock {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin: 4px 16px 0;
+  padding: 10px 0 0;
+  color: #071425;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid #e6edf4;
+  border-radius: 0;
+  font-size: 0.84rem;
+}
+
+.treated-water-final-stock svg {
+  display: none;
+}
+
+.treated-water-final-stock span {
+  color: #071425;
+  font-size: 1.3em;
+  font-weight: 400;
+  line-height: 1.2;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.treated-water-final-stock strong {
+  color: var(--teal-dark);
+  font-size: 1.3em;
+  font-weight: 800;
+  line-height: 1.2;
+  text-align: right;
 }
 
 .treated-water-consult-view.active {
@@ -3172,6 +3619,10 @@ button {
 
 .panel-card {
   padding: 24px;
+}
+
+.panel-card.treated-water-summary-card {
+  padding: 0;
 }
 
 .panel-heading {
@@ -7000,20 +7451,20 @@ button {
 .diesel-stat-grid .passenger-stat:nth-child(5) svg { color: #63a9e8; }
 .danger-text { color: #d92027 !important; }
 
-@media (max-width: 1320px) {
+@media (max-width: 980px) {
   .treated-water-commandbar {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     height: auto;
   }
 
   .treated-water-workgrid {
-    grid-template-columns: 170px minmax(0, 1fr) 250px;
+    grid-template-columns: 136px minmax(0, 1fr) 188px;
   }
 }
 
-@media (max-width: 1180px) {
+@media (max-width: 980px) {
   .treated-water-workgrid {
-    grid-template-columns: 170px minmax(0, 1fr);
+    grid-template-columns: 136px minmax(0, 1fr);
   }
 
   .treated-water-summary-card {
@@ -7030,7 +7481,7 @@ button {
   }
 }
 
-@media (max-width: 1500px) {
+@media (max-width: 980px) {
   .treated-water-detail-control {
     display: grid;
     grid-template-columns: 1fr;
