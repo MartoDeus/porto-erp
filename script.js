@@ -251,6 +251,8 @@ const bitacoraRefs = {
 const treatedWaterRefs = {
   form: document.querySelector("#treatedWaterForm"),
   date: document.querySelector("#treatedWaterDate"),
+  prevDate: document.querySelector("#treatedWaterPrevDate"),
+  nextDate: document.querySelector("#treatedWaterNextDate"),
   month: document.querySelector("#treatedWaterMonth"),
   year: document.querySelector("#treatedWaterYear"),
   ship: document.querySelector("#treatedWaterShip"),
@@ -1047,7 +1049,7 @@ function setPage(pageName) {
       diesel: "Registro de Diesel",
       consulta: "Consulta",
       lubricante: "Lubricante",
-      "agua-tratada": "Agua Tratada",
+      "agua-tratada": "Registro Agua Tratada",
       "agua-tratada-consulta": "Agua Tratada",
       "agua-consumo": "Agua de Consumo",
       buceo: "Buceo",
@@ -1160,6 +1162,9 @@ function isTreatedWaterShipValue(value) {
 }
 
 function isTreatedWaterRechargePlatformMode() {
+  if (getTreatedWaterActiveMode() === "TRANSFERENCIA") {
+    return true;
+  }
   return treatedWaterRechargePlatformMode;
 }
 
@@ -1177,24 +1182,33 @@ function isTreatedWaterPlatformCatalogItem(item) {
     && platform !== "DIFERENCIA POR SONDAJE";
 }
 
+function sortTreatedWaterCatalogByPlatform(items) {
+  return [...items].sort((a, b) => String(a.plataforma || "").localeCompare(String(b.plataforma || ""), "es", {
+    numeric: true,
+    sensitivity: "base"
+  }));
+}
+
 function getTreatedWaterCatalogForMode(mode = getTreatedWaterActiveMode()) {
   const normalizedMode = normalizeTreatedWaterValue(mode);
+  const catalog = getTreatedWaterCatalog();
   const shipValues = new Set(TREATED_WATER_SHIPS.map(normalizeTreatedWaterValue));
-  return getTreatedWaterCatalog().filter((item) => {
-    const platform = normalizeTreatedWaterValue(item.plataforma);
-    if (normalizedMode === "RECARGA") {
-      return isTreatedWaterRechargePlatformMode()
-        ? isTreatedWaterPlatformCatalogItem(item)
-        : platform === "RECARGA";
-    }
-    if (normalizedMode === "TRANSFERENCIA") {
-      return shipValues.has(platform);
-    }
-    if (normalizedMode === "PLATAFORMA") {
-      return isTreatedWaterPlatformCatalogItem(item);
-    }
-    return isTreatedWaterPlatformCatalogItem(item);
-  });
+  const shipItems = TREATED_WATER_SHIPS
+    .map((ship) => catalog.find((item) => normalizeTreatedWaterValue(item.plataforma) === normalizeTreatedWaterValue(ship)))
+    .filter(Boolean);
+  const platformItems = sortTreatedWaterCatalogByPlatform(catalog.filter(isTreatedWaterPlatformCatalogItem));
+  if (normalizedMode === "RECARGA") {
+    return isTreatedWaterRechargePlatformMode()
+      ? platformItems
+      : catalog.filter((item) => normalizeTreatedWaterValue(item.plataforma) === "RECARGA");
+  }
+  if (normalizedMode === "TRANSFERENCIA") {
+    return [...shipItems, ...platformItems];
+  }
+  if (normalizedMode === "PLATAFORMA") {
+    return platformItems;
+  }
+  return platformItems.filter((item) => !shipValues.has(normalizeTreatedWaterValue(item.plataforma)));
 }
 
 function getTreatedWaterSelectedDetailText() {
@@ -1243,24 +1257,36 @@ function populateTreatedWaterDetails(mode = getTreatedWaterActiveMode()) {
   if (!treatedWaterRefs.detail) {
     return;
   }
-  const catalog = getTreatedWaterCatalog();
+  const fullCatalog = getTreatedWaterCatalog();
+  const selectedItem = getSelectedTreatedWaterDetail();
+  const selectedPlatform = selectedItem?.plataforma || treatedWaterRefs.detail.selectedOptions?.[0]?.dataset?.plataforma || "";
+  const selectedZone = selectedItem?.zona || "";
+  const catalog = getTreatedWaterCatalogForMode(mode);
   const duplicateCount = catalog.reduce((acc, item) => {
     const key = normalizeTreatedWaterValue(item.plataforma);
     acc[key] = (acc[key] || 0) + 1;
     return acc;
   }, {});
   treatedWaterRefs.detail.innerHTML = '<option value="">Seleccione detalle</option>';
-  catalog.forEach((item, index) => {
+  catalog.forEach((item) => {
+    const fullIndex = fullCatalog.indexOf(item);
+    if (fullIndex < 0) {
+      return;
+    }
     const option = document.createElement("option");
-    option.value = String(index);
+    option.value = String(fullIndex);
     option.dataset.plataforma = item.plataforma;
     option.textContent = duplicateCount[normalizeTreatedWaterValue(item.plataforma)] > 1
       ? `${item.plataforma} - ${item.zona}`
       : item.plataforma;
     treatedWaterRefs.detail.appendChild(option);
   });
-  const selectedIndex = fullCatalog.findIndex((item) => normalizeTreatedWaterValue(item.plataforma) === normalizeTreatedWaterValue(selectedPlatform));
-  treatedWaterRefs.detail.value = selectedIndex >= 0 && catalog.includes(fullCatalog[selectedIndex]) ? String(selectedIndex) : "";
+  const selectedIndex = fullCatalog.findIndex((item) => {
+    const samePlatform = normalizeTreatedWaterValue(item.plataforma) === normalizeTreatedWaterValue(selectedPlatform);
+    const sameZone = !selectedZone || normalizeTreatedWaterValue(item.zona) === normalizeTreatedWaterValue(selectedZone);
+    return samePlatform && sameZone && catalog.includes(item);
+  });
+  treatedWaterRefs.detail.value = selectedIndex >= 0 ? String(selectedIndex) : "";
   syncTreatedWaterDetailDropdown();
 }
 
@@ -1330,7 +1356,7 @@ function resolveTreatedWaterMovement(detail, mode = getTreatedWaterActiveMode())
     return value ? "RECARGA" : "";
   }
   if (activeMode === "TRANSFERENCIA") {
-    return value ? "TRANSFERENCIA" : "";
+    return value ? "DESPACHO" : "";
   }
   if (activeMode === "PLATAFORMA") {
     return value ? "DESPACHO" : "";
@@ -1350,7 +1376,32 @@ function getTreatedWaterActiveMode() {
 
 function getTreatedWaterMovementForMode(mode = getTreatedWaterActiveMode()) {
   const normalizedMode = normalizeTreatedWaterValue(mode);
+  if (normalizedMode === "TRANSFERENCIA") {
+    return "DESPACHO";
+  }
   return normalizedMode === "PLATAFORMA" ? "DESPACHO" : normalizedMode;
+}
+
+function isTreatedWaterSimpleRechargeMode(mode = getTreatedWaterActiveMode()) {
+  return normalizeTreatedWaterValue(mode) === "RECARGA";
+}
+
+function syncTreatedWaterModeLabels(mode = getTreatedWaterActiveMode()) {
+  const isRecharge = isTreatedWaterSimpleRechargeMode(mode);
+  const qtyLabel = document.querySelector(".treated-water-qty-field > span:first-child");
+  const guideLabel = document.querySelector(".treated-water-guide-field > span:first-child");
+  if (qtyLabel) {
+    qtyLabel.innerHTML = isRecharge ? 'Volumen (gal) <b>*</b>' : 'Cantidad (gal) <b>*</b>';
+  }
+  if (guideLabel) {
+    guideLabel.innerHTML = isRecharge ? 'N° Vale Recarga <b>*</b>' : 'N° Vale <b>*</b>';
+  }
+  if (treatedWaterRefs.qty) {
+    treatedWaterRefs.qty.placeholder = isRecharge ? "" : "Ej: 1000";
+  }
+  if (treatedWaterRefs.guide) {
+    treatedWaterRefs.guide.placeholder = isRecharge ? "" : "Ej: 12345";
+  }
 }
 
 function updateTreatedWaterShiftState() {
@@ -1873,7 +1924,7 @@ function setTreatedWaterMode(mode) {
   const normalizedMovement = getTreatedWaterMovementForMode(normalizedMode);
   const activeEditMovement = normalizeTreatedWaterValue(activeEdit?.tipo_movimiento);
   const isCompatibleRechargeDispatchEdit = activeEditMovement === "DESPACHO"
-    && normalizedMode === "RECARGA"
+    && (normalizedMode === "RECARGA" || normalizedMode === "TRANSFERENCIA")
     && isTreatedWaterRechargePlatformMode();
   if (activeEdit && activeEditMovement !== normalizedMovement && !isCompatibleRechargeDispatchEdit) {
     treatedWaterEditingDraftIndex = null;
@@ -1884,12 +1935,14 @@ function setTreatedWaterMode(mode) {
     button.classList.toggle("is-active", button.dataset.treatedWaterMode === normalizedMode);
   });
   if (treatedWaterRefs.platformToggle) {
-    treatedWaterRefs.platformToggle.hidden = normalizedMode !== "RECARGA";
+    treatedWaterRefs.platformToggle.hidden = normalizedMode === "RECARGA";
   }
   if (normalizedMode !== "RECARGA") {
     setTreatedWaterRechargePlatformMode(false);
   }
   treatedWaterRefs.card?.classList.toggle("is-transfer-mode", normalizedMode === "TRANSFERENCIA");
+  treatedWaterRefs.card?.classList.toggle("is-recharge-simple-mode", normalizedMode === "RECARGA");
+  syncTreatedWaterModeLabels(normalizedMode);
   const header = treatedWaterRefs.card?.querySelector(".treated-water-header h3");
   const icon = header?.querySelector("svg, i");
   if (header && icon) {
@@ -1903,8 +1956,9 @@ function setTreatedWaterMode(mode) {
     icon.outerHTML = `<i data-lucide="${iconName}"></i>`;
   }
   if (treatedWaterRefs.workspaceTitle) {
-    const titleMode = normalizedMode === "RECARGA" ? "RECARGA / DESPACHO" : normalizedMode;
-    treatedWaterRefs.workspaceTitle.textContent = `REGISTRO DE MOVIMIENTO - ${titleMode}`;
+    treatedWaterRefs.workspaceTitle.textContent = normalizedMode === "RECARGA"
+      ? "Recarga"
+      : "Despacho / Transferencia";
   }
   populateTreatedWaterDetails(normalizedMode);
   updateTreatedWaterDetailMetadata();
@@ -1913,7 +1967,7 @@ function setTreatedWaterMode(mode) {
   } else if (normalizedMode === "TRANSFERENCIA") {
     const detail = getSelectedTreatedWaterDetail();
     const currentMovement = resolveTreatedWaterMovement(detail);
-    if (currentMovement !== "TRANSFERENCIA") {
+    if (currentMovement !== "DESPACHO") {
       treatedWaterRefs.detail.value = "";
       syncTreatedWaterDetailDropdown();
       updateTreatedWaterDetailMetadata();
@@ -1960,8 +2014,12 @@ function updateTreatedWaterDetailMetadata() {
       button.classList.toggle("is-active", button.dataset.treatedWaterMode === movement);
     });
     treatedWaterRefs.card?.classList.toggle("is-transfer-mode", movement === "TRANSFERENCIA");
+    treatedWaterRefs.card?.classList.toggle("is-recharge-simple-mode", movement === "RECARGA");
+    syncTreatedWaterModeLabels(movement);
     if (treatedWaterRefs.workspaceTitle) {
-      treatedWaterRefs.workspaceTitle.textContent = `REGISTRO DE MOVIMIENTO - ${movement}`;
+      treatedWaterRefs.workspaceTitle.textContent = movement === "RECARGA" || movement === "DESPACHO"
+        ? "Recarga"
+        : formatTreatedWaterMovementLabel(movement);
     }
   }
   updateTreatedWaterOperationalSummary();
@@ -2022,7 +2080,9 @@ function isTreatedWaterReadyToSave() {
 
 function updateTreatedWaterSaveState() {
   if (treatedWaterRefs.save) {
-    treatedWaterRefs.save.disabled = treatedWaterDraftRecords.length === 0;
+    treatedWaterRefs.save.disabled = isTreatedWaterSimpleRechargeMode()
+      ? !isTreatedWaterReadyToSave()
+      : treatedWaterDraftRecords.length === 0;
   }
 }
 
@@ -2115,12 +2175,15 @@ function filterTreatedWaterRecords(records, filters = getTreatedWaterConsultFilt
 }
 
 async function saveTreatedWaterRecord() {
-  if (!treatedWaterDraftRecords.length) {
+  const rowsToSave = treatedWaterDraftRecords.length
+    ? treatedWaterDraftRecords
+    : (isTreatedWaterSimpleRechargeMode() && isTreatedWaterReadyToSave() ? [buildTreatedWaterPayload()] : []);
+  if (!rowsToSave.length) {
     updateTreatedWaterSaveState();
     return;
   }
   const observations = treatedWaterRefs.observations?.value.trim() || "";
-  const payload = treatedWaterDraftRecords.map((row) => ({
+  const payload = rowsToSave.map((row) => ({
     ...row,
     observaciones: observations || row.observaciones || ""
   }));
@@ -8110,6 +8173,18 @@ passengerRefs.save?.addEventListener("click", savePassengerRecords);
 bindDateStepper(passengerRefs.date, passengerRefs.prevDay, passengerRefs.nextDay);
 
 treatedWaterRefs.date?.addEventListener("change", () => {
+  syncTreatedWaterDateParts();
+  loadTreatedWaterPersistedRecords({ silent: true });
+});
+treatedWaterRefs.prevDate?.addEventListener("click", () => {
+  if (!treatedWaterRefs.date) return;
+  treatedWaterRefs.date.value = shiftDateValue(treatedWaterRefs.date.value || getTodayValue(), -1);
+  syncTreatedWaterDateParts();
+  loadTreatedWaterPersistedRecords({ silent: true });
+});
+treatedWaterRefs.nextDate?.addEventListener("click", () => {
+  if (!treatedWaterRefs.date) return;
+  treatedWaterRefs.date.value = shiftDateValue(treatedWaterRefs.date.value || getTodayValue(), 1);
   syncTreatedWaterDateParts();
   loadTreatedWaterPersistedRecords({ silent: true });
 });
