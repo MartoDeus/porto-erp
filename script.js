@@ -1182,24 +1182,33 @@ function isTreatedWaterPlatformCatalogItem(item) {
     && platform !== "DIFERENCIA POR SONDAJE";
 }
 
+function sortTreatedWaterCatalogByPlatform(items) {
+  return [...items].sort((a, b) => String(a.plataforma || "").localeCompare(String(b.plataforma || ""), "es", {
+    numeric: true,
+    sensitivity: "base"
+  }));
+}
+
 function getTreatedWaterCatalogForMode(mode = getTreatedWaterActiveMode()) {
   const normalizedMode = normalizeTreatedWaterValue(mode);
+  const catalog = getTreatedWaterCatalog();
   const shipValues = new Set(TREATED_WATER_SHIPS.map(normalizeTreatedWaterValue));
-  return getTreatedWaterCatalog().filter((item) => {
-    const platform = normalizeTreatedWaterValue(item.plataforma);
-    if (normalizedMode === "RECARGA") {
-      return isTreatedWaterRechargePlatformMode()
-        ? isTreatedWaterPlatformCatalogItem(item)
-        : platform === "RECARGA";
-    }
-    if (normalizedMode === "TRANSFERENCIA") {
-      return shipValues.has(platform);
-    }
-    if (normalizedMode === "PLATAFORMA") {
-      return isTreatedWaterPlatformCatalogItem(item);
-    }
-    return isTreatedWaterPlatformCatalogItem(item);
-  });
+  const shipItems = TREATED_WATER_SHIPS
+    .map((ship) => catalog.find((item) => normalizeTreatedWaterValue(item.plataforma) === normalizeTreatedWaterValue(ship)))
+    .filter(Boolean);
+  const platformItems = sortTreatedWaterCatalogByPlatform(catalog.filter(isTreatedWaterPlatformCatalogItem));
+  if (normalizedMode === "RECARGA") {
+    return isTreatedWaterRechargePlatformMode()
+      ? platformItems
+      : catalog.filter((item) => normalizeTreatedWaterValue(item.plataforma) === "RECARGA");
+  }
+  if (normalizedMode === "TRANSFERENCIA") {
+    return [...shipItems, ...platformItems];
+  }
+  if (normalizedMode === "PLATAFORMA") {
+    return platformItems;
+  }
+  return platformItems.filter((item) => !shipValues.has(normalizeTreatedWaterValue(item.plataforma)));
 }
 
 function getTreatedWaterSelectedDetailText() {
@@ -1248,24 +1257,36 @@ function populateTreatedWaterDetails(mode = getTreatedWaterActiveMode()) {
   if (!treatedWaterRefs.detail) {
     return;
   }
-  const catalog = getTreatedWaterCatalog();
+  const fullCatalog = getTreatedWaterCatalog();
+  const selectedItem = getSelectedTreatedWaterDetail();
+  const selectedPlatform = selectedItem?.plataforma || treatedWaterRefs.detail.selectedOptions?.[0]?.dataset?.plataforma || "";
+  const selectedZone = selectedItem?.zona || "";
+  const catalog = getTreatedWaterCatalogForMode(mode);
   const duplicateCount = catalog.reduce((acc, item) => {
     const key = normalizeTreatedWaterValue(item.plataforma);
     acc[key] = (acc[key] || 0) + 1;
     return acc;
   }, {});
   treatedWaterRefs.detail.innerHTML = '<option value="">Seleccione detalle</option>';
-  catalog.forEach((item, index) => {
+  catalog.forEach((item) => {
+    const fullIndex = fullCatalog.indexOf(item);
+    if (fullIndex < 0) {
+      return;
+    }
     const option = document.createElement("option");
-    option.value = String(index);
+    option.value = String(fullIndex);
     option.dataset.plataforma = item.plataforma;
     option.textContent = duplicateCount[normalizeTreatedWaterValue(item.plataforma)] > 1
       ? `${item.plataforma} - ${item.zona}`
       : item.plataforma;
     treatedWaterRefs.detail.appendChild(option);
   });
-  const selectedIndex = fullCatalog.findIndex((item) => normalizeTreatedWaterValue(item.plataforma) === normalizeTreatedWaterValue(selectedPlatform));
-  treatedWaterRefs.detail.value = selectedIndex >= 0 && catalog.includes(fullCatalog[selectedIndex]) ? String(selectedIndex) : "";
+  const selectedIndex = fullCatalog.findIndex((item) => {
+    const samePlatform = normalizeTreatedWaterValue(item.plataforma) === normalizeTreatedWaterValue(selectedPlatform);
+    const sameZone = !selectedZone || normalizeTreatedWaterValue(item.zona) === normalizeTreatedWaterValue(selectedZone);
+    return samePlatform && sameZone && catalog.includes(item);
+  });
+  treatedWaterRefs.detail.value = selectedIndex >= 0 ? String(selectedIndex) : "";
   syncTreatedWaterDetailDropdown();
 }
 
