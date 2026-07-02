@@ -812,20 +812,36 @@
                 <input id="treatedWaterShipType" type="text" placeholder="Automático" disabled>
               </label>
 
-              <label class="treated-water-field">
-                <span>Tipo de Movimiento <b>*</b></span>
-                <input id="treatedWaterMovement" type="text" placeholder="Automático" disabled>
-              </label>
+            <div class="treated-water-workgrid">
+              <aside class="panel-card treated-water-mode-nav" aria-label="Tipo de movimiento de agua tratada">
+                <button class="treated-water-mode is-active" type="button" data-treated-water-mode="RECARGA"><span>Despacho / Transferencia</span></button>
+                <button class="treated-water-mode" type="button" data-treated-water-mode="TRANSFERENCIA"><span>Transferencia</span></button>
+              </aside>
 
-              <label class="treated-water-field">
-                <span>Zona</span>
-                <input id="treatedWaterZone" type="text" placeholder="Automático" disabled>
-              </label>
+              <article class="panel-card treated-water-card">
+                <header class="treated-water-header">
+                  <h3><i data-lucide="droplet"></i><span id="treatedWaterWorkspaceTitle">REGISTRO DE MOVIMIENTO - RECARGA / DESPACHO</span></h3>
+                </header>
 
-              <label class="treated-water-field">
-                <span>Cantidad (Gal) <b>*</b></span>
-                <input id="treatedWaterQty" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Ej: 1000" autocomplete="off" required>
-              </label>
+                <div class="treated-water-entry-grid">
+                  <label class="treated-water-field treated-water-detail-field">
+                    <span>Nave / Plataforma <b>*</b></span>
+                    <div class="treated-water-detail-control">
+                      <select class="treated-water-native-select" id="treatedWaterDetail" required tabindex="-1" aria-hidden="true">
+                        <option value="">Seleccione detalle</option>
+                      </select>
+                      <div class="treated-water-select-shell" id="treatedWaterDetailDropdown">
+                        <button class="treated-water-select-button" type="button" id="treatedWaterDetailButton" aria-haspopup="listbox" aria-expanded="false">
+                          <span id="treatedWaterDetailButtonText">Seleccione detalle</span>
+                          <i data-lucide="chevron-down"></i>
+                        </button>
+                        <div class="treated-water-select-menu" id="treatedWaterDetailMenu" role="listbox" hidden></div>
+                      </div>
+                      <button class="list-toggle treated-water-platform-toggle" type="button" id="treatedWaterPlatformToggle" aria-pressed="false">
+                        <i data-lucide="layers"></i><span>Plataformas</span>
+                      </button>
+                    </div>
+                  </label>
 
               <label class="treated-water-field">
                 <span>Vale de Salida <b>*</b></span>
@@ -840,37 +856,124 @@
                 </span>
               </label>
 
-              <label class="treated-water-field">
-                <span>Hora Fin</span>
-                <span class="treated-water-input-icon">
-                  <i data-lucide="clock-3"></i>
-                  <input id="treatedWaterEnd" type="time" required>
-                </span>
-              </label>
+                  <div class="treated-water-add-actions">
+                    <button class="treated-water-add-button" type="button" aria-label="Agregar movimiento"><i data-lucide="plus"></i></button>
+                    <button class="treated-water-cancel-edit" type="button" id="treatedWaterCancelEdit" aria-label="Cancelar edición" hidden><i data-lucide="x"></i></button>
+                  </div>
 
               <label class="treated-water-field">
                 <span>Tiempo de Recarga</span>
                 <input id="treatedWaterDuration" type="text" value="-" disabled>
               </label>
 
+                  <label class="treated-water-field treated-water-auto-field">
+                    <span>Tipo de Movimiento <b>*</b></span>
+                    <input id="treatedWaterMovement" type="text" placeholder="Automático" disabled>
+                  </label>
+
+                  <label class="treated-water-field treated-water-auto-field">
+                    <span>Zona</span>
+                    <input id="treatedWaterZone" type="text" placeholder="Automático" disabled>
+                  </label>
+
+                  <label class="treated-water-field">
+                    <span>Hora Inicio</span>
+                    <span class="treated-water-input-icon">
+                      <i data-lucide="clock-3"></i>
+                      <input id="treatedWaterStart" type="time" required>
+                    </span>
+                  </label>
+
+                  <label class="treated-water-field">
+                    <span>Hora Fin</span>
+                    <span class="treated-water-input-icon">
+                      <i data-lucide="clock-3"></i>
+                      <input id="treatedWaterEnd" type="time" required>
+                    </span>
+                  </label>
+
+                  <label class="treated-water-field">
+                    <span>Tiempo de Recarga</span>
+                    <input id="treatedWaterDuration" type="text" value="-" disabled>
+                  </label>
+                </div>
+
+                <div class="treated-water-register-table" aria-label="Detalle del registro actual">
+                  <div class="treated-water-register-head">
+                    <span>#</span>
+                    <span>Nave / Plataforma</span>
+                    <span>Tipo</span>
+                    <span>Cantidad (gal)</span>
+                    <span>N° Vale</span>
+                    <span>H. Inicio</span>
+                    <span>H. Fin</span>
+                    <span>Zona</span>
+                    <span>Acciones</span>
+                  </div>
+                  <div class="treated-water-register-rows" id="treatedWaterRegisterRows"></div>
+                  <div class="treated-water-register-empty" id="treatedWaterRegisterEmpty">Complete los datos para guardar el registro.</div>
+                  <footer class="treated-water-register-footer" id="treatedWaterRegisterFooter" hidden>
+                    <span id="treatedWaterRegisterCount">Total registros: 0</span>
+                    <strong id="treatedWaterRegisterTotal">Total Cantidad: 0 gal</strong>
+                  </footer>
+                </div>
+              </article>
+
+              <div class="treated-water-right-stack">
+                <aside class="panel-card treated-water-summary-card">
+                  <header>
+                    <h3>RESUMEN</h3>
+                    <i data-lucide="clipboard-list"></i>
+                  </header>
+                  <dl>
+                    <div><dt>Nave:</dt><dd id="treatedWaterSummaryShip">-</dd></div>
+                    <div><dt>Detalle:</dt><dd id="treatedWaterSummaryDetail">-</dd></div>
+                    <div><dt>Cantidad (gal):</dt><dd id="treatedWaterSummaryQty">0</dd></div>
+                    <hr>
+                    <div><dt>Stock Inicial (gal):</dt><dd id="treatedWaterSummaryInitialStock">0</dd></div>
+                    <div><dt>Recarga (gal):</dt><dd id="treatedWaterSummaryRecharge">0</dd></div>
+                    <div><dt>Total Despachado (gal):</dt><dd id="treatedWaterSummaryDispatched">0</dd></div>
+                    <div><dt>Transferencia Entrada (gal):</dt><dd id="treatedWaterSummaryTransferIn">0</dd></div>
+                    <div><dt>Transferencia Salida (gal):</dt><dd id="treatedWaterSummaryTransferOut">0</dd></div>
+                  </dl>
+                  <div class="treated-water-final-stock">
+                    <i data-lucide="database"></i>
+                    <span>STOCK FINAL <small>(gal)</small></span>
+                    <strong id="treatedWaterSummaryFinalStock">0</strong>
+                  </div>
+                </aside>
+              </div>
+            </div>
+
+            <section class="treated-water-bottom panel-card">
               <label class="treated-water-field treated-water-observations">
                 <span>Observaciones</span>
                 <textarea id="treatedWaterObservations" maxlength="500" placeholder="Ingrese observaciones (opcional)"></textarea>
                 <small><span id="treatedWaterObservationCount">0</span> / 500</small>
               </label>
-
               <div class="treated-water-actions">
-                <button class="treated-water-clear" type="button" id="treatedWaterClear">Limpiar</button>
-                <button class="treated-water-save" type="submit" id="treatedWaterSave" disabled><i data-lucide="save"></i>Guardar Registro</button>
+                <button class="treated-water-clear" type="button" id="treatedWaterClear"><i data-lucide="trash-2"></i>Limpiar</button>
+                <button class="treated-water-save" type="submit" id="treatedWaterSave" formnovalidate disabled><i data-lucide="save"></i>Guardar Registro</button>
               </div>
-            </form>
-          </article>
+            </section>
+            <p class="treated-water-info"><i data-lucide="info"></i>Los campos con <b>*</b> son obligatorios. Verifique los datos antes de guardar el registro.</p>
+          </form>
         </section>
         <section class="page-view treated-water-consult-view" data-view="agua-tratada-consulta" hidden>
+          <div class="treated-water-consult-toolbar">
+            <button class="treated-water-back treated-water-icon-back" type="button" id="treatedWaterBack"><i data-lucide="arrow-left"></i></button>
+            <div class="treated-water-results-actions">
+              <button class="treated-water-export" type="button" id="treatedWaterKardexExport"><i data-lucide="download"></i>Exportar Kardex</button>
+              <button class="treated-water-export" type="button" id="treatedWaterExportExcel"><i data-lucide="download"></i>Reporte Excel</button>
+              <button class="treated-water-export" type="button" id="treatedWaterExportPdf"><i data-lucide="printer"></i>Reporte PDF</button>
+              <button class="treated-water-refresh" type="button" id="treatedWaterRefresh"><i data-lucide="refresh-cw"></i>Actualizar</button>
+              <button class="treated-water-export" type="button" id="treatedWaterShowAll"><i data-lucide="list-filter"></i>Ver todas las naves</button>
+            </div>
+          </div>
+
           <section class="panel-card treated-water-consult-card">
             <header class="treated-water-consult-head">
               <h3><i data-lucide="filter"></i>Filtros de Búsqueda</h3>
-              <button class="treated-water-back" type="button" id="treatedWaterBack"><i data-lucide="arrow-left"></i>Regresar</button>
             </header>
 
             <form class="treated-water-filter-form" id="treatedWaterFilterForm">
@@ -894,7 +997,7 @@
                   <option value="">Seleccione una nave</option>
                 </select>
               </label>
-              <label class="treated-water-field">
+              <label class="treated-water-field treated-water-filter-optional">
                 <span>Detalle / Plataforma</span>
                 <select id="treatedWaterFilterDetail">
                   <option value="">Seleccione detalle</option>
@@ -916,10 +1019,10 @@
                 </select>
               </label>
               <label class="treated-water-field">
-                <span>Vale de Salida</span>
+                <span>N° Vale</span>
                 <input id="treatedWaterFilterGuide" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Ingrese vale">
               </label>
-              <label class="treated-water-field">
+              <label class="treated-water-field treated-water-filter-optional">
                 <span>Tipo de Nave</span>
                 <select id="treatedWaterFilterShipType">
                   <option value="">Seleccione tipo</option>
@@ -935,16 +1038,6 @@
           <section class="panel-card treated-water-results-card">
             <header class="treated-water-results-head">
               <h3><i data-lucide="table-2"></i>Resultados de la Búsqueda</h3>
-              <div class="treated-water-results-actions">
-                <div class="treated-water-export-menu">
-                  <button class="treated-water-export" type="button" id="treatedWaterExport" aria-expanded="false" aria-haspopup="true"><i data-lucide="download"></i>Exportar<i data-lucide="chevron-down"></i></button>
-                  <div class="treated-water-export-options" id="treatedWaterExportOptions" hidden>
-                    <button type="button" id="treatedWaterExportExcel"><i data-lucide="file-spreadsheet"></i>Exportar en Excel</button>
-                    <button type="button" id="treatedWaterExportPdf"><i data-lucide="file-text"></i>Exportar en PDF</button>
-                  </div>
-                </div>
-                <button class="treated-water-refresh" type="button" id="treatedWaterRefresh" aria-label="Actualizar"><i data-lucide="refresh-cw"></i></button>
-              </div>
             </header>
             <div class="treated-water-table-wrap">
               <table class="treated-water-table">
@@ -952,8 +1045,8 @@
                   <tr>
                     <th>Fecha</th>
                     <th>Nave</th>
-                    <th>Detalle / Plataforma</th>
-                    <th>Tipo de Nave</th>
+                    <th>Nave / Plataforma</th>
+                    <th>Tipo Agrupado</th>
                     <th>Tipo de Movimiento</th>
                     <th>Zona</th>
                     <th>Cantidad (Gal)</th>
@@ -1609,7 +1702,9 @@
   <script src="vendor/xlsx.full.min.js"></script>
   <script src="vendor/exceljs.min.js"></script>
   <script src="vendor/three.min.js"></script>
-  <script src="script.js?v=toast-report-20260606"></script>
+  <script src="assets/templates/reporte-diario-agua-tratada-template.js?v=20260630"></script>
+  <script src="assets/templates/kardex-agua-tratada-template.js?v=20260630"></script>
+  <script src="script.js?v=agua-tratada-supabase-tests-20260701"></script>
 </body>
 </html>
 
