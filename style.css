@@ -544,20 +544,24 @@ button {
 }
 
 .nav-icon {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   display: inline-grid;
   place-items: center;
   color: currentColor;
-  flex: 0 0 24px;
+  flex: 0 0 26px;
 }
 
 .custom-nav-icon {
   fill: none;
   stroke: currentColor;
-  stroke-width: 1.9;
+  stroke-width: 1.55;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+.app-sidebar .custom-nav-icon {
+  color: #ffffff;
 }
 
 .dashboard-workspace {
@@ -569,6 +573,8 @@ button {
 }
 
 .app-topbar {
+  position: relative;
+  z-index: 1500;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -645,7 +651,7 @@ button {
   position: absolute;
   top: 52px;
   right: 292px;
-  z-index: 20;
+  z-index: 1600;
   width: 360px;
   color: var(--ink);
   background: white;
@@ -759,13 +765,13 @@ button {
 }
 
 .toast-warning {
-  background: rgba(255, 250, 235, 0.97);
-  border-color: #f8d477;
+  background: rgba(255, 241, 242, 0.97);
+  border-color: #fecdd3;
 }
 
 .toast-warning .toast-icon {
-  color: #d97706;
-  border-color: #d97706;
+  color: #dc2626;
+  border-color: #dc2626;
 }
 
 .toast-icon svg {
@@ -872,7 +878,7 @@ button {
   position: absolute;
   top: 52px;
   right: 0;
-  z-index: 25;
+  z-index: 1600;
   width: 380px;
   max-height: calc(100vh - 84px);
   overflow-y: auto;
@@ -2097,7 +2103,7 @@ button {
 
 /* Agua Tratada mirrors the Diesel registration workspace measurements. */
 .treated-water-view {
-  padding: 24px 28px 0;
+  padding: 0;
 }
 
 .treated-water-shell,
@@ -2191,7 +2197,7 @@ button {
   box-shadow: 0 8px 18px rgba(77, 141, 132, 0.2);
 }
 
-.treated-water-card {
+.panel-card.treated-water-card {
   display: grid;
   gap: 14px;
   align-content: start;
@@ -2359,13 +2365,29 @@ button {
   box-shadow: none;
 }
 
-.treated-water-bottom {
+.panel-card.treated-water-bottom {
   min-height: 120px;
   display: grid;
   grid-template-columns: 1fr;
   gap: 8px;
   padding: 10px 12px 12px;
   overflow: hidden;
+}
+
+.treated-water-bottom .treated-water-observations {
+  gap: 14px;
+}
+
+.treated-water-bottom .treated-water-observations > span:first-child {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0 0 8px;
+  color: #4f7f79;
+  border-bottom: 3px solid #5c9188;
+  font-size: 0.98rem;
+  font-weight: 800;
+  line-height: 1.15;
 }
 
 .treated-water-observations textarea {
@@ -3825,6 +3847,15 @@ button {
 
 .green-action {
   padding: 0 20px;
+}
+
+#consultView .passenger-actions .outline-action,
+#consultView .passenger-actions .green-action {
+  border-color: #00a18e;
+}
+
+#consultView .back-action {
+  border-color: #00a18e;
 }
 
 .passenger-layout {
@@ -5690,12 +5721,15 @@ button {
 }
 
 .diesel-register-top {
+  position: relative;
+  z-index: 80;
   display: grid;
   grid-template-columns: minmax(204px, 0.8075fr) minmax(240px, 1.08fr) minmax(221px, 1.0625fr) minmax(150px, 0.45fr);
   gap: 18px;
   align-items: end;
   margin-bottom: 14px;
   padding: 18px 24px;
+  overflow: visible;
 }
 
 .diesel-consult-slot {
@@ -5762,6 +5796,128 @@ button {
   border: 1px solid #d9e1eb;
   border-radius: 6px;
   font: inherit;
+}
+
+.diesel-register-top select option,
+.diesel-entry-form select option,
+.diesel-sondaje-select-label select option,
+.consult-filter-card select option,
+.consult-pager select option {
+  color: #071425;
+  background: #ffffff;
+}
+
+.diesel-register-top select option:hover,
+.diesel-register-top select option:checked,
+.diesel-entry-form select option:hover,
+.diesel-entry-form select option:checked,
+.diesel-sondaje-select-label select option:hover,
+.diesel-sondaje-select-label select option:checked,
+.consult-filter-card select option:hover,
+.consult-filter-card select option:checked,
+.consult-pager select option:hover,
+.consult-pager select option:checked {
+  color: #006f63;
+  background: #eef8f5;
+}
+
+.diesel-native-select {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  min-height: 1px !important;
+  padding: 0 !important;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.diesel-select-shell {
+  min-width: 0;
+  position: relative;
+  z-index: 20;
+}
+
+.diesel-select-button {
+  width: 100%;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 12px;
+  color: #071425;
+  background: #ffffff;
+  border: 1px solid #d9e1eb;
+  border-radius: 6px;
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.diesel-select-button span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diesel-select-button svg {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+}
+
+.diesel-select-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 1200;
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 6px 0;
+  color: #071425;
+  background: #ffffff;
+  border: 1px solid #cfd9e6;
+  border-radius: 6px;
+  box-shadow: 0 16px 34px rgba(17, 31, 52, 0.16);
+}
+
+.diesel-select-menu[hidden] {
+  display: none;
+}
+
+.diesel-select-option {
+  width: 100%;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  color: #071425;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+
+.diesel-select-option:hover,
+.diesel-select-option.is-selected {
+  color: #006f63;
+  background: #eef8f5;
+}
+
+.diesel-select-option:disabled {
+  color: #64748b;
+  cursor: default;
+}
+
+.diesel-select-button:disabled {
+  color: #64748b;
+  background: #f8fafc;
+  cursor: default;
 }
 
 .diesel-register-top fieldset {
@@ -6077,9 +6233,11 @@ button {
 
 .diesel-sondaje-body {
   display: grid;
+  grid-template-columns: minmax(180px, 380px) minmax(260px, 380px);
   gap: 10px;
   padding-top: 10px;
   align-content: start;
+  align-items: start;
 }
 
 .diesel-sondaje-body[hidden] {
@@ -6096,6 +6254,8 @@ button {
 }
 
 .diesel-sondaje-select-label {
+  grid-column: 1;
+  grid-row: 1;
   margin-bottom: 2px;
   max-width: 380px;
 }
@@ -6103,7 +6263,7 @@ button {
 .diesel-sondaje-select-label select {
   width: 100%;
   min-height: 32px;
-  padding: 0 12px;
+  padding: 0 36px 0 12px;
   border: 1px solid #d9e1eb;
   border-radius: 6px;
   color: #1f2c44;
@@ -6140,6 +6300,7 @@ button {
 }
 
 .diesel-sondaje-time-row {
+  grid-column: 1;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
@@ -6150,8 +6311,28 @@ button {
   max-width: none !important;
 }
 
-.diesel-sondaje-body label:not(.diesel-sondaje-select-label) {
+.diesel-sondaje-body > label:not(.diesel-sondaje-select-label):not(.diesel-sondaje-apply-stock) {
+  grid-column: 1;
   max-width: 380px;
+}
+
+.diesel-sondaje-body > .diesel-sondaje-apply-stock {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+@media (max-width: 900px) {
+  .diesel-sondaje-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .diesel-sondaje-time-row,
+  .diesel-sondaje-select-label,
+  .diesel-sondaje-body > label:not(.diesel-sondaje-select-label):not(.diesel-sondaje-apply-stock),
+  .diesel-sondaje-body > .diesel-sondaje-apply-stock {
+    grid-column: 1;
+    grid-row: auto;
+  }
 }
 
 .diesel-sondaje-body label > span {
@@ -6213,9 +6394,14 @@ button {
   font-size: 0.78rem;
 }
 
-.diesel-entry-form .diesel-platform-toggle svg {
-  width: 15px;
-  height: 15px;
+.diesel-entry-form .diesel-platform-icon {
+  width: 17px;
+  height: 17px;
+  min-width: 17px;
+  flex: 0 0 auto;
+  display: block;
+  color: currentColor;
+  fill: currentColor;
 }
 
 .add-square {
@@ -6242,6 +6428,11 @@ button {
 .diesel-table th,
 .diesel-table td {
   padding: 10px 16px;
+}
+
+.diesel-table thead th {
+  color: #006f63;
+  background: linear-gradient(90deg, #eef8f5, #f8fcfb);
 }
 
 .type-pill {
@@ -6321,6 +6512,10 @@ button {
   gap: 8px;
   padding: 10px 12px 12px;
   margin-top: 0;
+  background: white;
+  border: 1px solid #e1e7ef;
+  border-radius: 8px;
+  box-shadow: 0 16px 38px rgba(17, 28, 43, 0.05);
   overflow: hidden;
 }
 
@@ -6336,7 +6531,7 @@ button {
 }
 
 .diesel-workspace .diesel-entry-form {
-  grid-template-columns: minmax(180px, 1.5fr) 72px minmax(130px, 0.9fr) minmax(136px, 0.95fr) 40px;
+  grid-template-columns: minmax(180px, 1.5fr) 112px minmax(130px, 0.9fr) minmax(136px, 0.95fr) 40px;
   gap: 10px;
 }
 
@@ -7423,9 +7618,9 @@ button {
 }
 
 .diesel-observations textarea {
-  min-height: 30px;
+  min-height: 78px;
   padding: 8px 12px;
-  resize: none;
+  resize: vertical;
 }
 
 .diesel-observations small {
@@ -7724,7 +7919,7 @@ button {
   }
 
   .feature-list {
-    grid-template-columns: 1fr;
+    display: none;
   }
 
   .login-card {
