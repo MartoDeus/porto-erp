@@ -163,6 +163,8 @@ const dieselRefs = {
   consultTabs: document.querySelector("#dieselConsultTabs"),
   consultGroups: document.querySelector("#dieselConsultGroups"),
   consultSummary: document.querySelector("#dieselConsultSummary"),
+  controllerDay: document.querySelector("#dieselControllerDay"),
+  controllerNight: document.querySelector("#dieselControllerNight"),
   consultRefresh: document.querySelector("#refreshDieselConsult"),
   consultExcel: document.querySelector("#exportDieselExcel"),
   consultReportExcel: document.querySelector("#downloadDieselExcel"),
@@ -1046,8 +1048,8 @@ function setPage(pageName) {
     const pageTitles = {
       dashboard: "Dashboard",
       passengers: "Pasajeros",
-      diesel: "Registro de Diesel",
-      consulta: "Consulta",
+      diesel: "Registro Diesel",
+      consulta: "Consulta Diesel",
       lubricante: "Lubricante",
       "agua-tratada": "Registro Agua Tratada",
       "agua-tratada-consulta": "Agua Tratada",
@@ -4543,6 +4545,7 @@ function renderDieselSondajeOptions() {
     if (dieselRefs.sondajeConsumption) {
       dieselRefs.sondajeConsumption.value = "";
     }
+    syncDieselCustomSelect(dieselRefs.sondajeSelect);
     return;
   }
 
@@ -4558,6 +4561,7 @@ function renderDieselSondajeOptions() {
 
   const nextSlot = availableSlots.includes(currentSlot) ? currentSlot : availableSlots[0];
   loadDieselSondajeEntry(nextSlot - 1);
+  syncDieselCustomSelect(dieselRefs.sondajeSelect);
 }
 
 function saveCurrentDieselSondajeEntry() {
@@ -4600,6 +4604,7 @@ function loadDieselSondajeEntry(index) {
 
   if (dieselRefs.sondajeSelect) {
     dieselRefs.sondajeSelect.value = String(index + 1);
+    syncDieselCustomSelect(dieselRefs.sondajeSelect);
   }
 
   syncDieselSondajeLabels(index);
@@ -4796,6 +4801,129 @@ function syncDieselReceiveModeLabel() {
     : "Nave/Barcaza Recibe";
 }
 
+function getDieselSelectText(select) {
+  return select?.selectedOptions?.[0]?.textContent || "";
+}
+
+function closeDieselCustomSelect(shell) {
+  const button = shell?.querySelector(".diesel-select-button");
+  const menu = shell?.querySelector(".diesel-select-menu");
+  if (!button || !menu) {
+    return;
+  }
+  button.setAttribute("aria-expanded", "false");
+  menu.hidden = true;
+}
+
+function closeAllDieselCustomSelects(exceptShell = null) {
+  document.querySelectorAll(".diesel-select-shell").forEach((shell) => {
+    if (shell !== exceptShell) {
+      closeDieselCustomSelect(shell);
+    }
+  });
+}
+
+function syncDieselCustomSelect(select) {
+  const shell = select?.nextElementSibling?.classList?.contains("diesel-select-shell")
+    ? select.nextElementSibling
+    : null;
+  if (!select || !shell) {
+    return;
+  }
+
+  const button = shell.querySelector(".diesel-select-button");
+  const buttonText = shell.querySelector(".diesel-select-button span");
+  const menu = shell.querySelector(".diesel-select-menu");
+  if (!button || !buttonText || !menu) {
+    return;
+  }
+
+  const selectedValue = select.value;
+  button.disabled = select.disabled;
+  buttonText.textContent = getDieselSelectText(select) || select.dataset.placeholder || "";
+  menu.innerHTML = "";
+
+  Array.from(select.options).forEach((option) => {
+    const item = document.createElement("button");
+    item.type = "button";
+    item.className = "diesel-select-option";
+    item.dataset.value = option.value;
+    item.disabled = option.disabled;
+    item.setAttribute("role", "option");
+    item.setAttribute("aria-selected", String(option.value === selectedValue));
+    item.classList.toggle("is-selected", option.value === selectedValue);
+    item.textContent = option.textContent;
+    menu.appendChild(item);
+  });
+}
+
+function syncAllDieselCustomSelects() {
+  document.querySelectorAll("select[data-diesel-custom-select='true']").forEach(syncDieselCustomSelect);
+}
+
+function enhanceDieselSelect(select) {
+  if (!select || select.dataset.dieselCustomSelect === "true") {
+    return;
+  }
+
+  select.dataset.dieselCustomSelect = "true";
+  select.dataset.placeholder = select.getAttribute("aria-label") || "";
+  select.classList.add("diesel-native-select");
+
+  const shell = document.createElement("div");
+  shell.className = "diesel-select-shell";
+  shell.innerHTML = `
+    <button class="diesel-select-button" type="button" aria-haspopup="listbox" aria-expanded="false">
+      <span></span>
+      <i data-lucide="chevron-down"></i>
+    </button>
+    <div class="diesel-select-menu" role="listbox" hidden></div>
+  `;
+  select.insertAdjacentElement("afterend", shell);
+
+  const button = shell.querySelector(".diesel-select-button");
+  const menu = shell.querySelector(".diesel-select-menu");
+  button?.addEventListener("click", () => {
+    if (button.disabled) {
+      return;
+    }
+    const isOpen = button.getAttribute("aria-expanded") === "true";
+    closeAllDieselCustomSelects(shell);
+    button.setAttribute("aria-expanded", String(!isOpen));
+    menu.hidden = isOpen;
+  });
+
+  menu?.addEventListener("click", (event) => {
+    const option = event.target.closest(".diesel-select-option");
+    if (!option || !menu.contains(option) || option.disabled) {
+      return;
+    }
+    select.value = option.dataset.value || "";
+    closeDieselCustomSelect(shell);
+    syncDieselCustomSelect(select);
+    select.dispatchEvent(new Event("input", { bubbles: true }));
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+
+  const observer = new MutationObserver(() => syncDieselCustomSelect(select));
+  observer.observe(select, { childList: true, subtree: true, attributes: true });
+  select.addEventListener("change", () => syncDieselCustomSelect(select));
+  syncDieselCustomSelect(select);
+}
+
+function enhanceDieselSelects() {
+  [
+    dieselRefs.origin,
+    dieselRefs.receive,
+    dieselRefs.sondajeSelect,
+    dieselRefs.consultVessel,
+    dieselRefs.consultShift
+  ].forEach(enhanceDieselSelect);
+  if (window.lucide) {
+    window.lucide.createIcons();
+  }
+}
+
 function fillDieselSelect(select, options, selectedValue, excludeValue = "") {
   if (!select) {
     return;
@@ -4811,6 +4939,7 @@ function fillDieselSelect(select, options, selectedValue, excludeValue = "") {
   } else {
     select.selectedIndex = -1;
   }
+  syncDieselCustomSelect(select);
 }
 
 function sortDieselOptions(options) {
@@ -4833,6 +4962,7 @@ function populateDieselShips() {
 
   fillDieselSelect(dieselRefs.origin, originOptions, selectedOrigin);
   fillDieselSelect(dieselRefs.receive, receiveOptions, selectedReceive, dieselRefs.origin.value);
+  syncAllDieselCustomSelects();
 }
 
 function populateDieselConsultFilters() {
@@ -4845,6 +4975,7 @@ function populateDieselConsultFilters() {
     .forEach((unit) => {
       dieselRefs.consultVessel.add(new Option(unit.ship, unit.ship));
     });
+  syncAllDieselCustomSelects();
 }
 
 function renderDieselRows() {
@@ -4915,7 +5046,7 @@ function addDieselDispatch() {
   const quantity = toNumber(dieselRefs.qty.value);
 
   if (!isDieselDispatcherShip(dieselRefs.origin.value)) {
-    alert("Solo naves abastecedoras y barcazas pueden despachar diesel.");
+    showWarningToast("Advertencia", "Solo naves abastecedoras y barcazas pueden despachar diesel.");
     return;
   }
 
@@ -5211,6 +5342,11 @@ function buildDieselConsultData() {
   const selectedDate = dieselRefs.consultDate?.value || getTodayValue();
   const currentKey = getDieselConsultKey();
   const cachedRows = dieselConsultCache.key === currentKey ? dieselConsultCache.rows : [];
+  const controllerRows = cachedRows.filter((record) => {
+    if (selectedShip && normalizeDieselName(record.unidad_nombre) !== normalizeDieselName(selectedShip)) return false;
+    return true;
+  });
+  const controllers = getDieselConsultControllers(controllerRows);
   const recordsForDate = cachedRows.filter((record) => {
     if (selectedShip && normalizeDieselName(record.unidad_nombre) !== normalizeDieselName(selectedShip)) return false;
     return showAllDieselConsultItems || record.tiene_movimiento;
@@ -5303,7 +5439,33 @@ function buildDieselConsultData() {
   }, { initialStock: 0, received: 0, day: 0, night: 0, consumption: 0, dispatched: 0, transferred: 0, sondage: 0, finalStock: 0 });
 
   const visibleRows = reportGroups.reduce((count, group) => count + group.rows.length, 0);
-  return { selectedShip, selectedShift, selectedDate, visibleUnits: recordsForDate, visibleRows, groups: reportGroups, totals };
+  return { selectedShip, selectedShift, selectedDate, visibleUnits: recordsForDate, visibleRows, groups: reportGroups, totals, controllers };
+}
+
+function getDieselConsultControllers(rows) {
+  const formatControllerList = (values) => {
+    const unique = [...new Set(
+      values
+        .map((value) => normalizeDieselDisplayName(value || ""))
+        .filter(Boolean)
+        .filter((value) => value !== "-")
+    )];
+    return unique.length ? unique.join(" / ") : "-";
+  };
+
+  return {
+    day: formatControllerList(rows.map((record) => record.registrado_por_dia)),
+    night: formatControllerList(rows.map((record) => record.registrado_por_noche))
+  };
+}
+
+function updateDieselConsultControllers(controllers = { day: "-", night: "-" }) {
+  if (dieselRefs.controllerDay) {
+    dieselRefs.controllerDay.textContent = controllers.day || "-";
+  }
+  if (dieselRefs.controllerNight) {
+    dieselRefs.controllerNight.textContent = controllers.night || "-";
+  }
 }
 
 function getDieselEditShiftValue(selectedShift) {
@@ -6066,6 +6228,7 @@ async function renderDieselConsult({ showError = false } = {}) {
   if (dieselRefs.consultSummary) {
     dieselRefs.consultSummary.textContent = "Actualizando consulta...";
   }
+  updateDieselConsultControllers();
   renderIcons();
 
   try {
@@ -6086,6 +6249,7 @@ async function renderDieselConsult({ showError = false } = {}) {
   }
 
   const report = buildDieselConsultData();
+  updateDieselConsultControllers(report.controllers);
   dieselRefs.consultTabs.innerHTML = "";
 
   if (dieselRefs.consultModeToggle) {
@@ -7254,8 +7418,8 @@ async function downloadDieselConsultPdf() {
   doc.text(selectedDate || "-", 14, 33.5);
   doc.text(selectedShip, 48, 33.5);
   doc.text(getConsultShiftLabel(), 85, 33.5);
-  doc.text("TURNO DIA: Javier Cespedes Rosales", 116, 32);
-  doc.text("TURNO NOCHE: Jimmy Perez Moran", 116, 34.5);
+  doc.text(`TURNO DIA: ${report.controllers?.day || "-"}`, 116, 32);
+  doc.text(`TURNO NOCHE: ${report.controllers?.night || "-"}`, 116, 34.5);
 
   report.groups.forEach((group) => {
     const body = group.rows.map((row) => [
@@ -7585,6 +7749,7 @@ function clearDieselForm() {
   selectDieselModule("despacho");
   renderDieselRows();
   updateDieselSummary();
+  syncAllDieselCustomSelects();
 }
 
 function syncDieselInitialStockDisplay() {
@@ -7623,6 +7788,7 @@ function clearDieselFormAfterSave() {
   updateSondageInputs();
   renderDieselRows();
   updateDieselSummary();
+  syncAllDieselCustomSelects();
 }
 
 function resetDieselInitialState() {
@@ -7680,6 +7846,7 @@ function updateSondageInputs(changedControl = null) {
 }
 
 function bootDiesel() {
+  enhanceDieselSelects();
   populateDieselShips();
   populateDieselConsultFilters();
   resetDieselInitialState();
@@ -8264,6 +8431,9 @@ treatedWaterRefs.registerRows?.addEventListener("click", (event) => {
 });
 
 document.addEventListener("click", (event) => {
+  if (!event.target.closest?.(".diesel-select-shell")) {
+    closeAllDieselCustomSelects();
+  }
   if (!event.target.closest?.(".treated-water-select-shell")) {
     closeTreatedWaterDetailDropdown();
   }
