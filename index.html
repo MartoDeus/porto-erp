@@ -229,6 +229,7 @@
         </a>
 
         <p class="nav-section">Navegación</p>
+        <a class="nav-item" href="#" data-page="portal-cliente"><i class="nav-icon" data-lucide="layout-dashboard"></i>Portal del Cliente</a>
         <a class="nav-item" href="#" data-page="mapa"><i class="nav-icon" data-lucide="map"></i>Mapa</a>
         <a class="nav-item" href="#" data-page="naves"><i class="nav-icon" data-lucide="ship"></i>Naves</a>
         <a class="nav-item" href="#" data-page="rutas"><i class="nav-icon" data-lucide="route"></i>Rutas</a>
@@ -1605,6 +1606,62 @@
         <section class="page-view placeholder-view" data-view="ajustes" hidden>
           <article class="panel-card placeholder-card"><i data-lucide="settings"></i><h1>Ajustes</h1><p>Pantalla preparada para configuración del sistema.</p></article>
         </section>
+      </main>
+    </div>
+  </section>
+
+  <section class="client-portal" id="clientPortal" hidden aria-label="Portal del Cliente">
+    <header class="client-portal-header">
+      <a class="client-brand" href="#" data-portal-screen="home"><span class="client-brand-mark">P</span><span>PORTO ERP<small>Portal del cliente</small></span></a>
+      <button class="client-portal-exit" type="button" id="clientPortalExit"><i data-lucide="arrow-left"></i><span>Volver al ERP</span></button>
+    </header>
+    <div class="client-portal-shell">
+      <aside class="client-portal-sidebar" aria-label="Navegación del Portal del Cliente">
+        <p>Control de operación</p>
+        <nav class="client-portal-nav">
+          <button type="button" data-portal-screen="home"><i data-lucide="layout-dashboard"></i>Control de Operación</button>
+          <button type="button" data-portal-screen="diesel-dashboard"><i data-lucide="fuel"></i>Dashboard de Diésel</button>
+          <button type="button" data-portal-screen="vessels"><i data-lucide="ship"></i>Naves</button>
+          <button type="button" data-portal-screen="history"><i data-lucide="history"></i>Historial de movimientos</button>
+          <button type="button" data-portal-screen="reports"><i data-lucide="file-chart-column"></i>Reportes</button>
+          <button type="button" data-portal-screen="home" class="client-portal-back"><i data-lucide="arrow-left"></i>Volver a Control de Operación</button>
+        </nav>
+      </aside>
+      <main class="client-portal-main">
+        <section class="client-portal-view" data-portal-view="home">
+          <div class="client-portal-breadcrumb">Portal del cliente <span>/</span> Operación</div>
+          <h1>CONTROL DE OPERACIÓN</h1><p class="client-portal-lead">Consulta la información operativa del muelle.</p>
+          <div class="client-module-grid">
+            <button class="client-module-card" type="button" data-portal-screen="diesel-dashboard"><i data-lucide="fuel"></i><span><strong>Diésel</strong><small>Consumo y existencias por nave</small></span><b>›</b></button>
+            <button class="client-module-card" type="button" data-portal-screen="other-module" data-module-label="Lubricantes"><i data-lucide="container"></i><span><strong>Lubricantes</strong><small>Consulta de operación</small></span><b>›</b></button>
+            <button class="client-module-card" type="button" data-portal-screen="other-module" data-module-label="Cargas"><i data-lucide="package"></i><span><strong>Cargas</strong><small>Consulta de operación</small></span><b>›</b></button>
+            <button class="client-module-card" type="button" data-portal-screen="other-module" data-module-label="Agua de Consumo"><i data-lucide="glass-water"></i><span><strong>Agua de Consumo</strong><small>Consulta de operación</small></span><b>›</b></button>
+            <button class="client-module-card" type="button" data-portal-screen="other-module" data-module-label="Agua Tratada"><i data-lucide="droplet"></i><span><strong>Agua Tratada</strong><small>Consulta de operación</small></span><b>›</b></button>
+          </div>
+        </section>
+        <section class="client-portal-view" data-portal-view="diesel-dashboard" hidden>
+          <div class="client-portal-page-head"><div><div class="client-portal-breadcrumb"><button type="button" data-portal-screen="home">Control de Operación</button><span>/</span>Diésel</div><h1>Dashboard de Diésel</h1><p class="client-portal-lead">Existencias y consumo de las naves.</p></div><span class="client-updated">Última actualización: —</span></div>
+          <div class="client-metrics">
+            <article><span>Existencia total actual</span><strong>— <small>gal</small></strong></article><article><span>Consumo del día</span><strong>— <small>gal</small></strong></article><article><span>Abastecimientos del día</span><strong>— <small>gal</small></strong></article><article><span>Naves</span><strong>—</strong></article>
+          </div>
+          <div class="client-dashboard-grid">
+            <article class="client-data-panel"><header><h2>Consumo de diésel</h2></header><div class="client-chart-empty"><i data-lucide="chart-no-axes-combined"></i><span>No hay datos disponibles</span></div></article>
+            <article class="client-data-panel"><header><h2>Consumo y existencias por nave</h2><button type="button" class="client-text-action" data-portal-screen="vessels">Ver todas las naves</button></header><div class="client-table-scroll"><table><thead><tr><th>Nave</th><th>Consumo del día</th><th>Existencia</th><th></th></tr></thead><tbody><tr><td colspan="4" class="client-table-empty">No hay datos disponibles</td></tr></tbody></table></div></article>
+          </div>
+        </section>
+        <section class="client-portal-view" data-portal-view="vessels" hidden>
+          <div class="client-portal-breadcrumb"><button type="button" data-portal-screen="diesel-dashboard">Diésel</button><span>/</span>Naves</div><h1>Naves</h1><p class="client-portal-lead">Existencias y consumo diario por nave.</p>
+          <article class="client-data-panel"><header><h2>Existencias por nave</h2><button type="button" class="client-text-action" data-portal-screen="vessel-detail">Abrir detalle de nave</button></header><div class="client-table-scroll"><table><thead><tr><th>Nave</th><th>Existencia de diésel</th><th>Consumo diario</th><th>Último abastecimiento</th><th></th></tr></thead><tbody><tr><td colspan="5" class="client-table-empty">No hay datos disponibles</td></tr></tbody></table></div></article>
+        </section>
+        <section class="client-portal-view" data-portal-view="vessel-detail" hidden>
+          <div class="client-portal-breadcrumb"><button type="button" data-portal-screen="vessels">Naves</button><span>/</span>Detalle</div><h1>Detalle de nave</h1><p class="client-portal-lead">Stock y movimientos de la nave seleccionada.</p>
+          <div class="client-detail-filters"><label for="clientDetailFrom">Desde</label><input id="clientDetailFrom" type="date"><label for="clientDetailTo">Hasta</label><input id="clientDetailTo" type="date"></div>
+          <div class="client-metrics client-detail-metrics"><article><span>Stock inicial</span><strong>— <small>gal</small></strong></article><article><span>Abastecimientos</span><strong>— <small>gal</small></strong></article><article><span>Consumos</span><strong>— <small>gal</small></strong></article><article><span>Stock actual</span><strong>— <small>gal</small></strong></article></div>
+          <article class="client-data-panel"><header><h2>Historial de movimientos</h2></header><div class="client-table-scroll"><table><thead><tr><th>Fecha</th><th>Movimiento</th><th>Abastecimiento</th><th>Consumo</th><th>Existencia</th></tr></thead><tbody><tr><td colspan="5" class="client-table-empty">No hay datos disponibles</td></tr></tbody></table></div></article>
+        </section>
+        <section class="client-portal-view" data-portal-view="history" hidden><div class="client-portal-breadcrumb"><button type="button" data-portal-screen="diesel-dashboard">Diésel</button><span>/</span>Historial</div><h1>Historial de movimientos</h1><p class="client-portal-lead">Consulta los movimientos registrados por nave.</p><div class="client-detail-filters"><label for="clientHistoryFrom">Desde</label><input id="clientHistoryFrom" type="date"><label for="clientHistoryTo">Hasta</label><input id="clientHistoryTo" type="date"></div><article class="client-data-panel"><div class="client-table-scroll"><table><thead><tr><th>Fecha</th><th>Nave</th><th>Movimiento</th><th>Abastecimiento</th><th>Consumo</th><th>Existencia</th></tr></thead><tbody><tr><td colspan="6" class="client-table-empty">No hay datos disponibles</td></tr></tbody></table></div></article></section>
+        <section class="client-portal-view" data-portal-view="reports" hidden><div class="client-portal-breadcrumb"><button type="button" data-portal-screen="diesel-dashboard">Diésel</button><span>/</span>Reportes</div><h1>Reportes de Diésel</h1><p class="client-portal-lead">Los reportes estarán disponibles cuando se conecten las consultas correspondientes.</p><article class="client-data-panel client-empty-message">No hay datos disponibles</article></section>
+        <section class="client-portal-view" data-portal-view="other-module" hidden><div class="client-portal-breadcrumb"><button type="button" data-portal-screen="home">Control de Operación</button><span>/</span><span data-module-title>Operación</span></div><h1 data-module-heading>Operación</h1><article class="client-data-panel client-empty-message">No hay datos disponibles</article></section>
       </main>
     </div>
   </section>

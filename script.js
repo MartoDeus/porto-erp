@@ -1032,6 +1032,19 @@ function closeProfileMenu() {
 }
 
 function setPage(pageName) {
+  if (pageName === "portal-cliente") {
+    dashboardPage.hidden = true;
+    document.querySelector("#clientPortal").hidden = false;
+    document.querySelectorAll("#clientPortal [data-portal-view]").forEach((view) => {
+      view.hidden = view.dataset.portalView !== "home";
+    });
+    document.querySelectorAll("#clientPortal [data-portal-screen]").forEach((button) => {
+      button.classList.toggle("active", button.dataset.portalScreen === "home");
+    });
+    renderIcons();
+    return;
+  }
+
   pageViews.forEach((view) => {
     const isActive = view.dataset.view === pageName;
     view.hidden = !isActive;
@@ -8282,6 +8295,31 @@ navItems.forEach((item) => {
     event.preventDefault();
     setPage(item.dataset.page);
   });
+});
+
+const clientPortal = document.querySelector("#clientPortal");
+clientPortal?.addEventListener("click", (event) => {
+  const control = event.target.closest("[data-portal-screen]");
+  if (!control) return;
+  const screen = control.dataset.portalScreen;
+  clientPortal.querySelectorAll("[data-portal-view]").forEach((view) => {
+    view.hidden = view.dataset.portalView !== screen;
+  });
+  clientPortal.querySelectorAll(".client-portal-nav [data-portal-screen]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.portalScreen === screen);
+  });
+  if (screen === "other-module") {
+    const label = control.dataset.moduleLabel || "Operación";
+    clientPortal.querySelector("[data-module-title]").textContent = label;
+    clientPortal.querySelector("[data-module-heading]").textContent = label;
+  }
+  renderIcons();
+});
+
+document.querySelector("#clientPortalExit")?.addEventListener("click", () => {
+  clientPortal.hidden = true;
+  dashboardPage.hidden = false;
+  setPage("dashboard");
 });
 
 if (notificationButton && notificationPanel) {
